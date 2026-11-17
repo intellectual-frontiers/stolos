@@ -10,6 +10,7 @@
 // Spec: 028-site-network
 // Spec: 029-vault
 // Spec: 100-remote-access FR-002
+// Spec: 103-three-ports FR-006
 
 /** One secret the fleet depends on: where it lives and how to make it again (never its value). */
 export interface SecretRef {
@@ -194,6 +195,32 @@ export const SECRET_INVENTORY: SecretRef[] = [
     recreate: "bun run stolos boot arm <host> makes a new one when needed",
     spec: "004-install",
   },
+  ...[
+    [
+      "pairing",
+      "pairing in progress",
+      "the code of a pairing in progress and what the machine and the person said (spec 098)",
+    ],
+    [
+      "pairing-lock",
+      "pairing's lock",
+      "the lock the processes that serve and ask for a pairing take while they change its record",
+    ],
+    [
+      "pairing-tmp",
+      "pairing's new record",
+      "the record being written, renamed over the pairing's file at once (atomic)",
+    ],
+  ].map(([id, label, purpose]): SecretRef => ({
+    id: id ?? "",
+    label: label ?? "",
+    path: `pair/${id}`,
+    purpose: `${purpose}: written by stolos pair, read by the doors (the boot server's HTTP, the console's TLS), gone in ten minutes`,
+    holder: "boot-machine",
+    ephemeral: true,
+    recreate: "bun run stolos pair makes a new one",
+    spec: "103-three-ports",
+  })),
 
   // ------------------------------------------------------------------- owner
   {

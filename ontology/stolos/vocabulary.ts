@@ -69,6 +69,9 @@ export const stolos = vocabulary(STOLOS, {
   DataClass: "owl:Class",
   IntegrationKind: "owl:Class",
   FileKind: "owl:Class",
+  Listener: "owl:Class",
+  Door: "owl:Class",
+  DevicePath: "owl:Class",
   // Properties.
   spec: "owl:DatatypeProperty",
   rungNumber: "owl:DatatypeProperty",
@@ -77,6 +80,10 @@ export const stolos = vocabulary(STOLOS, {
   provedBy: "owl:DatatypeProperty",
   emoji: "owl:DatatypeProperty",
   ascii: "owl:DatatypeProperty",
+  protocol: "owl:DatatypeProperty",
+  port: "owl:DatatypeProperty",
+  onListener: "owl:ObjectProperty",
+  pathPrefix: "owl:DatatypeProperty",
 });
 
 /** The schema of a class of Stolos: its label, its definition, its superclasses and the specs it comes from. */
@@ -128,6 +135,25 @@ export const DataClassSchema = classSchema(stolos.DataClass, CODE);
 export const IntegrationKindSchema = classSchema(stolos.IntegrationKind, CODE);
 /** The schema of a kind of file Stolos writes in a fleet repository. */
 export const FileKindSchema = classSchema(stolos.FileKind, CODE);
+
+/** The schema of a listener: one of the three ports the controller opens, with its transport protocol and port number. */
+export const ListenerSchema = classSchema(stolos.Listener, {
+  ...CODE,
+  protocol: one(stolos.protocol, range.string),
+  port: one(stolos.port, range.integer),
+});
+
+/** The schema of a pairing door: the way a machine reaches the pairing, and the listener it is on. */
+export const DoorSchema = classSchema(stolos.Door, {
+  ...CODE,
+  onListener: one(stolos.onListener, range.ref<"stolos:Listener">()),
+});
+
+/** The schema of a device path: a URL path prefix reserved for one kind of device-specific endpoint. */
+export const DevicePathSchema = classSchema(stolos.DevicePath, {
+  ...CODE,
+  pathPrefix: one(stolos.pathPrefix, range.string),
+});
 
 /** The schema of a rung of the ladder (Article 0): its number, name, purpose, homes, the rungs it may rely on and what proves it. */
 export const RungSchema = classSchema(stolos.Rung, {
@@ -333,6 +359,27 @@ export const classes = [
     ),
     spec: ["069-integrate"],
   }),
+  StolosClass.make(stolos.Listener, {
+    label: en("Listener"),
+    definition: en(
+      "One of the three sockets the controller PC opens for Stolos (UDP 69 and TCP 8080 for the boot server, TCP 443 for the console over TLS): its protocol and port. Every other exchange is a route on one of them or is loopback-only (Article 29).",
+    ),
+    spec: ["103-three-ports FR-001, FR-002"],
+  }),
+  StolosClass.make(stolos.Door, {
+    label: en("Door"),
+    definition: en(
+      "A way a machine reaches the pairing: plain HTTP on the boot server's port (the same trust as PXE) or TLS on the console's port, both serving one handler.",
+    ),
+    spec: ["103-three-ports FR-004"],
+  }),
+  StolosClass.make(stolos.DevicePath, {
+    label: en("Device path"),
+    definition: en(
+      "A URL path prefix under `/device/`, the namespace reserved for device-specific endpoints on the controller's listeners; pairing is the first.",
+    ),
+    spec: ["103-three-ports FR-003"],
+  }),
   StolosClass.make(stolos.FileKind, {
     label: en("File kind"),
     definition: en(
@@ -381,6 +428,34 @@ export const properties = [
     range: xsd.string,
     definition: en("A command whose passing proves the rung."),
     spec: ["101-ladder FR-001"],
+  }),
+  StolosDatatypeProperty.make(stolos.protocol, {
+    label: en("protocol"),
+    domain: stolos.Listener,
+    range: xsd.string,
+    definition: en("The listener's transport: `tcp` or `udp`."),
+    spec: ["103-three-ports FR-002"],
+  }),
+  StolosDatatypeProperty.make(stolos.port, {
+    label: en("port"),
+    domain: stolos.Listener,
+    range: xsd.integer,
+    definition: en("The listener's standard port number (the engine's default for it)."),
+    spec: ["103-three-ports FR-002"],
+  }),
+  StolosObjectProperty.make(stolos.onListener, {
+    label: en("on listener"),
+    domain: stolos.Door,
+    range: stolos.Listener,
+    definition: en("The listener a pairing door is served on."),
+    spec: ["103-three-ports FR-004"],
+  }),
+  StolosDatatypeProperty.make(stolos.pathPrefix, {
+    label: en("path prefix"),
+    domain: stolos.DevicePath,
+    range: xsd.string,
+    definition: en("The URL path prefix, with a leading slash and no trailing one."),
+    spec: ["103-three-ports FR-003"],
   }),
   StolosDatatypeProperty.make(stolos.emoji, {
     label: en("emoji"),

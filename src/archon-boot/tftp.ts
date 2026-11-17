@@ -9,8 +9,10 @@
  * @module
  */
 // Spec: 004-install
+// Spec: 103-three-ports FR-001, FR-011
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
+import { standardPort } from "../archon/core/listeners.ts";
 import dgram from "node:dgram";
 import { Buffer } from "node:buffer";
 
@@ -22,8 +24,8 @@ const RRQ = 1,
 
 /** Options for the TFTP server. */
 export interface TftpOptions {
-  /** The UDP port to listen on (69 is TFTP's standard port). */
-  port: number;
+  /** The UDP port to listen on: the ontology's `boot-tftp` (69, TFTP's standard port) unless the person chose another. */
+  port?: number;
   /** Read a file for a client: bytes, or undefined when there is none. */
   read: (path: string, from: string) => Promise<Uint8Array | undefined>;
   /** Spec 049: structured events; the window and boot.log render them. */
@@ -173,6 +175,7 @@ async function transfer(
  * use or needs privileges.
  */
 export function serveTftp(o: TftpOptions): Promise<{ close: () => void }> {
+  const port = o.port ?? standardPort("boot-tftp");
   const sock = dgram.createSocket("udp4");
   sock.on("message", (m: Buffer, r: { address: string; port: number }) => void answer(m, r));
   const answer = async (m: Buffer, r: { address: string; port: number }): Promise<void> => {
@@ -202,15 +205,15 @@ export function serveTftp(o: TftpOptions): Promise<{ close: () => void }> {
       reject(
         e.code === "EADDRINUSE"
           ? new Error(
-              `UDP port ${o.port} is in use: stop the other TFTP server (Tftpd64, Windows Deployment Services)`,
+              `UDP port ${port} is in use: stop the other TFTP server (Tftpd64, Windows Deployment Services)`,
             )
           : e.code === "EACCES"
             ? new Error(
-                `UDP port ${o.port} needs privileges on Linux: run boot serve with sudo, or use --tftp-port and point the router there`,
+                `UDP port ${port} needs privileges on Linux: run boot serve with sudo, or use --tftp-port and point the router there`,
               )
             : e,
       ),
     );
-    sock.bind(o.port, "0.0.0.0", () => resolve({ close: () => sock.close() }));
+    sock.bind(port, "0.0.0.0", () => resolve({ close: () => sock.close() }));
   });
 }

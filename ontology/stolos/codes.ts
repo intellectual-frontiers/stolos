@@ -11,8 +11,11 @@ import {
   CommandTierSchema,
   codeList,
   DataClassSchema,
+  DevicePathSchema,
+  DoorSchema,
   FileKindSchema,
   IntegrationKindSchema,
+  ListenerSchema,
   MachineKindSchema,
   OutcomeLevelSchema,
   SignerRoleSchema,
@@ -203,6 +206,65 @@ export const fileKinds = codeList(FileKindSchema, "file", {
   },
 });
 
+/** The three ports the controller PC opens for Stolos (Article 29, spec 103-three-ports FR-001, FR-002). */
+export const listeners = codeList(ListenerSchema, "listener", {
+  "boot-tftp": {
+    label: en("boot TFTP"),
+    definition: en("The boot server's TFTP (PXE firmware speaks only plain TFTP)."),
+    protocol: "udp",
+    port: 69,
+    spec: ["103-three-ports FR-001"],
+  },
+  "boot-http": {
+    label: en("boot HTTP"),
+    definition: en(
+      "The boot server's plain HTTP (UEFI HTTP Boot and GRUB speak only plain HTTP); also door A of pairing.",
+    ),
+    protocol: "tcp",
+    port: 8080,
+    spec: ["103-three-ports FR-001", "103-three-ports FR-004"],
+  },
+  "console-https": {
+    label: en("console HTTPS"),
+    definition: en("The Stolos Console over TLS, on the LAN names; also door B of pairing."),
+    protocol: "tcp",
+    port: 443,
+    spec: ["103-three-ports FR-001", "103-three-ports FR-004", "100-remote-access FR-003"],
+  },
+});
+
+/** The ways a machine reaches pairing: both serve one handler (spec 103-three-ports FR-004). */
+export const doors = codeList(DoorSchema, "door", {
+  "lan-http": {
+    label: en("LAN HTTP"),
+    definition: en(
+      "Plain HTTP on the boot server's port, on a trusted network (Article 28): the boot server's own, or a pair-only server `stolos pair` runs when boot serve is not.",
+    ),
+    onListener: listeners["boot-http"],
+    spec: ["103-three-ports FR-004"],
+  },
+  tls: {
+    label: en("TLS"),
+    definition: en(
+      "TLS on the console's port, for the console's LAN names only, when `stolos console --lan` is serving.",
+    ),
+    onListener: listeners["console-https"],
+    spec: ["103-three-ports FR-004"],
+  },
+});
+
+/** The URL namespaces reserved for device-specific endpoints (spec 103-three-ports FR-003). */
+export const devicePaths = codeList(DevicePathSchema, "devicepath", {
+  pair: {
+    label: en("pair"),
+    definition: en(
+      "Pairing: the scripts, the hello and the check-in of a machine joining the fleet. `/device/` is reserved for device-specific endpoints; pairing is the first.",
+    ),
+    pathPrefix: "/device/pair",
+    spec: ["103-three-ports FR-003"],
+  },
+});
+
 /** Every code list, by the name of the type the generator writes for it, with the name of its array and what it is. */
 export const CODE_LISTS = {
   OutcomeLevel: {
@@ -231,6 +293,40 @@ export const CODE_LISTS = {
     array: "FILE_KINDS",
     list: fileKinds,
     what: "Whether a file Stolos writes is a record or a decision",
+  },
+  ListenerKind: {
+    class: "Listener",
+    array: "LISTENER_KINDS",
+    list: listeners,
+    what: "The three ports the controller opens",
+    data: {
+      name: "LISTENERS",
+      doc: "Each listener's protocol and standard port, from the ontology",
+      fields: { protocol: `"tcp" | "udp"`, port: "number" },
+    },
+  },
+  PairingDoor: {
+    class: "Door",
+    array: "PAIRING_DOORS",
+    list: doors,
+    what: "The ways a machine reaches pairing",
+    data: {
+      name: "DOOR_LISTENERS",
+      doc: "The listener each pairing door is served on",
+      fields: { onListener: "ListenerKind" },
+    },
+  },
+  DevicePathKind: {
+    class: "DevicePath",
+    array: "DEVICE_PATH_KINDS",
+    list: devicePaths,
+    what: "The URL namespaces reserved for device-specific endpoints",
+    data: {
+      name: "DEVICE_PATHS",
+      doc: "Each device path's URL prefix",
+      fields: { pathPrefix: "string" },
+      after: `/** The URL prefix of pairing, \`/device/pair\`: every pairing route is relative to it (spec 103-three-ports FR-003). */\nexport const DEVICE_PAIR_PATH: string = DEVICE_PATHS.pair.pathPrefix;`,
+    },
   },
 } as const;
 

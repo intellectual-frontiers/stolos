@@ -22,6 +22,8 @@
  *
  * @module
  */
+// Spec: 004-install
+// Spec: 103-three-ports FR-001, FR-004, FR-010, FR-011
 
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { VERSION } from "../archon/version.ts";
@@ -41,6 +43,13 @@ import { UBUNTU } from "./pins.ts";
 import { render } from "./pretty.ts";
 import { type ArchonEvent, plainLine } from "../archon/telemetry/events.ts";
 import { addressFacing, bootUri, lanAddresses, preferAddress } from "../archon/core/net.ts";
+import { choosePort, firewallRule, outsideStandardNote } from "../archon/core/listeners.ts";
+
+/** The HTTP port: the ontology's `boot-http` unless `--port` says another (an explicit choice). */
+function bootPort(args: readonly string[]): number {
+  const given = opt(args, "port");
+  return choosePort("boot-http", given === undefined ? undefined : Number(given)).port;
+}
 
 function opt(args: readonly string[], name: string): string | undefined {
   const i = args.indexOf(`--${name}`);
@@ -155,7 +164,7 @@ async function main(args: readonly string[]): Promise<number> {
       return 2;
     }
     return await reinstall(args[1], {
-      port: Number(opt(args, "port") ?? 8080),
+      port: bootPort(args),
       confirmDestroy: opt(args, "confirm-destroy"),
     });
   }
@@ -191,7 +200,7 @@ async function main(args: readonly string[]): Promise<number> {
   if (cmd === "doctor") {
     const { doctor } = await import("./doctor.ts");
     return await doctor({
-      port: Number(opt(args, "port") ?? 8080),
+      port: bootPort(args),
       send: args.includes("--send") ? "bun run stolos boot doctor --send" : undefined,
     });
   }
@@ -216,7 +225,7 @@ async function main(args: readonly string[]): Promise<number> {
           t ? ui.green(`armed since ${new Date(t.armed).toLocaleString()}`) : ui.dim("not armed")
         }\n` +
           `${" ".repeat(ui.emoji ? 3 : 2)}${"".padEnd(14)} ${ui.dim("Boot URI")} ${ui.blue(
-            bootUri(ip, Number(opt(args, "port") ?? 8080), h.name),
+            bootUri(ip, bootPort(args), h.name),
           )} ${ui.dim(`· ${mac}`)}`,
       );
     }
@@ -236,7 +245,11 @@ async function main(args: readonly string[]): Promise<number> {
     return 2;
   }
 
-  const port = Number(opt(args, "port") ?? 8080);
+  const port = bootPort(args);
+  const tftpPort = choosePort(
+    "boot-tftp",
+    opt(args, "tftp-port") === undefined ? undefined : Number(opt(args, "tftp-port")),
+  );
   // Spec 023: the boot server's own telemetry, in this process, kept in local files on this PC.
   initBootTelemetry();
   // Ctrl+C: what the telemetry still holds goes to its journal first.
@@ -297,6 +310,8 @@ async function main(args: readonly string[]): Promise<number> {
     proxy,
     caPem: caFile ? await fs.readTextFile(caFile) : undefined,
     githubApi,
+    // Spec 103: door A of the pairing: /device/pair on this port, from the file `stolos pair` writes.
+    devicePair: (await import("../archon/adopt/pair-service.ts")).devicePairHandler(),
     emit: (e: ArchonEvent) => {
       // Spec 049: the event is the source. It is recorded as an OpenTelemetry
       // log record; boot.log and the window are renderings of it (the window
@@ -312,10 +327,9 @@ async function main(args: readonly string[]): Promise<number> {
   // memory of what each machine fetched (Boot URIs, progress, HTTP arrivals).
   const h = handler(assets, serveOpts);
   await serve(serveOpts, h);
-  const tftpPort = Number(opt(args, "tftp-port") ?? 69);
   if (!args.includes("--no-tftp")) {
     await serveTftp({
-      port: tftpPort,
+      port: tftpPort.port,
       emit: serveOpts.emit,
       read: async (name, from) => {
         const local = addressFacing(from) ?? "127.0.0.1";
@@ -333,7 +347,7 @@ async function main(args: readonly string[]): Promise<number> {
   s.done(
     args.includes("--no-tftp")
       ? `HTTP Boot on port ${port}`
-      : `PXE: DHCP next-server ${ip}, boot file bootx64.efi (TFTP, UDP ${tftpPort}) · HTTP port ${port}`,
+      : `PXE: DHCP next-server ${ip}, boot file bootx64.efi (TFTP, UDP ${tftpPort.port}) · HTTP port ${port}`,
   );
   const icon = (e: string, a: string) => (ui.emoji ? e : a);
   ui.say(
@@ -363,7 +377,20 @@ async function main(args: readonly string[]): Promise<number> {
   );
   // Read-only check of this machine's firewall; warnings only, in the background.
   const needs: Need[] = [{ protocol: "TCP", port, what: "HTTP" }];
-  if (!args.includes("--no-tftp")) needs.push({ protocol: "UDP", port: tftpPort, what: "TFTP" });
+  if (!args.includes("--no-tftp"))
+    needs.push({ protocol: "UDP", port: tftpPort.port, what: "TFTP" });
+  // Spec 103: a port other than the three standard ones is the person's explicit choice, with its own firewall rule.
+  for (const [what, protocol, p, explicit] of [
+    ["HTTP", "tcp", port, port !== choosePort("boot-http").port],
+    ["TFTP", "udp", tftpPort.port, tftpPort.explicit && !args.includes("--no-tftp")],
+  ] as const) {
+    if (explicit) {
+      ui.phase("Firewall").action(
+        outsideStandardNote(protocol, p),
+        firewallRule(proc.build.os, protocol, p, `boot ${what}`),
+      );
+    }
+  }
   void firewallWarnings(needs).then((lines) => {
     for (const l of lines) serveOpts.emit({ name: "boot.firewall", message: l });
   });

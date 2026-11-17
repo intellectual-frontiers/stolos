@@ -9,11 +9,13 @@
  */
 // Spec: 099-engine-update FR-005
 // Spec: 100-remote-access FR-003
+// Spec: 103-three-ports FR-004, FR-009
 
 import { fs, path, proc, type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
+import { standardPort } from "../core/listeners.ts";
 import { ui } from "../core/ui.ts";
 import { markdownToHtml } from "../web/markdown.ts";
 import { Sessions } from "./auth.ts";
@@ -24,6 +26,9 @@ import { PC_GUIDES } from "./stolos-pages.ts";
 import { Launch, type PcRunner, stolosHandler } from "./stolos-server.ts";
 import type { Estate } from "../estate/graph.ts";
 import type { PreparedRemote } from "../access/launch.ts";
+
+/** The console's HTTPS port, 443 (the ontology's `console-https` listener). */
+const HTTPS_PORT = standardPort("console-https");
 
 /** Your GitHub login, and whether it may push to the fleet repository; or why it cannot tell. */
 export async function githubCheck(
@@ -146,7 +151,7 @@ export function openBrowser(url: string): void {
 }
 
 /**
- * `stolos console [--port n] [--no-open] [--no-github] [--lan]`; with `audit`, the auditor portal's
+ * `stolos console [--port n] [--no-open] [--no-github] [--lan [--lan-port n]]`; with `audit`, the auditor portal's
  * link instead (spec 083). With `lan` (spec 100), also HTTPS on this PC's LAN address, for devices
  * a fleet signer approved.
  */
@@ -156,6 +161,8 @@ export async function stolosConsole(o: {
   github?: boolean;
   audit?: string;
   lan?: boolean;
+  /** An explicit port for the HTTPS listener (outside the three standard ports unless it is 443). */
+  lanPort?: number;
 }): Promise<number> {
   const c = ui.phase("Console");
   const facts = await pcFacts();
@@ -222,6 +229,7 @@ export async function stolosConsole(o: {
       pc,
       addresses: lanAddresses(),
       activity,
+      ...(o.lanPort === undefined ? {} : { port: o.lanPort }),
     }).catch((e: unknown) => ({ why: (e as Error).message, fix: "run it again" }));
     if ("why" in p) {
       c.fail(`remote access: ${p.why}`, p.fix);
@@ -251,6 +259,10 @@ export async function stolosConsole(o: {
     evidenceDir: path.join(P.state, "evidence"),
     audit,
     ...(prepared ? { remote: prepared.remote } : {}),
+    // Spec 103: pairing's routes (/device/pair) on the HTTPS names, from the pairing's file.
+    ...(prepared
+      ? { devicePair: (await import("../adopt/pair-service.ts")).devicePairHandler() }
+      : {}),
   });
   let server: Server;
   try {
@@ -269,19 +281,23 @@ export async function stolosConsole(o: {
     const l = await prepared.start(handler);
     if ("why" in l) {
       await server.shutdown();
-      c.fail(
-        `remote access: cannot listen on 443 or 8443 (${l.why})`,
-        "free one of the ports (or allow Bun to bind 443), then run this again",
-      );
+      c.fail(`remote access: ${l.why}`, l.fix);
       return 1;
     }
     ui.say(
       `Remote access: ${prepared.remote.access.names.served
-        .map((n) => `https://${n}${l.port === 443 ? "" : `:${l.port}`}`)
+        .map((n) => `https://${n}${l.port === HTTPS_PORT ? "" : `:${l.port}`}`)
         .join(
           ", ",
         )} (on ${l.address}, LAN or mesh only). Devices sign in with a passkey a signer approved; see /access.`,
     );
+    if (l.explicit) {
+      const { firewallRule, outsideStandardNote } = await import("../core/listeners.ts");
+      ui.phase("Firewall").action(
+        `${outsideStandardNote("tcp", l.port)}`,
+        firewallRule(proc.build.os, "tcp", l.port, "Console (HTTPS)"),
+      );
+    }
   }
   c.done(
     `${facts.fleet.title} on http://127.0.0.1:${port}${

@@ -8,6 +8,7 @@
  */
 // Spec: 003-identity
 // Spec: 100-remote-access FR-002
+// Spec: 103-three-ports FR-006
 
 import { P } from "./paths.ts";
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
@@ -47,6 +48,13 @@ export const SECRETS = {
   },
   get tokens(): string {
     return paths.join(P.secrets, "install-tokens.json");
+  },
+  /**
+   * Spec 103-three-ports: the pairing in progress (its code, the machine's hello and check-in, the person's decision), a record
+   * `stolos pair` writes and the doors read; its `-lock` and `-tmp` siblings are the lock and the atomic write.
+   */
+  get pairing(): string {
+    return paths.join(P.secrets, "pair", "pairing");
   },
 };
 

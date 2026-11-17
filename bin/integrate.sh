@@ -93,7 +93,7 @@ post() {
 if [ -n "$pair" ] && [ "$undo" != 1 ]; then
   has openssl || die "pairing needs openssl (for the code's signatures): install it, then run this again"
   say ""
-  say "Stolos: join the fleet${fleet:+ $fleet} (the PC at ${pair#http://})"
+  say "Stolos: join the fleet${fleet:+ $fleet} (the PC at ${pair#*://})"
   say "  The fleet will be able to read facts about this machine. It never changes anything else."
   ptmp=$(mktemp -d); trap 'rm -rf "$ptmp"' EXIT
   host=$(hostname 2>/dev/null || uname -n)

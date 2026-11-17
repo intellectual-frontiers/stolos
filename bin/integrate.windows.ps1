@@ -59,6 +59,8 @@ function Get-Mac([string]$c, [byte[]]$bytes) {
   $h = [Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($c))
   ([BitConverter]::ToString($h.ComputeHash($bytes)) -replace '-', '').ToLower()
 }
+# An HTTPS door (the console's TLS) needs TLS 1.2, which Windows PowerShell 5.1 may not offer by default.
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 function Send-Pair([string]$where, [string]$text) {
   $b = [Text.Encoding]::UTF8.GetBytes($text)
   $r = Invoke-WebRequest -UseBasicParsing -Method Post -Uri ($Pair + $where) -Body $b -ContentType 'text/plain' -Headers @{ 'X-Stolos-Mac' = (Get-Mac $Code $b) }
@@ -68,7 +70,7 @@ $Code = ''
 if ($Pair -and -not $Undo) {
   if (-not $Admin) { Die 'this needs an administrator: right-click PowerShell, Run as administrator, and run the command again' }
   Write-Host ''
-  Write-Host ("Stolos: join the fleet {0} (the PC at {1})" -f $Fleet, ($Pair -replace '^http://', ''))
+  Write-Host ("Stolos: join the fleet {0} (the PC at {1})" -f $Fleet, ($Pair -replace '^https?://', ''))
   Write-Host '  The fleet will be able to read facts about this PC. It never changes anything else.'
   $tries = 0
   while ($true) {

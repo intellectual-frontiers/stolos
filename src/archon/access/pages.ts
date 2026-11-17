@@ -11,6 +11,7 @@
  * @module
  */
 // Spec: 100-remote-access FR-004, FR-007, FR-010
+// Spec: 103-three-ports FR-009
 
 import type { ConsoleDevice } from "../model/types.ts";
 import type { ActivityEntry } from "../console/pages.ts";
@@ -19,7 +20,7 @@ import { diagram } from "../console/layout.ts";
 import type { DeviceUse, Pending } from "./devices.ts";
 import { UNUSED_DAYS } from "./devices.ts";
 import type { ConsoleNames } from "./names.ts";
-import { daysLeft, EXPIRY_WARN_DAYS, issuerName } from "./tls.ts";
+import { daysLeft, EXPIRY_WARN_DAYS, HTTPS_PORT, issuerName } from "./tls.ts";
 
 /** How remote access works, drawn (the Remote Access page and its action group). */
 export function accessDiagram(domain = "lab.example.net"): string {
@@ -248,7 +249,7 @@ export function accessPage(v: AccessView): Html {
         ${
           v.names
             ? html`<div class="v mono">
-                  ${v.names.served.map((n) => html`<div>https://${n}${v.listener && v.listener.port !== 443 ? `:${v.listener.port}` : ""}</div>`)}
+                  ${v.names.served.map((n) => html`<div>https://${n}${v.listener && v.listener.port !== HTTPS_PORT ? `:${v.listener.port}` : ""}</div>`)}
                 </div>
                 <div class="sub">
                   ${v.names.primary ? "this PC is the primary controller" : `the primary is ${v.names.primaryName ?? "another controller"}`}

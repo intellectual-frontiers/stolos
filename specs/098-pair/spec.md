@@ -15,11 +15,11 @@ sequenceDiagram
   participant PC as Controller PC (stolos pair)
   participant M as The machine
   PC->>PC: shows the line and the code
-  M->>PC: GET / (the script, from this engine)
-  M->>PC: POST /hello (nonce, hostname; HMAC under the code)
+  M->>PC: GET /device/pair (the script, from this engine)
+  M->>PC: POST /device/pair/hello (nonce, hostname; HMAC under the code)
   PC->>M: ok, name, probe key, probe SHA-256 (HMAC under the code)
   M->>M: SSH on, the probe installed (checked), only the key may run it
-  M->>PC: POST /checkin (host keys, facts; HMAC under the code)
+  M->>PC: POST /device/pair/checkin (host keys, facts; HMAC under the code)
   PC->>PC: the person approves (name, OS, address, host key)
   PC->>M: ok: adopted
 ```
@@ -33,9 +33,15 @@ theirs: `stolos:PairingCode`, `stolos:TrustedNetwork`, `stolos:AdoptedMachine`,
 
 ## Requirements
 
-- **FR-001** `stolos pair [--name] [--address] [--port 7457] [--title] [--owner]` listens on the
-  LAN for one machine, and shows one short line to run there (`curl -fsSL http://<pc>:7457 | sh`,
-  or `irm http://<pc>:7457/w | iex` in an administrator PowerShell) and a code.
+- **FR-001** `stolos pair [--name] [--address] [--port] [--title] [--owner]` waits on the LAN for
+  one machine, and shows one short line to run there per door that is up, HTTPS first
+  (`curl -fsSL <base> | sh`, or `irm <base>/w | iex` in an administrator PowerShell, where `<base>` is
+  `https://<console name>/device/pair` or `http://<pc>:8080/device/pair`) and a code. Pairing is the
+  routes under `/device/pair` of two of the controller's three ports (constitution Article 29, spec
+  103-three-ports): TCP 8080 (plain HTTP, the boot server's, or `stolos pair`'s own pair-only server
+  when boot serve is not running) and TCP 443 (the console's TLS, when it serves the LAN). There is no
+  port of its own: the old TCP 7457 is gone, and `--port` is an explicit choice of another port for
+  the plain HTTP door.
 - **FR-002** The code is 8 characters from an alphabet without look-alikes (`ABCDEFGHJKMNPQRSTUVWXYZ23456789`,
   about 39 bits), shown as two groups of four, chosen without bias; it is good for one machine, for
   10 minutes, and for 5 wrong signatures in all. Typed in any case, with or without the dash.
@@ -57,10 +63,10 @@ theirs: `stolos:PairingCode`, `stolos:TrustedNetwork`, `stolos:AdoptedMachine`,
   check-in, observed over SSH with its probe key, policies reported).
 - **FR-007** A name that is a managed server's, or not a DNS label, is refused before anything is
   installed, with what to type on the PC. A second machine cannot use a code another is using.
-- **FR-008** Plain HTTP is deliberate (constitution Article 28): the PC says so when it shows the
-  line, and the guide says to pair a machine outside the LAN over a zero trust mesh network
-  (`--address` with the PC's mesh address), never over the internet. The firewall is checked
-  (read-only) for the port.
+- **FR-008** Plain HTTP on the boot server's port is deliberate (constitution Article 28): the PC
+  says so when it shows the line, and the guide says to pair a machine outside the LAN over a zero
+  trust mesh network (`--address` with the PC's mesh address), never over the internet. The firewall
+  is checked (read-only) for the ports the doors use (TCP 8080, and 443 for the HTTPS door).
 - **FR-010** `stolos mesh` (read-only, guidance only) explains Article 28: what a zero trust mesh
   network is, the common choices (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard by
   hand) without preferring one, what to look for, and this PC's mesh addresses (by the clients'
@@ -80,8 +86,9 @@ theirs: `stolos:PairingCode`, `stolos:TrustedNetwork`, `stolos:AdoptedMachine`,
 
 ## Decisions
 
-- **HTTP only, on a trusted network** (the owner's): no certificate, no public relay, no domain to
-  run. A machine elsewhere joins over a zero trust mesh network the fleet chooses (FR-010).
+- **Plain HTTP on a trusted network, TLS where the console serves** (the owner's): no public relay,
+  no domain to run for the plain door; the console's TLS door (spec 103-three-ports) adds a
+  certificate where the fleet has one. A machine elsewhere joins over a zero trust mesh network the fleet chooses (FR-010).
 - **The code is typed on the machine, approved on the PC.** The PC is the trusted side: the person
   sees the machine there, and the commit that follows is signed there.
 - **openssl on the machine.** A POSIX shell has no HMAC; openssl is on macOS and every distribution

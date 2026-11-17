@@ -1,6 +1,6 @@
 /**
  * Spec 098: pairing with a short code: the code, the signatures, the session, and the real
- * integrate.sh paired end to end against the PC's server.
+ * integrate.sh paired end to end against the PC's server, under `/device/pair` (spec 103-three-ports).
  *
  * @module
  */
@@ -25,6 +25,8 @@ import {
   sha256Hex,
   windowsLoader,
 } from "../src/archon/adopt/pair.ts";
+import { MemoryPairStore, newPairRecord } from "../src/archon/adopt/pair-store.ts";
+import { DEVICE_PAIR_PATH } from "../src/archon/ontology.auto.ts";
 import { parseCheckIn } from "../src/archon/adopt/checkin.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "../src/archon/adopt/probe.ts";
 import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
@@ -32,7 +34,9 @@ import { servePair } from "./integrate/pair-server.ts";
 
 const KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexampleexampleexampleexampleexample00";
 const CODE = "WDJB-MJHT";
-const URL0 = "http://10.0.0.5:7457";
+const URL0 = "http://10.0.0.5:8080";
+/** The pairing's base: every route is relative to it (spec 103-three-ports FR-003). */
+const BASE = `${URL0}${DEVICE_PAIR_PATH}`;
 
 proves(["098-pair FR-002"], "098: a code is 8 characters without look-alikes, two groups", () => {
   for (let i = 0; i < 200; i++) {
@@ -69,10 +73,15 @@ proves(
 const session = (o: { now?: () => number; name?: string } = {}) => {
   const seen: string[] = [];
   const s = new PairSession({
-    fleet: "lab",
-    engine: "v1.2.3",
-    url: URL0,
-    code: CODE,
+    store: new MemoryPairStore(
+      newPairRecord({
+        code: CODE,
+        fleet: "lab",
+        engine: "v1.2.3",
+        ...(o.now ? { now: o.now() } : {}),
+      }),
+    ),
+    pollMs: 10,
     ...(o.now ? { now: o.now } : {}),
     nameFor: (h) =>
       Promise.resolve(
@@ -91,7 +100,7 @@ const session = (o: { now?: () => number; name?: string } = {}) => {
 const post = async (s: PairSession, where: string, body: string, code = CODE) =>
   await (
     await s.handle(
-      new Request(`${URL0}${where}`, {
+      new Request(`${BASE}${where}`, {
         method: "POST",
         body,
         headers: { "x-stolos-mac": await mac(code, body) },
@@ -104,32 +113,36 @@ proves(
   "098: the PC serves this engine's scripts with the pairing filled in",
   async () => {
     const { s } = session();
-    const sh = await (await s.handle(new Request(`${URL0}/`))).text();
+    const sh = await (await s.handle(new Request(BASE))).text();
     assertStringIncludes(
       sh,
-      `set -- --adopt --pair '${URL0}' --fleet 'lab' --engine 'v1.2.3' "$@"`,
+      `set -- --adopt --pair '${BASE}' --fleet 'lab' --engine 'v1.2.3' "$@"`,
     );
     assertStringIncludes(sh, "--pair <url>");
-    assertEquals(sh, posixScript({ url: URL0, fleet: "lab", engine: "v1.2.3" }));
-    const w = await (await s.handle(new Request(`${URL0}/w`))).text();
-    assertEquals(w, windowsLoader({ url: URL0, fleet: "lab", engine: "v1.2.3" }));
+    assertEquals(sh, posixScript({ url: BASE, fleet: "lab", engine: "v1.2.3" }));
+    const w = await (await s.handle(new Request(`${BASE}/w`))).text();
+    assertEquals(w, windowsLoader({ url: BASE, fleet: "lab", engine: "v1.2.3" }));
+    assertStringIncludes(w, `'${BASE}/w.ps1'`);
     assertStringIncludes(
       w,
       "powershell.exe -NoProfile -ExecutionPolicy Bypass -File $stolosPair --adopt --pair",
     );
     assertStringIncludes(
-      await (await s.handle(new Request(`${URL0}/w.ps1`))).text(),
+      await (await s.handle(new Request(`${BASE}/w.ps1`))).text(),
       "--pair <url>",
     );
     assertEquals(
-      await (await s.handle(new Request(`${URL0}/bin/stolos-probe.sh`))).text(),
+      await (await s.handle(new Request(`${BASE}/bin/stolos-probe.sh`))).text(),
       PROBE_SCRIPT,
     );
     assertEquals(
-      await (await s.handle(new Request(`${URL0}/bin/stolos-probe.ps1`))).text(),
+      await (await s.handle(new Request(`${BASE}/bin/stolos-probe.ps1`))).text(),
       PROBE_SCRIPT_WINDOWS,
     );
-    assertEquals((await s.handle(new Request(`${URL0}/etc/passwd`))).status, 404);
+    assertEquals((await s.handle(new Request(`${BASE}/etc/passwd`))).status, 404);
+    // Nothing is served outside /device/pair, not even the old root.
+    assertEquals((await s.handle(new Request(`${URL0}/`))).status, 404);
+    assertEquals((await s.handle(new Request(`${URL0}/w`))).status, 404);
   },
 );
 
@@ -180,7 +193,7 @@ proves(
       assertStringIncludes(await post(s, "/hello", body, "AAAA-AAAA"), `(${MAX_TRIES - i} tr`);
     }
     assertStringIncludes(await post(s, "/hello", body, "AAAA-AAAA"), "the pairing has ended");
-    assertEquals(s.ended, "tries");
+    assertEquals(await s.ended(), "tries");
     assertStringIncludes(await post(s, "/hello", body), "this pairing has ended");
     let t = 1_000;
     const { s: s2 } = session({ now: () => t });
@@ -239,7 +252,7 @@ proves(
       const ci = parseCheckIn(`stolos1:${toBase64(new TextEncoder().encode(got))}`);
       assertEquals([ci.fleet, ci.kinds, ci.port], ["lab", ["adopt"], ssh.addr.port]);
       assertEquals(ci.observed?.probe, "2");
-      assertEquals(srv.session.ended, "paired");
+      assertEquals(await srv.session.ended(), "paired");
     } finally {
       ssh.close();
       srv.close();

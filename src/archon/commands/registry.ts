@@ -8,6 +8,7 @@
 // Spec: 098-pair FR-001, FR-010
 // Spec: 099-engine-update FR-001
 // Spec: 100-remote-access FR-003, FR-005, FR-008
+// Spec: 103-three-ports FR-008, FR-009
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
@@ -1717,6 +1718,10 @@ export const COMMANDS: Command[] = [
       { name: "no-open", type: "boolean", description: "Print the link; open no browser." },
     ],
     async run(a: Parsed): Promise<number> {
+      const lanPort = a["lan-port"] ? Number(a["lan-port"]) : undefined;
+      if (lanPort !== undefined && !(Number.isInteger(lanPort) && lanPort > 0 && lanPort < 65536)) {
+        throw new Error(`--lan-port ${a["lan-port"]}: a port from 1 to 65535`);
+      }
       const { stolosConsole } = await import("../console/stolos-launch.ts");
       return await stolosConsole({
         audit: a["id"] as string,
@@ -2125,7 +2130,13 @@ export const COMMANDS: Command[] = [
         name: "lan",
         type: "boolean",
         description:
-          "Spec 100: also serve HTTPS on this PC's LAN address as stolos.<web domain> and <pc>.stolos.<web domain> (a Let's Encrypt certificate, DNS in Cloudflare), for devices a fleet signer approved.",
+          "Spec 100: also serve HTTPS on this PC's LAN address as stolos.<web domain> and <pc>.stolos.<web domain> (a Let's Encrypt certificate, DNS in Cloudflare), for devices a fleet signer approved. TCP 443 only: there is no fallback port.",
+      },
+      {
+        name: "lan-port",
+        type: "string",
+        description:
+          "Spec 103: with --lan, an explicit port for the HTTPS listener instead of 443 (it is outside the three standard ports: this prints its own firewall rule).",
       },
     ],
     examples: [
@@ -2140,12 +2151,17 @@ export const COMMANDS: Command[] = [
       if (port !== undefined && !(Number.isInteger(port) && port > 1023 && port < 65536)) {
         throw new Error(`--port ${a["port"]}: a port from 1024 to 65535`);
       }
+      const lanPort = a["lan-port"] ? Number(a["lan-port"]) : undefined;
+      if (lanPort !== undefined && !(Number.isInteger(lanPort) && lanPort > 0 && lanPort < 65536)) {
+        throw new Error(`--lan-port ${a["lan-port"]}: a port from 1 to 65535`);
+      }
       const { stolosConsole } = await import("../console/stolos-launch.ts");
       return await stolosConsole({
         ...(port === undefined ? {} : { port }),
         open: !a["no-open"],
         github: !a["no-github"],
         lan: !!a["lan"],
+        ...(lanPort === undefined ? {} : { lanPort }),
       });
     },
   },
@@ -2245,7 +2261,7 @@ export const COMMANDS: Command[] = [
     name: "pair",
     summary:
       "Bring a machine into the fleet with a short code: one line to run there, approve here",
-    description: `Spec 098. Shows one short line to run on the machine (curl ... | sh, or irm ... | iex on Windows as administrator) and an 8-character code that expires in 10 minutes. The machine's script, served by this PC from this engine, asks for the code, turns on SSH, installs the read-only probe, and sends its check-in signed with the code; you approve it here, seeing its name, OS, address and SSH host key, and it is adopted (host adopt) with nothing copied by hand. One machine per code; 5 wrong codes end it. Plain HTTP on purpose: run it on a trusted LAN, or reach the machine over a zero trust mesh network (see stolos mesh), never over the internet.`,
+    description: `Specs 098 and 103. Shows one short line per door that is up (curl ... | sh, or irm ... | iex on Windows as administrator), HTTPS first, and an 8-character code that expires in 10 minutes. Pairing is /device/pair on two of the three ports this PC opens (Article 29): TCP 443, the console's TLS, when stolos console --lan serves and its name is this PC's; and TCP 8080, plain HTTP, the boot server's (this command serves just those routes there when boot serve is not running). The machine's script, served by this PC from this engine, asks for the code, turns on SSH, installs the read-only probe, and sends its check-in signed with the code; you approve it here, seeing its name, OS, address and SSH host key, and it is adopted (host adopt) with nothing copied by hand. One machine per code; 5 wrong codes end it. Plain HTTP on the boot server's port on purpose: run it on a trusted LAN, or reach the machine over a zero trust mesh network (see stolos mesh), never over the internet.`,
     tier: "repo",
     args: [
       {
@@ -2259,7 +2275,12 @@ export const COMMANDS: Command[] = [
         description:
           "The address the machine reaches this PC at (default: this PC's LAN address; give the mesh network's address for a machine elsewhere).",
       },
-      { name: "port", type: "string", description: "The port to listen on (default 7457)." },
+      {
+        name: "port",
+        type: "string",
+        description:
+          "Spec 103: an explicit port for the plain HTTP door instead of the boot server's TCP 8080 (it is outside the three standard ports: this prints its own firewall rule).",
+      },
       { name: "title", type: "string", description: 'What it is, for people: "Alice\'s laptop".' },
       { name: "owner", type: "string", description: "Who it belongs to." },
     ],
@@ -2272,10 +2293,14 @@ export const COMMANDS: Command[] = [
     ],
     async run(a: Parsed): Promise<number> {
       const { pair } = await import("../adopt/pair-command.ts");
+      const port = a["port"] ? Number(a["port"]) : undefined;
+      if (port !== undefined && !(Number.isInteger(port) && port > 0 && port < 65536)) {
+        throw new Error(`--port ${a["port"]}: a port from 1 to 65535`);
+      }
       return await pair({
         ...(a["name"] ? { name: a["name"] as string } : {}),
         ...(a["address"] ? { address: a["address"] as string } : {}),
-        ...(a["port"] ? { port: Number(a["port"]) } : {}),
+        ...(port === undefined ? {} : { port }),
         ...(a["title"] ? { title: a["title"] as string } : {}),
         ...(a["owner"] ? { owner: a["owner"] as string } : {}),
       });

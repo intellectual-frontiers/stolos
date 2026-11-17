@@ -2,15 +2,17 @@
  * Spec 100: what `stolos console --lan` adds to the console. In order: the names (FR-001), a
  * trusted address (Article 28), the Cloudflare token, the certificate (FR-002), the DNS records,
  * remote access itself (the signed tip read once), then, once the console's handler exists, the
- * HTTPS listener on 443 or 8443 (FR-003) and the timers: the heartbeat every 5 minutes, the signed
+ * HTTPS listener on 443 (FR-003, spec 103-three-ports FR-009: no fallback; another port is an explicit choice) and the timers: the heartbeat every 5 minutes, the signed
  * tip every 30 seconds while a code waits (else 5 minutes), the certificate daily, the digest
  * daily.
  *
  * @module
  */
 // Spec: 100-remote-access FR-001, FR-002, FR-003
+// Spec: 103-three-ports FR-004, FR-009, FR-011
 
 import { acme, path, type ServeHandler } from "@intellectual-frontiers/commons/ts/runtime";
+import { choosePort } from "../core/listeners.ts";
 import { P } from "../core/paths.ts";
 import { readSecret, SECRETS, writeSecret } from "../core/secrets.ts";
 import type { Phase } from "../core/ui.ts";
@@ -24,7 +26,7 @@ import {
   type AcmeIssue,
   ensureCertificate,
   HEARTBEAT_MS,
-  HTTPS_PORTS,
+  HTTPS_PORT,
   keepDns,
   listenAddress,
   type TlsMaterial,
@@ -35,8 +37,13 @@ import type { TlsServer } from "./https.ts";
 export interface PreparedRemote {
   /** For the console's handler. */
   remote: ConsoleRemote;
-  /** Listen with TLS (443, else 8443) and start the timers; where it listens. */
-  start(handler: ServeHandler): Promise<{ address: string; port: number } | { why: string }>;
+  /**
+   * Listen with TLS on 443 (or the explicit port) and start the timers; where it listens, or why it cannot, with the fix. There is no
+   * fallback port.
+   */
+  start(
+    handler: ServeHandler,
+  ): Promise<{ address: string; port: number; explicit: boolean } | { why: string; fix: string }>;
   /** Stop the timers and the listener. */
   stop(): Promise<void>;
 }
@@ -50,6 +57,10 @@ export async function prepareRemote(o: {
   activity: { add(e: ActivityEntry): Promise<void>; recent(n: number): Promise<ActivityEntry[]> };
   issue?: AcmeIssue;
   directory?: string;
+  /** An explicit port for the LAN listener (`--lan-port`), outside the three standard ports unless it is 443. */
+  port?: number;
+  /** Names what holds a port (tests give one; the default asks the operating system). */
+  holder?: (port: number) => Promise<string | undefined>;
 }): Promise<PreparedRemote | { why: string; fix: string }> {
   const c = o.phase;
   const names: ConsoleNames | undefined = consoleNames(o.fleet, o.pc);
@@ -130,7 +141,7 @@ export async function prepareRemote(o: {
   const read = await access.refresh().catch((e: unknown) => ({ refused: String(e) }));
   if ("refused" in read && read.refused) c.warn(`access.ts not read: ${read.refused}`);
   const hosts: string[] = [];
-  let listening: { address: string; port: number } | undefined;
+  let listening: { address: string; port: number; explicit: boolean } | undefined;
   let server: TlsServer | undefined;
   const timers: Array<ReturnType<typeof setInterval>> = [];
   const remote: ConsoleRemote = {
@@ -143,29 +154,33 @@ export async function prepareRemote(o: {
       ...(other ? { other } : {}),
     }),
     get controller() {
-      return `https://${names.base}${listening && listening.port !== 443 ? `:${listening.port}` : ""}`;
+      return `https://${names.base}${listening && listening.port !== HTTPS_PORT ? `:${listening.port}` : ""}`;
     },
   };
   return {
     remote,
     async start(handler) {
       const { serveTls } = await import("./https.ts");
-      let why = "";
-      for (const port of HTTPS_PORTS) {
-        try {
-          server = await serveTls(
-            { hostname: address, port, cert: tls.certificatePem, key: tls.privateKeyPem },
-            handler,
-          );
-          listening = { address, port };
-          break;
-        } catch (e) {
-          why = `${why}${why ? "; " : ""}${port}: ${(e as Error).message}`;
-        }
+      const choice = choosePort("console-https", o.port);
+      try {
+        server = await serveTls(
+          {
+            hostname: address,
+            port: choice.port,
+            cert: tls.certificatePem,
+            key: tls.privateKeyPem,
+          },
+          handler,
+        );
+        listening = { address, port: choice.port, explicit: choice.explicit };
+      } catch (e) {
+        const { listenRefusal, portHolder } = await import("./holder.ts");
+        const code = (e as { code?: string }).code ?? (e as Error).name;
+        const holder = await (o.holder ?? portHolder)(choice.port).catch(() => undefined);
+        return listenRefusal({ port: choice.port, code, holder });
       }
-      if (!listening || !server) return { why };
       for (const n of names.served)
-        hosts.push(listening.port === 443 ? n : `${n}:${listening.port}`);
+        hosts.push(listening.port === HTTPS_PORT ? n : `${n}:${listening.port}`);
       await access.listening(listening);
       // The timers: none keeps the process alive by itself; Ctrl+C ends the console.
       const every = (ms: number, f: () => Promise<unknown>) => {

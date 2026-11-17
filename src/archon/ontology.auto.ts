@@ -67,3 +67,42 @@ export type FileKind = "record" | "decision";
 
 /** Every {@link FileKind}, in the ontology's order. */
 export const FILE_KINDS: readonly FileKind[] = ["record", "decision"];
+
+/** The three ports the controller opens (`stolos:Listener`; 103-three-ports FR-001, 103-three-ports FR-004, 100-remote-access FR-003). */
+export type ListenerKind = "boot-tftp" | "boot-http" | "console-https";
+
+/** Every {@link ListenerKind}, in the ontology's order. */
+export const LISTENER_KINDS: readonly ListenerKind[] = ["boot-tftp", "boot-http", "console-https"];
+
+/** Each listener's protocol and standard port, from the ontology. */
+export const LISTENERS: Record<ListenerKind, { protocol: "tcp" | "udp"; port: number }> = {
+  "boot-tftp": { protocol: "udp", port: 69 },
+  "boot-http": { protocol: "tcp", port: 8080 },
+  "console-https": { protocol: "tcp", port: 443 },
+};
+
+/** The ways a machine reaches pairing (`stolos:Door`; 103-three-ports FR-004). */
+export type PairingDoor = "lan-http" | "tls";
+
+/** Every {@link PairingDoor}, in the ontology's order. */
+export const PAIRING_DOORS: readonly PairingDoor[] = ["lan-http", "tls"];
+
+/** The listener each pairing door is served on. */
+export const DOOR_LISTENERS: Record<PairingDoor, { onListener: ListenerKind }> = {
+  "lan-http": { onListener: "boot-http" },
+  tls: { onListener: "console-https" },
+};
+
+/** The URL namespaces reserved for device-specific endpoints (`stolos:DevicePath`; 103-three-ports FR-003). */
+export type DevicePathKind = "pair";
+
+/** Every {@link DevicePathKind}, in the ontology's order. */
+export const DEVICE_PATH_KINDS: readonly DevicePathKind[] = ["pair"];
+
+/** Each device path's URL prefix. */
+export const DEVICE_PATHS: Record<DevicePathKind, { pathPrefix: string }> = {
+  pair: { pathPrefix: "/device/pair" },
+};
+
+/** The URL prefix of pairing, `/device/pair`: every pairing route is relative to it (spec 103-three-ports FR-003). */
+export const DEVICE_PAIR_PATH: string = DEVICE_PATHS.pair.pathPrefix;

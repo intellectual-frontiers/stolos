@@ -12,7 +12,9 @@
  * @module
  */
 // Spec: 100-remote-access FR-005, FR-008
+// Spec: 103-three-ports FR-009
 
+import type { AccessFacts } from "./doctor.ts";
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
@@ -348,13 +350,7 @@ export async function consoleNamesSetup(
 }
 
 /** The doctor's view of remote access, read from this PC (no network). */
-export async function accessFacts(): Promise<{
-  configured: boolean;
-  listening?: { address: string; port: number; at: string };
-  notAfter?: string;
-  unused: number;
-  devices: number;
-}> {
+export async function accessFacts(): Promise<AccessFacts> {
   const { loadFleet } = await import("../model/load.ts");
   const { readSecret } = await import("../core/secrets.ts");
   const { parseTls } = await import("./tls.ts");

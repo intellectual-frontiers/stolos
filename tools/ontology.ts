@@ -70,17 +70,63 @@ export function unionsText(): string {
  * @module
  */
 `;
-  for (const [type, c] of Object.entries(CODE_LISTS)) {
+  for (const [type, c] of Object.entries<CodeListEntry>(CODE_LISTS)) {
     const keys = Object.keys(c.list).map((k) => JSON.stringify(k));
     const cited = [
       ...new Set(Object.values<rdf.AnyIndividual>(c.list).flatMap((i) => specsOf(i))),
     ].join(", ");
-    out += `\n/** ${c.what} (\`stolos:${type}\`; ${cited}). */\n`;
+    out += `\n/** ${c.what} (\`stolos:${c.class ?? type}\`; ${cited}). */\n`;
     out += fitted(`export type ${type} = `, keys, "", "", " | ", "|");
     out += `\n/** Every {@link ${type}}, in the ontology's order. */\n`;
     out += fitted(`export const ${c.array}: readonly ${type}[] = `, keys, "[", "]", ", ", ",");
+    if (c.data) out += dataText(type, c, c.data);
   }
   return out;
+}
+
+/** A code list in `CODE_LISTS`: its generated array, and optionally the facts of each code written as typed data. */
+type CodeListEntry = {
+  readonly class?: string;
+  readonly array: string;
+  readonly list: Readonly<Record<string, rdf.AnyIndividual>>;
+  readonly what: string;
+  readonly data?: {
+    readonly name: string;
+    readonly doc: string;
+    readonly fields: Readonly<Record<string, string>>;
+    /** Text written after the record (a named constant read from it). */
+    readonly after?: string;
+  };
+};
+
+/** The facts of each code of a list (its `data` fields) as a typed record, for example the listeners' protocols and ports. */
+function dataText(
+  type: string,
+  c: CodeListEntry,
+  data: NonNullable<CodeListEntry["data"]>,
+): string {
+  const shape = Object.entries(data.fields)
+    .map(([k, t]) => `${k}: ${t}`)
+    .join("; ");
+  const rows = Object.entries(c.list).map(([key, i]) => {
+    const values = (i as unknown as { values: Record<string, unknown> }).values;
+    const fields = Object.keys(data.fields).map((f) => {
+      const v = values[f];
+      // A reference to another code: the key of that code in its own list.
+      if (typeof v === "object" && v !== null && "iri" in v)
+        return `${f}: ${JSON.stringify(keyOfIri(String(v.iri)))}`;
+      return `${f}: ${JSON.stringify(v)}`;
+    });
+    const name = /^[A-Za-z_$][\w$]*$/.test(key) ? key : JSON.stringify(key);
+    return `  ${name}: { ${fields.join(", ")} },`;
+  });
+  return `\n/** ${data.doc}. */\nexport const ${data.name}: Record<${type}, { ${shape} }> = {\n${rows.join("\n")}\n};\n${data.after ? `\n${data.after}\n` : ""}`;
+}
+
+/** The key of a code (its notation) from its IRI (`...#listener-boot-http` is `boot-http`). */
+function keyOfIri(iri: string): string {
+  const local = iri.slice(STOLOS.iri.length);
+  return local.slice(local.indexOf("-") + 1);
 }
 
 function specsOf(i: rdf.AnyIndividual): string[] {

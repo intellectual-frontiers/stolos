@@ -13,8 +13,11 @@ import {
   classes,
   CommandTierSchema,
   DataClassSchema,
+  DevicePathSchema,
+  DoorSchema,
   FileKindSchema,
   IntegrationKindSchema,
+  ListenerSchema,
   MachineKindSchema,
   OutcomeLevelSchema,
   properties,
@@ -65,6 +68,9 @@ export const citingSchemas = [
   DataClassSchema,
   IntegrationKindSchema,
   FileKindSchema,
+  ListenerSchema,
+  DoorSchema,
+  DevicePathSchema,
   RungSchema,
 ] as const;
 

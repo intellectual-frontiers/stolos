@@ -7,18 +7,21 @@
  *
  * @module
  */
+// Spec: 004-install
+// Spec: 103-three-ports FR-001
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { ArchonEvent } from "../telemetry/events.ts";
+import { standardPort } from "./listeners.ts";
 
 /**
  * POST `event` to the boot server on loopback (`port`, default
- * ARCHON_BOOT_PORT or 8080), waiting at most 1.5 seconds. Returns whether the
+ * ARCHON_BOOT_PORT or the boot server's standard port), waiting at most 1.5 seconds. Returns whether the
  * server accepted it; false when none is running.
  */
 export async function announce(
   event: Pick<ArchonEvent, "name" | "host" | "message" | "attrs">,
-  port = Number(proc.env.get("ARCHON_BOOT_PORT")) || 8080,
+  port = Number(proc.env.get("ARCHON_BOOT_PORT")) || standardPort("boot-http"),
 ): Promise<boolean> {
   try {
     const r = await fetch(`http://127.0.0.1:${port}/local/event`, {

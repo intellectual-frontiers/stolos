@@ -16,9 +16,11 @@
  * @module
  */
 // Spec: 004-install
+// Spec: 103-three-ports FR-003, FR-004, FR-005
 
 import { fs, type tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { explainHint } from "../archon/core/ui.ts";
+import { DEVICE_PAIR_PATH } from "../archon/ontology.auto.ts";
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import {
   FLEET_KEEP,
@@ -61,6 +63,11 @@ export interface ServeOptions {
    * leases, which installers change mid-install; it is a hint, not a guarantee.
    */
   stallWatch?: boolean;
+  /**
+   * Spec 103: pairing's routes (`/device/pair`), door A of the pairing: plain HTTP on this port, the same trust as PXE (Article 28).
+   * The handler answers `undefined` for a path that is not pairing's, and 404 while no pairing waits.
+   */
+  devicePair?: (req: Request) => Promise<Response | undefined>;
 }
 
 /** How long a machine's address stays tied to the host named in its Boot URI. */
@@ -206,6 +213,11 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
     // Everything the host is told to fetch next points back at the address it used.
     const base = `http://${req.headers.get("host") ?? `${url.hostname}:${o.port}`}/`;
     try {
+      // Spec 103: the pairing (/device/pair) is a route of this port, answered before anything of the boot's.
+      if (o.devicePair && (path === DEVICE_PAIR_PATH || path.startsWith(`${DEVICE_PAIR_PATH}/`))) {
+        const answered = await o.devicePair(req);
+        if (answered) return answered;
+      }
       // UEFI HTTP Boot: shim, then GRUB, kernel, initrd (Ubuntu's signed files).
       // A host's own Boot URI is /boot/<host>/bootx64.efi; shim then asks for
       // grubx64.efi next to it.

@@ -55,9 +55,13 @@ theirs: `stolos:ConsoleName`, `stolos:ConsoleDevice`, `stolos:Signer` and `stolo
   (`console/tls.json`, owner only, so every backup holds them) and are renewed when 30 days or
   fewer remain, at start and daily while serving. The DNS provider, the ACME directory and `fetch`
   are injected, so tests run against fakes.
-- **FR-003** Listener. `stolos console --lan` serves HTTPS on this PC's LAN address, port 443, else
-  8443, beside the 127.0.0.1 listener and its launch link (unchanged). The Host check accepts the
-  two names. Constitution Article 28: only a private or mesh address (RFC 1918, 100.64.0.0/10) is
+- **FR-003** Listener. `stolos console --lan` serves HTTPS on this PC's LAN address, TCP 443 and no
+  other automatic port (constitution Article 29, spec 103-three-ports: there is no fallback), beside
+  the 127.0.0.1 listener and its launch link (unchanged). Where 443 cannot be bound, it refuses to
+  listen and says what holds the port and the fix; `--lan-port <n>` is an explicit choice outside the
+  three standard ports, which prints its own firewall rule. The Host check accepts the two names. On
+  these names the console also serves pairing's routes (`/device/pair`, spec 098), with no session.
+  Constitution Article 28: only a private or mesh address (RFC 1918, 100.64.0.0/10) is
   ever bound; with none, it refuses and says why. The doctor checks the firewall (Private and
   Domain profiles only) and shows the exact command as ⚡.
 - **FR-004** Registration. An unknown browser on an HTTPS name picks its signer (from
@@ -106,8 +110,9 @@ theirs: `stolos:ConsoleName`, `stolos:ConsoleDevice`, `stolos:Signer` and `stolo
   does not send it again. Every event is also an activity record (kind `access`). No secret in any
   of them.
 - **FR-012** Doctor and policy. `boot doctor` shows remote access: the LAN listener on or off, the
-  certificate's expiry (⚡ under 14 days), devices unused for 90 days (⚡), and the firewall rule
-  (⚡). The controller's policy pack (spec 097) adds "remote access: HTTPS with a valid certificate,
+  certificate's expiry (⚡ under 14 days), devices unused for 90 days (⚡), the firewall rule
+  (⚡), and, where the console is not serving and TCP 443 cannot be bound, what holds it and the fix
+  (spec 103-three-ports). The controller's policy pack (spec 097) adds "remote access: HTTPS with a valid certificate,
   devices reviewed within 90 days".
 - **FR-013** Compliance. The access evidence is labelled with SCF controls already in the catalog:
   CRY-05 (TLS), IAC-14 (passkeys, per person), IAC-12 (devices reviewed), IAC-30 (least privilege:

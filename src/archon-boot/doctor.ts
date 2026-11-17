@@ -8,6 +8,7 @@
  */
 // Spec: 099-engine-update FR-006, FR-007
 // Spec: 100-remote-access FR-012
+// Spec: 103-three-ports FR-001, FR-009, FR-011
 
 import { fs, path, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
@@ -15,6 +16,8 @@ import { P } from "../archon/core/paths.ts";
 import { ui } from "../archon/core/ui.ts";
 import { liveToken, loadTokens, SECRETS } from "../archon/core/secrets.ts";
 import { lanAddresses } from "../archon/core/net.ts";
+import { standardPort } from "../archon/core/listeners.ts";
+import { HEARTBEAT_STALE_MS } from "../archon/access/tls.ts";
 import { HOST_KEY_TYPES } from "../archon/install/host-keys.ts";
 import { cacheDir } from "./assets.ts";
 import { UBUNTU } from "./pins.ts";
@@ -177,7 +180,7 @@ export async function doctor(o: {
   if (!up) {
     for (const [proto, port] of [
       ["TCP", o.port],
-      ["UDP", 69],
+      ["UDP", standardPort("boot-tftp")],
     ] as const) {
       try {
         if (proto === "TCP") (await tcp.listen({ port, hostname: "0.0.0.0" })).close();
@@ -194,7 +197,7 @@ export async function doctor(o: {
         const code = (e as { code?: string }).code ?? (e as Error).name;
         n.fail(
           `${proto} port ${port} is not free (${code})`,
-          port === 69
+          port === standardPort("boot-tftp")
             ? "stop the other TFTP server (Tftpd64, Windows Deployment Services)"
             : `stop what uses port ${port}, or use --port`,
         );
@@ -211,7 +214,7 @@ export async function doctor(o: {
   const f = ui.phase("Firewall");
   const warnings = await firewallWarnings([
     { protocol: "TCP", port: o.port, what: "HTTP" },
-    { protocol: "UDP", port: 69, what: "TFTP" },
+    { protocol: "UDP", port: standardPort("boot-tftp"), what: "TFTP" },
   ]);
   for (const w of warnings) f.warn(w);
   f.done(warnings.length ? "see the warnings" : "allows TFTP and HTTP (or no firewall to check)");
@@ -224,7 +227,15 @@ export async function doctor(o: {
     const { accessDoctor } = await import("../archon/access/doctor.ts");
     const { proc } = await import("@intellectual-frontiers/commons/ts/runtime");
     const facts = await accessFacts();
-    const port = facts.listening?.port ?? 443;
+    const port = facts.listening?.port ?? standardPort("console-https");
+    // Spec 103: where the console is not serving, can it have TCP 443? If not, what holds it.
+    const live =
+      facts.listening && Date.now() - Date.parse(facts.listening.at) < HEARTBEAT_STALE_MS;
+    if (facts.configured && !live) {
+      const { bindProblem, portHolder } = await import("../archon/access/holder.ts");
+      const code = await bindProblem(port);
+      if (code) facts.blocked = { port, code, holder: await portHolder(port) };
+    }
     const fw = facts.configured
       ? await firewallWarnings([{ protocol: "TCP", port, what: "Stolos Console (HTTPS)" }])
       : [];

@@ -8,8 +8,10 @@
  * @module
  */
 // Spec: 004-install
+// Spec: 103-three-ports FR-001, FR-004, FR-011
 
 import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { standardPort } from "../archon/core/listeners.ts";
 
 /** Answers one request; `from` is the client's address. */
 export type Handler = (req: Request, from: string) => Promise<Response>;
@@ -159,18 +161,20 @@ async function serveConn(conn: tcp.Conn, handler: Handler, port: number): Promis
 
 /**
  * Listen on `port` on `hostname` (every IPv4 address by default: the machines being installed
- * reach this PC over the LAN) and serve each connection with `handler` in the background.
- * Returns the listener so the caller can close it.
+ * reach this PC over the LAN) and serve each connection with `handler` in the background. An
+ * undefined `port` is the standard one, the ontology's `boot-http` (TCP 8080, Article 29); any other
+ * is the caller's explicit choice. Returns the listener so the caller can close it.
  */
 export async function listen(
-  port: number,
+  port: number | undefined,
   handler: Handler,
   hostname = "0.0.0.0",
 ): Promise<tcp.Listener> {
-  const listener = await tcp.listen({ port, hostname });
+  const bound = port ?? standardPort("boot-http");
+  const listener = await tcp.listen({ port: bound, hostname });
   void (async (): Promise<void> => {
     try {
-      for await (const conn of listener) void serveConn(conn, handler, port);
+      for await (const conn of listener) void serveConn(conn, handler, bound);
     } catch {
       /* closed */
     }

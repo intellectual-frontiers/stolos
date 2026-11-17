@@ -28,6 +28,7 @@
 // Spec: 066-stolos-console
 // Spec: 099-engine-update FR-002, FR-005
 // Spec: 100-remote-access FR-003, FR-007, FR-009
+// Spec: 103-three-ports FR-003, FR-004, FR-005
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { type Askpass, type Question, sameToken } from "./askpass.ts";
@@ -43,6 +44,7 @@ import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
 import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
 import { formText, type Html, html, raw } from "./html.ts";
 import { ui } from "../core/ui.ts";
+import { DEVICE_PAIR_PATH } from "../ontology.auto.ts";
 import { bare, page } from "./layout.ts";
 import {
   actionsView,
@@ -220,6 +222,11 @@ export interface StolosDeps {
   scope?: { label: string; href: string };
   /** Spec 100: remote access over HTTPS on the LAN (absent: this PC only). */
   remote?: ConsoleRemote;
+  /**
+   * Spec 103: pairing's routes (`/device/pair`), answered on the HTTPS names only, before any session or passkey, never on 127.0.0.1
+   * (the handler answers `undefined` for a path that is not pairing's; with no pairing waiting it answers 404).
+   */
+  devicePair?: (req: Request) => Promise<Response | undefined>;
 }
 
 /**
@@ -581,6 +588,11 @@ export function stolosHandler(
     const lan = !local.has(host);
     const from = lan ? (info?.remoteAddr.hostname ?? "?") : "this PC";
     const secure = url.protocol === "https:";
+    // Spec 103: pairing is a route of the console's TLS door, for its LAN names (the Host check above held), with no session.
+    if (path === DEVICE_PAIR_PATH || path.startsWith(`${DEVICE_PAIR_PATH}/`)) {
+      const answer = lan && deps.devicePair ? await deps.devicePair(req) : undefined;
+      return answer ?? new Response("not found\n", { status: 404 });
+    }
     if (lan && (path === "/launch" || path === "/audit/launch" || path === "/askpass")) {
       return new Response("not here: this PC's own links work on 127.0.0.1 only\n", {
         status: 404,

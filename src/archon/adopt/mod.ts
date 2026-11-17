@@ -21,12 +21,15 @@
  * bun run stolos pair
  * ```
  *
- * It shows one short line and a code (spec 098):
+ * It shows one short line per door that is up, HTTPS first, and a code (specs 098 and 103-three-ports):
  *
  * ```text
- *   On the machine, run:
- *     Linux, macOS, WSL:   curl -fsSL http://10.0.0.5:7457 | sh
- *     Windows (admin):     irm http://10.0.0.5:7457/w | iex
+ *   On the machine, run (over HTTPS, the console's TLS door, when `stolos console --lan` serves):
+ *     Linux, macOS, WSL:   curl -fsSL https://stolos.lab.example.net/device/pair | sh
+ *     Windows (admin):     irm https://stolos.lab.example.net/device/pair/w | iex
+ *   or over this LAN's plain HTTP (the boot server's port):
+ *     Linux, macOS, WSL:   curl -fsSL http://10.0.0.5:8080/device/pair | sh
+ *     Windows (admin):     irm http://10.0.0.5:8080/device/pair/w | iex
  *
  *   Then type this code:   WDJB-MJHT      (expires in 10 minutes)
  * ```
@@ -35,8 +38,20 @@
  * sends its check-in back. On the PC you see its name, OS, address and SSH host key, and approve it;
  * it is then adopted, with nothing copied by hand. The code signs every message both ways
  * (HMAC-SHA256), so a machine without it cannot join and no one else can answer in the PC's place.
- * One machine per code; 5 wrong codes end it. `--name` names it (default: its hostname), `--owner`
- * says whose it is.
+ * One machine per code; 5 wrong codes end it (counted over both doors together). `--name` names it
+ * (default: its hostname), `--owner` says whose it is.
+ *
+ * ### Three ports, two doors, `/device/pair`
+ *
+ * This PC opens only UDP 69 and TCP 8080 (the boot server) and TCP 443 (the console over TLS):
+ * constitution Article 29. Pairing is a route on two of them, `/device/pair`: **door A**, plain HTTP on
+ * TCP 8080 (the boot server's, when `boot serve` runs; otherwise `stolos pair` serves just those routes
+ * there itself, no TFTP and no Ubuntu downloads), and **door B**, the console's TLS on TCP 443, only on
+ * its LAN names and only while `stolos console --lan` serves. Both answer from one short-lived,
+ * owner-only file `stolos pair` writes in this PC's secrets folder, so the five tries are shared and
+ * the person still approves in the terminal. Without a pairing waiting, `/device/pair` answers 404.
+ * `--port <n>` is an explicit choice of another port: the command says it is outside the three and
+ * prints its firewall rule.
  *
  * ### Networks: the LAN, or a zero trust mesh
  *
@@ -44,7 +59,7 @@
  * like PXE and HTTP Boot. A machine that is not on the LAN joins over a zero trust mesh network
  * (Tailscale, Headscale, NetBird, ZeroTier, Nebula, or WireGuard by hand: encrypted end to end, each
  * device known by its identity, access by policy). Stolos installs none of them; `bun run stolos mesh`
- * lists the choices and this PC's mesh addresses. Give the PC's mesh address, `bun run stolos pair --address 100.64.0.5`. Never open the port to the internet.
+ * lists the choices and this PC's mesh addresses. Give the PC's mesh address, `bun run stolos pair --address 100.64.0.5`. Never open a port to the internet.
  *
  * ## One line on the machine, without pairing
  *
@@ -283,5 +298,6 @@
  */
 // Spec: 097-controller
 // Spec: 098-pair
+// Spec: 103-three-ports FR-012
 
 export {};

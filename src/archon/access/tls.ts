@@ -13,6 +13,7 @@
  * @module
  */
 // Spec: 100-remote-access FR-002, FR-003
+// Spec: 103-three-ports FR-009
 
 import {
   type ARecord,
@@ -21,6 +22,7 @@ import {
   type TxtRecord,
   upsertRecords,
 } from "../web/cloudflare.ts";
+import { standardPort } from "../core/listeners.ts";
 import type { ConsoleNames } from "./names.ts";
 
 /** How often the heartbeat is refreshed while the console serves (5 minutes). */
@@ -35,8 +37,8 @@ export const RENEW_DAYS = 30;
 /** The doctor warns (⚡) when fewer than this many days remain. */
 export const EXPIRY_WARN_DAYS = 14;
 
-/** The ports tried for HTTPS, in order. */
-export const HTTPS_PORTS = [443, 8443];
+/** The console's HTTPS port: the ontology's `console-https` listener (Article 29). There is no other automatic port. */
+export const HTTPS_PORT = standardPort("console-https");
 
 /** The console's certificate as the vault keeps it (`console/tls.json`). */
 export interface TlsMaterial {

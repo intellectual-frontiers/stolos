@@ -10,10 +10,12 @@
  *
  * @module
  */
+// Spec: 103-three-ports FR-001
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { standardPort } from "./listeners.ts";
 
-/** The boot server's default HTTP port. */
-export const BOOT_PORT = 8080;
+/** The boot server's default HTTP port: the ontology's `boot-http` listener (spec 103-three-ports FR-001). */
+export const BOOT_PORT = standardPort("boot-http");
 
 /** Virtual adapters (WSL, Hyper-V, containers, VPNs) come after real ones. */
 const VIRTUAL =

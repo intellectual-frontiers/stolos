@@ -7,11 +7,13 @@
  * @module
  */
 // Spec: 100-remote-access FR-003
+// Spec: 103-three-ports FR-001, FR-009, FR-011
 
 import { createServer, type Server as HttpsServer } from "node:https";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
+import { standardPort } from "../core/listeners.ts";
 import type { Server, ServeHandler } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** The certificate and key the listener serves (PEM). */
@@ -112,18 +114,20 @@ function listen(server: HttpsServer, port: number, hostname: string): Promise<Ad
 }
 
 /**
- * Listen with TLS on `hostname:port`; rejects when the port is taken or not allowed. A new
+ * Listen with TLS on `hostname:port` (443, the ontology's `console-https`, unless the caller passes an explicit port); rejects when
+ * the port is taken or not allowed, with the error's `code`: there is no other port to fall back to (Article 29). A new
  * certificate is put in place without a restart of the console: in place where the runtime can
  * (Node's `setSecureContext`), else by listening again on the same port with it (Bun), the
  * connections already open finishing on the old one.
  */
 export async function serveTls(
-  o: { hostname: string; port: number } & TlsPair,
+  o: { hostname: string; port?: number } & TlsPair,
   handler: ServeHandler,
 ): Promise<TlsServer> {
-  const host = `${o.hostname}:${o.port}`;
+  const port = o.port ?? standardPort("console-https");
+  const host = `${o.hostname}:${port}`;
   let server = tlsServer(o, host, handler);
-  const a = await listen(server, o.port, o.hostname);
+  const a = await listen(server, port, o.hostname);
   let done: () => void = () => undefined;
   const finished = new Promise<void>((resolve) => (done = resolve));
   let stopped = false;

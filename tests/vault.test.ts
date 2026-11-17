@@ -456,6 +456,9 @@ proves(
       SECRETS.tokens,
       SECRETS.exportMail("acme"),
       SECRETS.consoleTls,
+      SECRETS.pairing,
+      `${SECRETS.pairing}-lock`,
+      `${SECRETS.pairing}-tmp`,
     ];
     // Every SECRETS entry is among them (a new one must be added here and to the inventory).
     const keys = Object.keys(SECRETS).filter((k) => k !== "dir");
@@ -468,6 +471,7 @@ proves(
       "exportMail",
       "hostKey",
       "mail",
+      "pairing",
       "tokens",
       "web",
     ]);

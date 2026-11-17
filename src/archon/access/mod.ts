@@ -17,6 +17,18 @@
  * backup) and renewed 30 days before it expires. It never listens on a public address (Article 28):
  * from outside the LAN, use a zero trust mesh network (`bun run stolos mesh`).
  *
+ * ## Port 443 only
+ *
+ * The console's LAN listener is TCP 443, one of the three ports this PC opens (constitution Article
+ * 29: UDP 69 and TCP 8080 for the boot server, TCP 443 here), and the only port it tries: there is no
+ * fallback. If 443 is in use or not allowed, `console --lan` refuses to listen and says what holds the
+ * port (Windows: `Get-NetTCPConnection -LocalPort 443 -State Listen`; Linux: `ss -ltnp`; macOS: `lsof
+ * -iTCP:443 -sTCP:LISTEN`) and the fix; `boot doctor` reports the same. `bun run stolos console --lan
+ * --lan-port <n>` is the explicit choice of another port: it says it is outside the three standard
+ * ports and prints its own firewall rule. On these names the console also serves pairing at
+ * `/device/pair` (door B, spec 098 and 103-three-ports): no session or passkey, only while a pairing
+ * waits, and never on the 127.0.0.1 listener.
+ *
  * ## Signing in from a device
  *
  * There is no password. A device makes a passkey, and a fleet signer approves it with a signed
@@ -68,5 +80,6 @@
  * @module
  */
 // Spec: 100-remote-access
+// Spec: 103-three-ports FR-009, FR-012
 
 export {};

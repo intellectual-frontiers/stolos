@@ -6,7 +6,10 @@
  * @module
  */
 // Spec: 100-remote-access FR-012
+// Spec: 103-three-ports FR-009
 
+import { firewallRule, standardPort } from "../core/listeners.ts";
+import { listenRefusal } from "./holder.ts";
 import { EXPIRY_WARN_DAYS, daysLeft, HEARTBEAT_STALE_MS } from "./tls.ts";
 import { UNUSED_DAYS } from "./devices.ts";
 
@@ -22,6 +25,8 @@ export interface AccessFacts {
   unused: number;
   /** Approved devices. */
   devices: number;
+  /** TCP 443 cannot be bound on this PC (the error's code), and what holds it where that could be found (spec 103-three-ports). */
+  blocked?: { port: number; code: string; holder?: string | undefined };
 }
 
 /** One line of the doctor's "Remote access" phase. */
@@ -39,9 +44,7 @@ export interface DoctorLine {
  * (never Public): Windows Defender Firewall, else ufw.
  */
 export function consoleFirewallCommand(os: string, port: number): string {
-  return os === "windows"
-    ? `New-NetFirewallRule -DisplayName "Stolos Console (HTTPS)" -Direction Inbound -Protocol TCP -LocalPort ${port} -Profile Private,Domain -Action Allow (PowerShell as Administrator)`
-    : `sudo ufw allow from 10.0.0.0/8 to any port ${port} proto tcp (and 172.16.0.0/12, 192.168.0.0/16: your LAN, never the internet)`;
+  return firewallRule(os, "tcp", port, "Console (HTTPS)");
 }
 
 /** The doctor's lines for remote access. `firewall` is what the firewall check said for the port. */
@@ -67,6 +70,10 @@ export function accessDoctor(
       ? `LAN listener on: https on ${f.listening?.address}:${f.listening?.port}`
       : "LAN listener off (the console is not running with --lan)",
   });
+  if (!live && f.blocked) {
+    const r = listenRefusal({ ...f.blocked, os });
+    out.push({ level: "action", msg: r.why, fix: r.fix });
+  }
   if (f.notAfter) {
     const left = daysLeft(f.notAfter, now);
     if (left < EXPIRY_WARN_DAYS) {
@@ -93,8 +100,8 @@ export function accessDoctor(
   if (firewall.length) {
     out.push({
       level: "action",
-      msg: `the firewall may block the console's HTTPS port (${f.listening?.port ?? 443}/tcp) on the LAN`,
-      fix: consoleFirewallCommand(os, f.listening?.port ?? 443),
+      msg: `the firewall may block the console's HTTPS port (${f.listening?.port ?? standardPort("console-https")}/tcp) on the LAN`,
+      fix: consoleFirewallCommand(os, f.listening?.port ?? standardPort("console-https")),
     });
   }
   return out;

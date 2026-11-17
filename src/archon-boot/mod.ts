@@ -49,11 +49,23 @@
  * Plain HTTP and TFTP are deliberate (constitution Article 28): the boot server runs on a network
  * the fleet trusts, the site's LAN, and every file it serves is checked (pinned SHA-256s, a signed
  * commit). A machine elsewhere is reached over a zero trust mesh network (Tailscale, NetBird, ZeroTier,
- * Nebula, WireGuard, or similar; `stolos mesh` explains the choice), never by opening these ports to the internet. `stolos pair` (TCP 7457, spec 098) follows the same
- * rule; allow it the same way when you pair machines:
+ * Nebula, WireGuard, or similar; `stolos mesh` explains the choice), never by opening these ports to the internet.
+ *
+ * ## The three ports (constitution Article 29)
+ *
+ * This PC opens inbound only **UDP 69** and **TCP 8080** (this boot server, because firmware speaks only plain TFTP
+ * and HTTP) and **TCP 443** (the Stolos Console over TLS, `stolos console --lan`, spec 100). Every other exchange is a route on
+ * one of them or is loopback-only: pairing (spec 098) is `/device/pair` on TCP 8080 (plain HTTP, the same trust as PXE) and,
+ * when the console serves the LAN, on TCP 443 (TLS); the REST API and the passphrase helper answer on the loopback
+ * console. The three ports are facts of the ontology (`stolos:Listener`). TFTP's data transfers use a
+ * per-transfer UDP port, as TFTP requires, and the firewall tracks the replies: there is nothing to open for them. A port
+ * other than these is your explicit choice (`--port`, `--tftp-port`, `console --lan --lan-port`): the command says it is
+ * outside the three and prints its own firewall rule.
+ *
+ * Allow the console's TCP 443 the same way, on private networks only, if you serve it on the LAN:
  *
  * ```powershell
- * New-NetFirewallRule -DisplayName "Stolos pair" -Direction Inbound -Protocol TCP -LocalPort 7457 -Profile Private,Domain -Action Allow
+ * New-NetFirewallRule -DisplayName "Stolos Console (HTTPS)" -Direction Inbound -Protocol TCP -LocalPort 443 -Profile Private,Domain -Action Allow
  * ```
  *
  * ## Give this PC a fixed address (once)
@@ -342,5 +354,6 @@
  * @module
  */
 // Spec: 003-identity
+// Spec: 103-three-ports FR-012
 
 export {};

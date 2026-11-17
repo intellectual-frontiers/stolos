@@ -59,6 +59,16 @@ stolos:Device a owl:Class ;
     skos:definition "A printer, router, switch or other appliance, read over SNMP."@en ;
     stolos:spec "069-integrate FR-005" .
 
+stolos:DevicePath a owl:Class ;
+    rdfs:label "Device path"@en ;
+    skos:definition "A URL path prefix under `/device/`, the namespace reserved for device-specific endpoints on the controller's listeners; pairing is the first."@en ;
+    stolos:spec "103-three-ports FR-003" .
+
+stolos:Door a owl:Class ;
+    rdfs:label "Door"@en ;
+    skos:definition "A way a machine reaches the pairing: plain HTTP on the boot server's port (the same trust as PXE) or TLS on the console's port, both serving one handler."@en ;
+    stolos:spec "103-three-ports FR-004" .
+
 stolos:EngineRelease a owl:Class ;
     rdfs:label "Engine release"@en ;
     skos:definition "A version of Stolos, a tag v<version> on the engine's main, that a fleet pins and stolos update adopts."@en ;
@@ -90,6 +100,11 @@ stolos:IntegrationKind a owl:Class ;
     rdfs:label "Integration kind"@en ;
     skos:definition "What a machine integrates as: discovered, adopted, with osquery, as a server or as a workstation."@en ;
     stolos:spec "069-integrate" .
+
+stolos:Listener a owl:Class ;
+    rdfs:label "Listener"@en ;
+    skos:definition "One of the three sockets the controller PC opens for Stolos (UDP 69 and TCP 8080 for the boot server, TCP 443 for the console over TLS): its protocol and port. Every other exchange is a route on one of them or is loopback-only (Article 29)."@en ;
+    stolos:spec "103-three-ports FR-001, FR-002" .
 
 stolos:MachineKind a owl:Class ;
     rdfs:label "Machine kind"@en ;
@@ -149,6 +164,27 @@ stolos:data-ephemeral a stolos:DataClass ;
     skos:definition "Losing it is harmless."@en ;
     skos:notation "ephemeral" ;
     stolos:spec "044-durable FR-001" .
+
+stolos:devicepath-pair a stolos:DevicePath ;
+    rdfs:label "pair"@en ;
+    skos:definition "Pairing: the scripts, the hello and the check-in of a machine joining the fleet. `/device/` is reserved for device-specific endpoints; pairing is the first."@en ;
+    skos:notation "pair" ;
+    stolos:pathPrefix "/device/pair" ;
+    stolos:spec "103-three-ports FR-003" .
+
+stolos:door-lan-http a stolos:Door ;
+    rdfs:label "LAN HTTP"@en ;
+    skos:definition "Plain HTTP on the boot server's port, on a trusted network (Article 28): the boot server's own, or a pair-only server `stolos pair` runs when boot serve is not."@en ;
+    skos:notation "lan-http" ;
+    stolos:onListener stolos:listener-boot-http ;
+    stolos:spec "103-three-ports FR-004" .
+
+stolos:door-tls a stolos:Door ;
+    rdfs:label "TLS"@en ;
+    skos:definition "TLS on the console's port, for the console's LAN names only, when `stolos console --lan` is serving."@en ;
+    skos:notation "tls" ;
+    stolos:onListener stolos:listener-console-https ;
+    stolos:spec "103-three-ports FR-004" .
 
 stolos:emoji a owl:DatatypeProperty ;
     rdfs:domain stolos:OutcomeLevel ;
@@ -249,12 +285,46 @@ stolos:kind-workstation a stolos:MachineKind ;
     skos:notation "workstation" ;
     stolos:spec "020-workstation" .
 
+stolos:listener-boot-http a stolos:Listener ;
+    rdfs:label "boot HTTP"@en ;
+    skos:definition "The boot server's plain HTTP (UEFI HTTP Boot and GRUB speak only plain HTTP); also door A of pairing."@en ;
+    skos:notation "boot-http" ;
+    stolos:port 8080 ;
+    stolos:protocol "tcp" ;
+    stolos:spec "103-three-ports FR-001",
+        "103-three-ports FR-004" .
+
+stolos:listener-boot-tftp a stolos:Listener ;
+    rdfs:label "boot TFTP"@en ;
+    skos:definition "The boot server's TFTP (PXE firmware speaks only plain TFTP)."@en ;
+    skos:notation "boot-tftp" ;
+    stolos:port 69 ;
+    stolos:protocol "udp" ;
+    stolos:spec "103-three-ports FR-001" .
+
+stolos:listener-console-https a stolos:Listener ;
+    rdfs:label "console HTTPS"@en ;
+    skos:definition "The Stolos Console over TLS, on the LAN names; also door B of pairing."@en ;
+    skos:notation "console-https" ;
+    stolos:port 443 ;
+    stolos:protocol "tcp" ;
+    stolos:spec "100-remote-access FR-003",
+        "103-three-ports FR-001",
+        "103-three-ports FR-004" .
+
 stolos:mayRelyOn a owl:ObjectProperty ;
     rdfs:domain stolos:Rung ;
     rdfs:label "may rely on"@en ;
     rdfs:range stolos:Rung ;
     skos:definition "A lower rung this rung may import from (spec 101-ladder FR-003)."@en ;
     stolos:spec "101-ladder FR-003" .
+
+stolos:onListener a owl:ObjectProperty ;
+    rdfs:domain stolos:Door ;
+    rdfs:label "on listener"@en ;
+    rdfs:range stolos:Listener ;
+    skos:definition "The listener a pairing door is served on."@en ;
+    stolos:spec "103-three-ports FR-004" .
 
 stolos:outcome-action a stolos:OutcomeLevel ;
     rdfs:label "action"@en ;
@@ -295,6 +365,27 @@ stolos:outcome-warning a stolos:OutcomeLevel ;
     stolos:ascii "[!]" ;
     stolos:emoji "⚠️" ;
     stolos:spec "019-output" .
+
+stolos:pathPrefix a owl:DatatypeProperty ;
+    rdfs:domain stolos:DevicePath ;
+    rdfs:label "path prefix"@en ;
+    rdfs:range xsd:string ;
+    skos:definition "The URL path prefix, with a leading slash and no trailing one."@en ;
+    stolos:spec "103-three-ports FR-003" .
+
+stolos:port a owl:DatatypeProperty ;
+    rdfs:domain stolos:Listener ;
+    rdfs:label "port"@en ;
+    rdfs:range xsd:integer ;
+    skos:definition "The listener's standard port number (the engine's default for it)."@en ;
+    stolos:spec "103-three-ports FR-002" .
+
+stolos:protocol a owl:DatatypeProperty ;
+    rdfs:domain stolos:Listener ;
+    rdfs:label "protocol"@en ;
+    rdfs:range xsd:string ;
+    skos:definition "The listener's transport: `tcp` or `udp`."@en ;
+    stolos:spec "103-three-ports FR-002" .
 
 stolos:provedBy a owl:DatatypeProperty ;
     rdfs:domain stolos:Rung ;

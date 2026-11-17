@@ -2,7 +2,6 @@
 # It only shrinks: when you fix one, delete its line. Never add a line to make the check pass.
 trace/no-spec-line src/archon-boot/assets.ts
 trace/no-spec-line src/archon-boot/mail.ts
-trace/no-spec-line src/archon-boot/main.ts
 trace/no-spec-line src/archon-boot/pins.ts
 trace/no-spec-line src/archon-boot/web.ts
 trace/no-spec-line src/archon/apply/apply.ts
@@ -35,12 +34,10 @@ trace/no-spec-line src/archon/controls/commands.ts
 trace/no-spec-line src/archon/controls/core.ts
 trace/no-spec-line src/archon/controls/define.ts
 trace/no-spec-line src/archon/controls/testing.ts
-trace/no-spec-line src/archon/core/announce.ts
 trace/no-spec-line src/archon/core/clock.ts
 trace/no-spec-line src/archon/core/guides.ts
 trace/no-spec-line src/archon/core/lock.ts
 trace/no-spec-line src/archon/core/log.ts
-trace/no-spec-line src/archon/core/net.ts
 trace/no-spec-line src/archon/core/secret-ledger.ts
 trace/no-spec-line src/archon/core/share.ts
 trace/no-spec-line src/archon/core/status.ts
