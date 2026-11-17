@@ -12,6 +12,7 @@
 // Spec: 101-ladder FR-006
 // Spec: 107-pairing-and-query FR-007, FR-008
 // Spec: 108-tags FR-014
+// Spec: 112-machine-reported-tags FR-011, FR-013, FR-014, FR-015
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -25,7 +26,7 @@ import type { PackRun } from "../controls/run.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
 import type { MachineKind, WayOfJoining } from "../ontology.auto.ts";
 import { wayOfJoining } from "../adopt/joining.ts";
-import type { ResolvedTag, TaggingView } from "../fleet/tags.ts";
+import type { ClaimView, ResolvedTag, TaggingView } from "../fleet/tags.ts";
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
@@ -76,6 +77,14 @@ export interface PcMachine {
   upToDate?: boolean;
   /** Its tags (spec 108-tags FR-014), each with its origin; free-form ones are marked custom. Absent where it has none. */
   tags?: ResolvedTag[];
+  /** Spec 112-machine-reported-tags FR-014: what it says about itself, and what the fleet did with it. Absent where it never reported. */
+  says?: ClaimView[];
+  /** Spec 112-machine-reported-tags FR-013: where it says another value than the fleet (the fleet wins), in words. */
+  disagreements?: string[];
+  /** Spec 112-machine-reported-tags FR-013: when it last reported (the evidence of its inventory's accuracy). */
+  reportedAt?: string;
+  /** Spec 112-machine-reported-tags FR-004: how many things it said were dropped (not tags, too long, over the cap). */
+  claimsDropped?: number;
 }
 
 /** One cloud account, observed. */
@@ -376,6 +385,11 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     for (const m of machines) {
       const t = ft.machines.find((x) => x.name === m.name);
       if (t?.resolved.tags.length) m.tags = t.resolved.tags;
+      if (t?.resolved.claims.length) m.says = t.resolved.claims;
+      if (t?.resolved.disagreements.length)
+        m.disagreements = t.resolved.disagreements.map((d) => d.text);
+      if (t?.report) m.reportedAt = t.report.at;
+      if (t?.claimsDropped) m.claimsDropped = t.claimsDropped;
     }
   }
   const tagging = ft

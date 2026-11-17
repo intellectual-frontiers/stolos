@@ -116,11 +116,34 @@ export type TagCardinality = "one-of" | "many-of";
 /** Every {@link TagCardinality}, in the ontology's order. */
 export const TAG_CARDINALITIES: readonly TagCardinality[] = ["one-of", "many-of"];
 
-/** Where a tag on a machine came from (`stolos:TagOrigin`; 108-tags FR-006, FR-008, FR-011, 108-tags FR-009, 108-tags FR-010). */
-export type TagOrigin = "person" | "rule" | "inherited";
+/** Where a tag on a machine came from (`stolos:TagOrigin`; 108-tags FR-006, FR-008, FR-011, 108-tags FR-009, 108-tags FR-010, 112-machine-reported-tags FR-001, FR-002, 112-machine-reported-tags FR-002). */
+export type TagOrigin = "person" | "rule" | "inherited" | "reported" | "announced";
 
 /** Every {@link TagOrigin}, in the ontology's order. */
-export const TAG_ORIGINS: readonly TagOrigin[] = ["person", "rule", "inherited"];
+export const TAG_ORIGINS: readonly TagOrigin[] = [
+  "person",
+  "rule",
+  "inherited",
+  "reported",
+  "announced",
+];
+
+/** What a fleet does with the tags machines report in one dimension (`stolos:TagTrust`; 112-machine-reported-tags FR-003). */
+export type TagTrust = "accept" | "hint" | "ignore";
+
+/** Every {@link TagTrust}, in the ontology's order. */
+export const TAG_TRUSTS: readonly TagTrust[] = ["accept", "hint", "ignore"];
+
+/** Where on a machine a reported tag was read (`stolos:TagSource`; 112-machine-reported-tags FR-005, 112-machine-reported-tags FR-007, 112-machine-reported-tags FR-008, 112-machine-reported-tags FR-006). */
+export type TagSource = "machine-info" | "archon-local" | "archon-fleet" | "smbios";
+
+/** Every {@link TagSource}, in the ontology's order. */
+export const TAG_SOURCES: readonly TagSource[] = [
+  "machine-info",
+  "archon-local",
+  "archon-fleet",
+  "smbios",
+];
 
 /** What an account's API is a kind of (an integration's kind) (`stolos:ApiKind`; 109-integrations-api FR-001). */
 export type ApiKind = "router" | "dns" | "email";

@@ -203,7 +203,8 @@ async function callTool(
   limit: McpTier,
   traceparent?: string,
 ): Promise<ToolResult> {
-  const c = COMMANDS.find((x) => !x.noMcp && mcpToolName(x) === name);
+  // Spec 112-machine-reported-tags: `tag add` is a command of the PC and of each machine: an agent reaches the machine's.
+  const c = COMMANDS.find((x) => !x.noMcp && x.place !== "pc" && mcpToolName(x) === name);
   if (!c) return { content: [{ type: "text", text: `unknown tool ${name}` }], isError: true };
   const human = c.args.find((a) => a.human && args[a.name] !== undefined);
   if (human) {

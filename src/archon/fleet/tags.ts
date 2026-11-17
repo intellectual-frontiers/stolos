@@ -17,14 +17,19 @@
  * @module
  */
 // Spec: 108-tags FR-002, FR-004, FR-005, FR-009, FR-010, FR-011, FR-013, FR-014, FR-015, FR-016
+// Spec: 112-machine-reported-tags FR-002, FR-003, FR-004, FR-010, FR-011, FR-013, FR-015
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import type { AdoptedDef } from "../adopt/adopt.ts";
 import type { loadFleet, loadHosts } from "../model/load.ts";
-export type { ResolvedTag, TagSet } from "../model/tags.ts";
+export type { ClaimView, ResolvedTag, TagSet } from "../model/tags.ts";
+export { isClaimOrigin, isUsed } from "../model/tags.ts";
+import { claimsFrom, type MachineReport } from "../model/reported.ts";
 import {
   idSet,
+  isClaimOrigin,
+  isUsed,
   matches,
   parseSelection,
   type ResolvedTag,
@@ -87,6 +92,12 @@ export interface TagMachine {
   home: { kind: "decisions" | "machine"; file: string };
   /** Its tags, resolved. */
   resolved: ResolvedTags;
+  /** Spec 112-machine-reported-tags FR-010: what it last reported about itself (the PC's observation cache), when it has. */
+  report?: MachineReport;
+  /** How many things it said that were dropped (malformed, too long, over the cap): a gap, never an error. */
+  claimsDropped: number;
+  /** What was dropped, in words (at most a few). */
+  gaps: string[];
 }
 
 /** What a caller that has loaded the model already hands on, so that it is not read twice. */
@@ -100,6 +111,11 @@ export interface FleetTagsSource {
     machine: AdoptedDef;
     observed?: { os: { family: string; name: string; version: string } };
   }>;
+  /**
+   * What machines reported about themselves, by name (spec 112-machine-reported-tags FR-010). Absent: read from this PC's observation
+   * cache (nothing where there is none); `{}`: no reports at all (the machine itself, working out the tags the fleet knows for it).
+   */
+  reports?: Record<string, MachineReport>;
 }
 
 /** The fleet's tags and machines. */
@@ -112,6 +128,16 @@ export interface FleetTags {
   machines: TagMachine[];
   /** The site's networks (name to prefix), for groups. */
   networks: Record<string, string>;
+}
+
+/** What this PC's observation cache holds of what machines reported (none where it cannot be read: that is no reason to fail). */
+async function cachedReports(): Promise<Record<string, MachineReport>> {
+  try {
+    const { lastReports } = await import("../state/reported.ts");
+    return await lastReports(P.state);
+  } catch {
+    return {};
+  }
 }
 
 /** The first word of the operating system family a probe reported, lowercase (`macos`, `windows`, `linux`). */
@@ -130,8 +156,17 @@ export async function loadFleetTags(src: FleetTagsSource = {}): Promise<FleetTag
   const networks: Record<string, string> = {};
   for (const n of fleet?.site?.networks ?? []) networks[n.name] = n.cidr;
   const machines: TagMachine[] = [];
-  const add = (m: Omit<TagMachine, "resolved">): void => {
-    machines.push({ ...m, resolved: resolveTags(set, m.facts, m.assigned, networks) });
+  const reports = src.reports ?? (await cachedReports());
+  const add = (m: Omit<TagMachine, "resolved" | "report" | "claimsDropped" | "gaps">): void => {
+    const report = reports[m.name];
+    const read = claimsFrom(report, set?.machineInfoMap);
+    machines.push({
+      ...m,
+      resolved: resolveTags(set, m.facts, m.assigned, networks, read.claims),
+      ...(report ? { report } : {}),
+      claimsDropped: read.dropped,
+      gaps: read.gaps,
+    });
   };
   for (const h of src.hosts ?? (await loadHosts().catch(() => []))) {
     const kind = h.kind === "workstation" ? "workstation" : "server";
@@ -219,30 +254,42 @@ export async function tagProblems(): Promise<TagProblem[]> {
 // ------------------------------------------------------------------------------ showing tags
 
 /** A tag for a line of text: a defined tag as its id, a free-form one marked (custom), an undefined one marked. */
-export function tagWord(t: Pick<ResolvedTag, "id" | "standing">): string {
+export function tagWord(t: Pick<ResolvedTag, "id" | "standing"> & Partial<ResolvedTag>): string {
+  const claim = t.origin !== undefined && isClaimOrigin(t.origin);
+  const mark = claim ? (t.trust === "accept" ? t.origin : `${t.origin} hint`) : "";
   return t.standing === "custom"
-    ? `${t.id} (custom)`
+    ? `${t.id} (custom${mark ? `, ${mark}` : ""})`
     : t.standing === "unknown"
       ? `${t.id} (not defined)`
-      : t.id;
+      : mark
+        ? `${t.id} (${mark})`
+        : t.id;
 }
 
 /** A machine's tags for one line: the defined ones, then the custom ones apart (`env:lab role:nas · custom: pilot`). */
-export function tagLine(tags: ReadonlyArray<Pick<ResolvedTag, "id" | "standing">>): string {
+export function tagLine(
+  tags: ReadonlyArray<Pick<ResolvedTag, "id" | "standing"> & Partial<ResolvedTag>>,
+): string {
   const defined = tags.filter((t) => t.standing !== "custom").map((t) => tagWord(t));
-  const custom = tags.filter((t) => t.standing === "custom").map((t) => t.id);
+  const custom = tags
+    .filter((t) => t.standing === "custom")
+    .map((t) => (t.origin !== undefined && isClaimOrigin(t.origin) ? tagWord(t) : t.id));
   return [defined.join(" "), custom.length ? `custom: ${custom.join(", ")}` : ""]
     .filter(Boolean)
     .join(" · ");
 }
 
 /** A tag's origin in words (`person`, `rule windows`, `inherited from servers-net`). */
-export function originWords(t: Pick<ResolvedTag, "origin" | "from">): string {
+export function originWords(
+  t: Pick<ResolvedTag, "origin" | "from"> & Partial<ResolvedTag>,
+): string {
   return t.origin === "person"
     ? "person"
     : t.origin === "rule"
       ? `rule ${t.from ?? ""}`.trim()
-      : `inherited from ${t.from ?? "a group"}`;
+      : t.origin === "reported" || t.origin === "announced"
+        ? `${t.origin} by the machine${t.from ? ` (${t.from})` : ""}, ${t.trust === "accept" ? "accepted by the fleet" : "a hint"}`
+        : `inherited from ${t.from ?? "a group"}`;
 }
 
 /** A tag as a record for JSON, a CSV or evidence: always says whether it is custom, and where it came from. */
@@ -256,6 +303,7 @@ export function tagRecord(t: ResolvedTag): Record<string, unknown> {
     ...(t.colour ? { colour: t.colour } : {}),
     origin: t.origin,
     ...(t.from ? { from: t.from } : {}),
+    ...(isClaimOrigin(t.origin) ? { source: t.from, trust: t.trust ?? "hint" } : {}),
   };
 }
 
@@ -289,8 +337,11 @@ export function selectionFromArgs(
 export function chosen<M extends Pick<TagMachine, "resolved">>(
   machines: readonly M[],
   selection: Selection | undefined,
+  reported = false,
 ): M[] {
-  return selection ? machines.filter((m) => matches(selection, idSet(m.resolved))) : [...machines];
+  return selection
+    ? machines.filter((m) => matches(selection, idSet(m.resolved, reported)))
+    : [...machines];
 }
 
 /** A selection written for people ("env:prod and not role:db"). */
@@ -383,8 +434,9 @@ export function taggingView(
   machines: ReadonlyArray<{ tags?: readonly ResolvedTag[] }>,
 ): TaggingView {
   const count = new Map<string, number>();
+  // A hint a machine reported is not a tag the fleet uses: it does not count (spec 112-machine-reported-tags FR-011).
   for (const m of machines)
-    for (const t of m.tags ?? []) count.set(t.id, (count.get(t.id) ?? 0) + 1);
+    for (const t of m.tags ?? []) if (isUsed(t)) count.set(t.id, (count.get(t.id) ?? 0) + 1);
   return {
     configured: set !== undefined,
     ...(error ? { error } : {}),

@@ -118,6 +118,10 @@ const MAPPED: Readonly<Record<string, string>> = {
   TagColour: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   TagCardinality: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   TagOrigin: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  // Spec 112-machine-reported-tags: the two new code lists are concept schemes (W3C SKOS); a claim a machine makes about itself is a statement (RDF 1.1: rdf:Statement, a subject, a predicate and an object, with who made it).
+  TagTrust: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  TagSource: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  TagClaim: "http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement",
   // Spec 109-integrations-api: the two code lists are concept schemes (W3C SKOS); an integration is a web API an account offers (schema.org WebAPI); the entities it reads are
   // OCSF 1.9.0 objects (documented at schema.ocsf.io, which publishes no RDF) or MITRE D3FEND classes, each narrower or as close as its relation says.
   ApiKind: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
@@ -144,6 +148,7 @@ const RELATION: Readonly<Record<string, "narrowMatch" | "broadMatch">> = {
   SwitchPort: "narrowMatch",
   EmailDomain: "broadMatch",
   EngineRelease: "narrowMatch",
+  TagClaim: "narrowMatch",
 };
 
 function record(local: string) {

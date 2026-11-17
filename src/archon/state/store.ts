@@ -60,7 +60,11 @@ export type Kind =
   | "proposal"
   | "hold"
   | "recording"
-  | "alert";
+  | "alert"
+  // Spec 112-machine-reported-tags: a tag of this machine's own table (`archon tag`, the view archon_tags), and,
+  // on the PC, what a machine reported about itself (the observation cache).
+  | "tag"
+  | "reported";
 
 /** One record: a host's fact of one kind, by name. */
 export interface StateRecord<T = unknown> {
@@ -113,6 +117,10 @@ CREATE VIEW IF NOT EXISTS archon_observation AS SELECT host, name AS id, at,
   json_extract(body, '$.kind') AS kind, json_extract(body, '$.name') AS subject,
   json_extract(body, '$.change') AS change, json_extract(body, '$.what') AS what
   FROM archon_record WHERE kind = 'observation';
+CREATE VIEW IF NOT EXISTS archon_tags AS SELECT host, json_extract(body, '$.dimension') AS dimension,
+  json_extract(body, '$.value') AS value, json_extract(body, '$.source') AS source,
+  json_extract(body, '$.set_by') AS set_by, json_extract(body, '$.set_at') AS set_at
+  FROM archon_record WHERE kind = 'tag';
 CREATE VIEW IF NOT EXISTS archon_proposal AS SELECT host, name AS id, at,
   json_extract(body, '$.by') AS by, json_extract(body, '$.reason') AS reason,
   json_extract(body, '$.items') AS items, json_extract(body, '$.sent') AS sent
@@ -137,6 +145,8 @@ export const VIEWS: Record<string, string[]> = {
   archon_inventory: ["host", "at", "vendor", "model", "serial", "cpus", "mem_mib", "disks", "macs"],
   archon_observation: ["host", "id", "at", "source", "who", "kind", "subject", "change", "what"],
   archon_proposal: ["host", "id", "at", "by", "reason", "items", "sent"],
+  // Spec 112-machine-reported-tags FR-007, FR-009: the machine's own tags (osquery automatic table; no column may be `path`, which ATC reserves).
+  archon_tags: ["host", "dimension", "value", "source", "set_by", "set_at"],
 };
 
 /** How many provenance records a host keeps (the oldest go first). */
@@ -264,6 +274,19 @@ export async function listRecords<T = unknown>(
     .map((r) => rec<T>(r));
 }
 
+/** The record of one name of a kind, for every host that has one (one load of the file: the PC's cache of what machines reported). */
+export async function recordsNamed<T = unknown>(
+  kind: Kind,
+  name: string,
+  dir = stateDir(),
+): Promise<StateRecord<T>[]> {
+  const db = await load(dir);
+  return db
+    .prepare("SELECT * FROM archon_record WHERE kind = ? AND name = ? ORDER BY host")
+    .all(kind, name)
+    .map((r) => rec<T>(r));
+}
+
 /** Write one record (replacing the one with the same key). */
 export async function putRecord(
   host: string,
@@ -320,6 +343,30 @@ export async function putRecords(
           (SELECT name FROM archon_record WHERE host = ? AND kind = 'observation' ORDER BY at DESC LIMIT ?)`,
       ).run(host, host, OBSERVATION_KEEP);
     }
+    await save(dir, db);
+  });
+}
+
+/**
+ * Replace the records of one kind whose names start with `prefix` by these (spec 112-machine-reported-tags FR-008: the tags the machine
+ * works out from the fleet at each apply replace the previous ones and leave its own alone), in one load and save.
+ */
+export async function replaceRecords(
+  host: string,
+  kind: Kind,
+  prefix: string,
+  items: Array<{ name: string; body: unknown; at?: string }>,
+  dir = stateDir(),
+): Promise<void> {
+  return serially(dir, async () => {
+    const db = await load(dir);
+    db.prepare(
+      "DELETE FROM archon_record WHERE host = ? AND kind = ? AND substr(name, 1, ?) = ?",
+    ).run(host, kind, prefix.length, prefix);
+    const ins = db.prepare("INSERT OR REPLACE INTO archon_record VALUES (?, ?, ?, ?, ?)");
+    const now = new Date().toISOString();
+    for (const i of items) ins.run(host, kind, i.name, i.at ?? now, JSON.stringify(i.body));
+    count("archon.state.writes", items.length, { "archon.kind": kind });
     await save(dir, db);
   });
 }

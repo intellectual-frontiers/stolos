@@ -4,7 +4,6 @@ trace/no-spec-line src/archon-boot/assets.ts
 trace/no-spec-line src/archon-boot/mail.ts
 trace/no-spec-line src/archon-boot/pins.ts
 trace/no-spec-line src/archon-boot/web.ts
-trace/no-spec-line src/archon/apply/apply.ts
 trace/no-spec-line src/archon/apply/apt.ts
 trace/no-spec-line src/archon/audit/mod.ts
 trace/no-spec-line src/archon/audit/openapi.ts
@@ -76,8 +75,6 @@ trace/no-spec-line src/archon/risk/mod.ts
 trace/no-spec-line src/archon/s3/mod.ts
 trace/no-spec-line src/archon/smb/mod.ts
 trace/no-spec-line src/archon/state/capture.ts
-trace/no-spec-line src/archon/state/mod.ts
-trace/no-spec-line src/archon/state/state-command.ts
 trace/no-spec-line src/archon/telemetry/mod.ts
 trace/no-spec-line src/archon/tools/keys/microsoft.ts
 trace/no-spec-line src/archon/tools/sync.ts

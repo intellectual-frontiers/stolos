@@ -27,6 +27,7 @@
 // Spec: 097-controller FR-002
 // Spec: 107-pairing-and-query FR-007
 // Spec: 108-tags FR-004, FR-005, FR-008
+// Spec: 112-machine-reported-tags FR-005, FR-006, FR-010
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -36,6 +37,7 @@ import { ownerOnly, writeSecret } from "../core/secrets.ts";
 import { authorizedLine, parseProbe, PROBE_SCRIPT, type ProbeOutput } from "./probe.ts";
 import type { ControllerFacts } from "./controller.ts";
 import type { WayOfJoining } from "../ontology.auto.ts";
+import { type MachineReport, reportFromProbe } from "../model/reported.ts";
 
 /** An adopted machine, as the fleet declares it (machine.ts); `T` is the fleet's own tag ids (its `TagId`). */
 export type AdoptedDef<T extends string = string> = {
@@ -401,15 +403,39 @@ export async function ensureProbeKey(name: string, fleet: string): Promise<strin
   return ((await fs.readTextOr(`${key}.pub`)) ?? "").trim();
 }
 
-/** Observe a machine now: its observation, or why not. */
-export async function observe(m: AdoptedDef): Promise<{ observed?: Observed; why?: string }> {
+/**
+ * Observe a machine now: its observation, or why not. Spec 112-machine-reported-tags FR-005, FR-006: also what the machine says about
+ * itself (the probe's `reported` section), for the PC's observation cache (`keepReported`), never for the fleet repository.
+ */
+export async function observe(
+  m: AdoptedDef,
+): Promise<{ observed?: Observed; reported?: MachineReport; why?: string }> {
   const r = await probe(m, "facts");
   if (!r.ok) return { why: r.err.split("\n").pop() || "the probe did not answer" };
   const p = parseProbe(r.out);
   if (!p["os"]) return { why: "the probe answered without facts (an old or edited stolos-probe?)" };
+  const reported = reportFromProbe(p["reported"], p["probe"]?.["at"]);
+  const out = reported ? { reported } : {};
   if (m.role === "controller") {
     const { controllerFacts } = await import("./controller.ts");
-    return { observed: { ...toObserved(p), controller: await controllerFacts() } };
+    return { observed: { ...toObserved(p), controller: await controllerFacts() }, ...out };
   }
-  return { observed: toObserved(p) };
+  return { observed: toObserved(p), ...out };
+}
+
+/**
+ * Keep what a machine reported in this PC's observation cache (never committed: spec 112-machine-reported-tags FR-010). A cache that
+ * cannot be written is no reason to fail an observation.
+ */
+export async function keepReported(
+  name: string,
+  reported: MachineReport | undefined,
+): Promise<void> {
+  if (!reported) return;
+  try {
+    const { keepReport } = await import("../state/reported.ts");
+    await keepReport(name, reported, P.state);
+  } catch {
+    // The observation stands; the next one keeps the report.
+  }
 }

@@ -103,7 +103,7 @@ proves(
 );
 
 proves(["069-integrate FR-002"], "069: both probes report the same version", () => {
-  assertEquals(PROBE_VERSION, "2");
+  assertEquals(PROBE_VERSION, "3");
   assertStringIncludes(PROBE_SCRIPT_WINDOWS, `$version = '${PROBE_VERSION}'`);
   assertStringIncludes(PROBE_SCRIPT, `version) echo ${PROBE_VERSION} ;;`);
 });

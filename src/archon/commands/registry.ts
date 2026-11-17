@@ -12,6 +12,7 @@
 // Spec: 105-calm-output FR-001, FR-010
 // Spec: 109-integrations-api FR-018
 // Spec: 108-tags FR-006, FR-007, FR-008, FR-013, FR-016
+// Spec: 112-machine-reported-tags FR-007, FR-011, FR-012
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
@@ -50,6 +51,14 @@ const TAG_SELECT_ARGS: Command["args"] = [
       "Only machines the expression chooses: and, or, not, parentheses, tags (--select 'env:prod and not role:database').",
   },
 ];
+
+/** Spec 112-machine-reported-tags FR-011: the hints machines reported are never used to choose machines unless this says so. */
+const REPORTED_ARG: Command["args"][number] = {
+  name: "reported",
+  type: "boolean",
+  description:
+    "Also choose by the hints machines reported about themselves (shown, never used otherwise); the fleet's own tags and the accepted claims are always used.",
+};
 
 /** Every archon command, in help order: the single source for the CLI, MCP tools, man pages, and completions. */
 export const COMMANDS: Command[] = [
@@ -1221,7 +1230,7 @@ export const COMMANDS: Command[] = [
     name: "tag list",
     output: "report",
     summary: "The fleet's tags and which machines hold them; one machine's tags with their origins",
-    description: `Spec 108. Lists the tags this fleet defines in fleets/<fleet>/tags.ts (dimensions, tags, colours, how many machines hold each) and every machine with its tags; free-form (custom) tags are always shown apart, marked custom. With a machine, each of its tags with its label and origin (person, a rule of tags.ts, or a group it inherits from) and what a stronger origin overrode. --tag, --any-tag and --select list only the machines they choose. Tags are defined by editing tags.ts (an environment, a role, a site, an owner, a criticality and a data class come with a new fleet), never by a command: this one says where. --json for scripts.`,
+    description: `Spec 108. Lists the tags this fleet defines in fleets/<fleet>/tags.ts (dimensions, tags, colours, how many machines hold each) and every machine with its tags; free-form (custom) tags are always shown apart, marked custom. With a machine, each of its tags with its label and origin (person, a rule of tags.ts, or a group it inherits from) and what a stronger origin overrode. --tag, --any-tag and --select list only the machines they choose. Tags are defined by editing tags.ts (an environment, a role, a site, an owner, a criticality and a data class come with a new fleet), never by a command: this one says where. Spec 112: a machine's own claims (its /etc/machine-info, its firmware, its archon tag table) are listed as what it says, below the fleet's tags, and where it says another value than the fleet in a one-of dimension the fleet's wins and the disagreement is shown; hints are never used to choose machines unless --reported says so. --json for scripts.`,
     tier: "read",
     args: [
       {
@@ -1231,6 +1240,7 @@ export const COMMANDS: Command[] = [
         description: "One machine: each of its tags, with its origin.",
       },
       ...TAG_SELECT_ARGS,
+      REPORTED_ARG,
     ],
     examples: [
       { cmd: "bun run stolos tag list", text: "The defined tags and every machine's." },
@@ -1251,8 +1261,10 @@ export const COMMANDS: Command[] = [
           ...(a["tag"] ? { tag: a["tag"] as string } : {}),
           ...(a["any-tag"] ? { anyTag: a["any-tag"] as string } : {}),
           ...(a["select"] ? { select: a["select"] as string } : {}),
+          ...(a["reported"] ? { reported: true } : {}),
         },
         ctx.json,
+        ctx.verbose === true,
       );
     },
   },
@@ -1364,10 +1376,135 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "tag accept",
+    output: "action",
+    summary: "Accept what a machine says about itself as a tag a person gave (one signed commit)",
+    description: `Spec 112. A machine says things about itself (its /etc/machine-info, its firmware, its own archon tag table): the fleet reads them as claims and never as its own tags (stolos tag list <machine> shows what it says, with where it was read and what the fleet did with it). This turns a claim into a tag a person gave, written in the machine's own file and sent with stolos apply (one signed commit, your key), by the same code as stolos tag add: a person's tag wins over a rule's and a group's, and a new value of a one-of dimension replaces the old one. It refuses a tag the machine does not claim, and a claim that tags.ts does not define (define it in the spec loop first). --no-apply writes it and leaves the sending to stolos apply. There is no command that ignores a claim: a dimension of tags.ts says fromMachine: "ignore", and the console's Ignore hides one for the session.`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [
+      {
+        name: "machine",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The machine's name (stolos tag list shows them).",
+      },
+      {
+        name: "tags",
+        type: "string",
+        positional: true,
+        repeatable: true,
+        required: true,
+        description: "One or more tags it claims: env:prod role:nas.",
+      },
+      {
+        name: "no-apply",
+        type: "boolean",
+        description: "Write the change but do not send it (stolos apply sends it later).",
+      },
+      {
+        name: "message",
+        short: "m",
+        type: "string",
+        description:
+          "The commit message (default: 112-machine-reported-tags: accept <machine> <tags>).",
+      },
+    ],
+    examples: [
+      {
+        cmd: "bun run stolos tag accept alpha env:prod",
+        text: "alpha says it is production: now a person says so too, in one signed commit.",
+      },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { tagAccept } = await import("../fleet/tag-commands.ts");
+      return await tagAccept({
+        machine: a["machine"] as string,
+        tags: String(a["tags"] ?? ""),
+        noApply: !!a["no-apply"],
+        ...(a["message"] ? { message: a["message"] as string } : {}),
+      });
+    },
+  },
+  {
+    name: "tag list",
+    place: "machine",
+    output: "report",
+    summary: "The tags this machine says about itself (its own table, osquery's archon_tags)",
+    description: `Spec 112. Lists this machine's own tags table in its archon.sql: each tag with its source (local: said here by a person with archon tag add; fleet: what this machine worked out from the fleet repository it holds at its last apply) and who and when. osquery reads the same rows as the table archon_tags (archon query "select * from archon_tags"), and the PC reads them as claims over SSH. These are what the machine says about itself: none of it changes the machine's configuration, and the fleet decides what to do with it (a machine never overrides the fleet's tags). --json for scripts.`,
+    tier: "read",
+    args: [],
+    async run(_a: Parsed, ctx: RunContext): Promise<number> {
+      const { tagListLocal } = await import("../fleet/machine-tags.ts");
+      return await tagListLocal(ctx.hostName, ctx.json);
+    },
+  },
+  {
+    name: "tag add",
+    place: "machine",
+    output: "action",
+    operation: true,
+    summary: "Say a tag about this machine, in its own table (root; run log and journal)",
+    description: `Spec 112. Writes tags into this machine's own tags table in its archon.sql (source local, with who and when): env:prod, role:nas, or a plain word (pilot). A tag is read with the fleet's tag grammar (<dimension>:<value>, lowercase, at most 64 characters); a new value of a one-of dimension of the fleet's tags replaces this machine's old one; a tag the fleet's tags.ts does not define is written and said to be one the PC cannot accept. Every change goes to the run log and the journal. This is what the machine says about itself, never configuration: the PC reads it as a claim, and the fleet decides (it never overrides the fleet's tags; where it disagrees, the disagreement is a finding). It changes nothing in the fleet repository.`,
+    tier: "mutate",
+    args: [
+      {
+        name: "tags",
+        type: "string",
+        positional: true,
+        repeatable: true,
+        required: true,
+        description: "One or more tags: env:prod role:nas pilot.",
+      },
+      {
+        name: "custom",
+        type: "boolean",
+        description:
+          "Read every word as a free-form tag, even a word that is also a defined tag's name.",
+      },
+    ],
+    examples: [
+      {
+        cmd: "archon tag add env:prod pilot",
+        text: "This machine says it is production, and a pilot.",
+      },
+    ],
+    async run(a: Parsed, ctx: RunContext): Promise<number> {
+      const { tagAddLocal } = await import("../fleet/machine-tags.ts");
+      return await tagAddLocal(ctx.hostName, String(a["tags"] ?? ""), { custom: !!a["custom"] });
+    },
+  },
+  {
+    name: "tag remove",
+    place: "machine",
+    output: "action",
+    operation: true,
+    summary: "Take tags off this machine's own table (root; only the ones said here)",
+    description: `Spec 112. Removes tags from this machine's own tags table: only the ones a person said here (source local); what the fleet says of this machine (source fleet) is the fleet's, and is changed in the fleet repository. Every change goes to the run log and the journal.`,
+    tier: "mutate",
+    args: [
+      {
+        name: "tags",
+        type: "string",
+        positional: true,
+        repeatable: true,
+        required: true,
+        description: "One or more tags it says.",
+      },
+    ],
+    examples: [{ cmd: "archon tag remove pilot", text: "Take a tag back." }],
+    async run(a: Parsed, ctx: RunContext): Promise<number> {
+      const { tagRemoveLocal } = await import("../fleet/machine-tags.ts");
+      return await tagRemoveLocal(ctx.hostName, String(a["tags"] ?? ""));
+    },
+  },
+  {
     name: "fleet query",
     output: "report",
     summary: "Ask every machine one SQL question (osquery): managed and adopted, one table",
-    description: `Specs 067 and 107. Runs one osquery SELECT on every machine at once (at most 8 at a time): managed servers through their MCP server (archon query, over SSH as ops) and adopted machines through their probe (where osquery is installed), this PC's included. Each machine has a time limit (15 seconds; --timeout changes it); one that fails or does not answer in time is named with its reason, and the last line says "N of M answered". Prints one table with a machine column; --json for scripts (each answer carries its state, and how long it took). Read-only: one SELECT on the allowlisted tables (as archon query), anything else is refused; each server also limits what it answers (spec 048). Spec 108: --tag, --any-tag and --select ask only the machines with those tags (--select 'env:prod and not role:database'), and each answer carries the machine's tags. Examples: "select name, version from os_version"; "select name, bundle_short_version from apps where name like 'Google Chrome%'"; "select port, address from listening_ports".`,
+    description: `Specs 067 and 107. Runs one osquery SELECT on every machine at once (at most 8 at a time): managed servers through their MCP server (archon query, over SSH as ops) and adopted machines through their probe (where osquery is installed), this PC's included. Each machine has a time limit (15 seconds; --timeout changes it); one that fails or does not answer in time is named with its reason, and the last line says "N of M answered". Prints one table with a machine column; --json for scripts (each answer carries its state, and how long it took). Read-only: one SELECT on the allowlisted tables (as archon query), anything else is refused; each server also limits what it answers (spec 048). Spec 108: --tag, --any-tag and --select ask only the machines with those tags (--select 'env:prod and not role:database'), and each answer carries the machine's tags. Spec 112: they choose by the fleet's own tags and the claims its dimensions accept; the hints machines reported about themselves (shown, never used otherwise) are included only with --reported; every machine's own tags are the table archon_tags (select * from archon_tags). Examples: "select name, version from os_version"; "select name, bundle_short_version from apps where name like 'Google Chrome%'"; "select port, address from listening_ports".`,
     tier: "read",
     args: [
       {
@@ -1383,6 +1520,7 @@ export const COMMANDS: Command[] = [
         description: "Seconds each machine has to answer (15 by default).",
       },
       ...TAG_SELECT_ARGS,
+      REPORTED_ARG,
     ],
     async run(a: Parsed, ctx: RunContext): Promise<number> {
       const { fleetQuery } = await import("../adopt/commands.ts");
@@ -1394,6 +1532,7 @@ export const COMMANDS: Command[] = [
         tag: a["tag"],
         "any-tag": a["any-tag"],
         select: a["select"],
+        reported: a["reported"],
       });
     },
   },
@@ -5410,6 +5549,7 @@ const PC_COMMANDS = new Set([
   "fleet query",
   "tag add",
   "tag remove",
+  "tag accept",
   "tag list",
   "validate",
   "build",

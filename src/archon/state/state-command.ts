@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 112-machine-reported-tags FR-005, FR-007
 
 import { json } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -16,6 +17,8 @@ import { describeData, hostData } from "../model/durable.ts";
 import { getRecord, listRecords, STATE_SQL, stateDir } from "./store.ts";
 import type { RecordedVerify } from "./verify.ts";
 import { describeInventory, type Inventory } from "./inventory.ts";
+import { readMachineInfo } from "./reported.ts";
+import { listTagRows, type TagBody } from "./tags.ts";
 
 /** What a machine recorded about itself (archon state; MCP archon_state). */
 export interface HostState {
@@ -31,6 +34,11 @@ export interface HostState {
   optIns: Record<string, unknown>;
   /** Its data class (Article 23). */
   data: { class: string; reasons: string[] };
+  /**
+   * Spec 112-machine-reported-tags FR-005, FR-007: what this machine says about itself: its `/etc/machine-info` (as bounded text) and
+   * the rows of its own tags table. The PC reads them as untrusted claims (its inventory above carries the firmware facts).
+   */
+  reported?: { machineInfo?: Record<string, string>; tags: TagBody[] };
   /** Spec 066: the commit this host applies now (its checkout's HEAD). */
   applied?: { commit: string; subject: string; at: string };
   /** Spec 066: what its last pull did (and why it could not, when it could not). */
@@ -72,8 +80,12 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
     (await listRecords(hostName, "optin", dir)).map((r) => [r.name, r.body]),
   );
   const d = host ? hostData(host) : { class: "durable", reasons: ["not in the model"] };
+  const { onHost } = await import("../core/paths.ts");
+  const machineInfo = await readMachineInfo(onHost("/etc/machine-info"));
+  const tags = await listTagRows(hostName, dir).catch(() => []);
   return {
     host: hostName,
+    reported: { ...(machineInfo ? { machineInfo } : {}), tags },
     ...(install ? { install: { at: install.at, body: install.body } } : {}),
     ...(verify ? { verify } : {}),
     ...(inventory ? { inventory } : {}),
@@ -101,6 +113,11 @@ export async function stateCommand(hostName: string, json: boolean): Promise<num
       : "no install record (installed by hand, or before spec 048)",
   );
   if (s.inventory) p.note(`machine: ${describeInventory(s.inventory)}`);
+  if (s.reported?.tags.length) {
+    p.note(
+      `its own tags: ${s.reported.tags.map((t) => (t.dimension ? `${t.dimension}:${t.value}` : t.value)).join(" ")} (archon tag list)`,
+    );
+  }
   // Spec 054: say so while packages change (powering off now can break dpkg).
   const { packagesBusy } = await import("../install/apt-busy.ts");
   const busy = await packagesBusy();

@@ -41,7 +41,11 @@ export const QUERY_CAP = 8;
 export const QUERY_TIMEOUT_S = 15;
 
 /** A tag of a machine that was asked (spec 108-tags FR-013): its id, whether it is defined or custom, and its origin. */
-export type QueryTag = Pick<ResolvedTag, "id" | "standing" | "origin"> & { from?: string };
+export type QueryTag = Pick<ResolvedTag, "id" | "standing" | "origin"> & {
+  from?: string;
+  /** Spec 112-machine-reported-tags: for a claim the machine made, what the fleet does with it (`hint` or `accept`). */
+  trust?: NonNullable<ResolvedTag["trust"]>;
+};
 
 /** One machine's answer to a question to every machine. */
 export interface QueryAnswer {
@@ -83,6 +87,8 @@ export interface AskOptions {
   onAnswer?: (a: QueryAnswer) => void;
   /** Spec 108-tags FR-013: ask only the machines whose tags this chooses (`askFleet` reads it; `askAll` asks the targets it is given). */
   selection?: Selection;
+  /** Spec 112-machine-reported-tags FR-011: choose by the hints machines reported too (`--reported`). */
+  reported?: boolean;
 }
 
 /** One machine, asked within its time limit: always an answer, never a throw. */

@@ -1,5 +1,5 @@
 #!/bin/sh
-# stolos-probe 2: read-only facts for the fleet's Stolos (specs 067, 069). Installed by
+# stolos-probe 3: read-only facts for the fleet's Stolos (specs 067, 069). Installed by
 # "bun run stolos host adopt" or bin/integrate.sh --adopt; run only by the fleet's probe key
 # (authorized_keys forces it). It changes nothing. Remove it with: integrate.sh --undo, or
 # bun run stolos host release <name>. POSIX sh; BusyBox (NAS devices) too.
@@ -12,7 +12,7 @@ has() { command -v "$1" >/dev/null 2>&1; }
 os=$(uname -s 2>/dev/null || echo unknown)
 
 facts() {
-  echo "@probe"; kv version 2; kv at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "@probe"; kv version 3; kv at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "@os"
   kv kernel "$os"; kv release "$(uname -r)"; kv arch "$(uname -m)"; kv hostname "$(hostname 2>/dev/null || uname -n)"
   if [ "$os" = Darwin ]; then
@@ -64,6 +64,15 @@ facts() {
   fi
   has brew && kv brew_packages "$(brew list 2>/dev/null | wc -l)"
   has osqueryi && kv osquery "$(osqueryi --version 2>/dev/null | awk '{print $NF}')"
+  # Spec 112-machine-reported-tags: what the machine says about itself, read as data (never sourced): its
+  # /etc/machine-info (systemd machine-info(5)) and its firmware's SMBIOS facts. The fleet reads them as claims.
+  echo "@reported"
+  mi() { [ -r /etc/machine-info ] && sed -n "s/^$1=//p" /etc/machine-info 2>/dev/null | head -n 1 | sed "s/^[\"']//;s/[\"']\$//"; }
+  dmi() { head -n 1 "/sys/class/dmi/id/$1" 2>/dev/null; }
+  kv machine_info_deployment "$(mi DEPLOYMENT)"; kv machine_info_location "$(mi LOCATION)"
+  kv machine_info_chassis "$(mi CHASSIS)"; kv machine_info_tags "$(mi TAGS)"
+  kv smbios_vendor "$(dmi sys_vendor)"; kv smbios_model "$(dmi product_name)"
+  kv smbios_chassis_type "$(dmi chassis_type)"; kv smbios_bios_vendor "$(dmi bios_vendor)"
   echo "@listening"
   if has ss; then ss -Hltn 2>/dev/null | awk '{print $4}' | sed 's/.*://' | sort -un | tr '\n' ' ' | sed 's/^/ports=/;s/ *$//'; echo
   elif has lsof; then lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | awk 'NR>1{print $9}' | sed 's/.*://' | sort -un | tr '\n' ' ' | sed 's/^/ports=/;s/ *$//'; echo
@@ -73,7 +82,7 @@ facts() {
 
 case "$req" in
   facts) facts ;;
-  version) echo 2 ;;
+  version) echo 3 ;;
   osquery\ *)
     has osqueryi || { echo "osquery is not installed here" >&2; exit 3; }
     sql=$(printf '%s' "${req#osquery }" | base64 -d 2>/dev/null) || { echo "not base64" >&2; exit 2; }

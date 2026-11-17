@@ -39,7 +39,7 @@ test("every machine command has a man page; fleet commands (stolos) have none", 
 
 proves(
   ["059-stolos-and-archon FR-001"],
-  "059: every command says where it runs; stolos and archon do not overlap but for explain and docs",
+  "059: every command says where it runs; stolos and archon do not overlap but for explain, docs, apply, update and tag",
   async () => {
     const { offeredOn } = await import("../src/archon/commands/registry.ts");
     for (const c of COMMANDS) assert(c.place, `${c.name} has no place`);
@@ -50,8 +50,8 @@ proves(
     const both = [...pc].filter((n) => machine.has(n)).sort();
     assertEquals(
       both,
-      ["apply", "docs", "explain", "update"],
-      "apply and update are two commands: one each",
+      ["apply", "docs", "explain", "tag add", "tag list", "tag remove", "update"],
+      "apply, update and tag add, remove and list are two commands each: one for each place (spec 112)",
     );
     for (const n of ["keys setup", "fleet init", "host add", "vault backup", "decide", "where"]) {
       assert(pc.has(n) && !machine.has(n), n);

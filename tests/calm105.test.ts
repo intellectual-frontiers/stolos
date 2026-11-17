@@ -322,12 +322,12 @@ proves(
   "105: every command has an output class from the ontology; reports are the read-tier commands; --quiet and --verbose are global options",
   async () => {
     assertEquals([...OUTPUT_CLASSES], ["report", "action"]);
-    // Article 19 states the contract (constitution 6.2.0).
+    // Article 19 states the contract (constitution 6.2.0; later amendments keep it).
     const constitution = await fs.readTextFile(
       path.join(ENGINE_ROOT, ".specify/memory/constitution.md"),
     );
     assertStringIncludes(constitution, "## Article 19: Calm Output");
-    assertStringIncludes(constitution, "**Version**: 6.2.");
+    assertStringIncludes(constitution, "**Version**: 6.");
     for (const w of [
       "report",
       "action",

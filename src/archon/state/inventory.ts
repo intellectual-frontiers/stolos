@@ -8,6 +8,7 @@
  * @module
  */
 // Spec: 051-machine-identity
+// Spec: 112-machine-reported-tags FR-006
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
@@ -22,6 +23,10 @@ export interface Inventory {
   model?: string;
   /** Its serial (readable by root only: absent otherwise). */
   serial?: string;
+  /** Spec 112-machine-reported-tags FR-006: its SMBIOS chassis type (DSP0134 table 17, a number as text). */
+  chassis?: string;
+  /** Spec 112-machine-reported-tags FR-006: its BIOS vendor (a cloud's name shows here too). */
+  biosVendor?: string;
   /** Its CPUs. */
   cpus: number;
   /** Its memory, in MiB. */
@@ -75,10 +80,14 @@ export async function collectInventory(): Promise<Inventory> {
   const vendor = (await dmi("sys_vendor")) ?? (await dmi("board_vendor"));
   const model = (await dmi("product_name")) ?? (await dmi("board_name"));
   const serial = await dmi("product_serial");
+  const chassis = await dmi("chassis_type");
+  const biosVendor = await dmi("bios_vendor");
   return {
     ...(vendor === undefined ? {} : { vendor }),
     ...(model === undefined ? {} : { model }),
     ...(serial === undefined ? {} : { serial }),
+    ...(chassis === undefined ? {} : { chassis }),
+    ...(biosVendor === undefined ? {} : { biosVendor }),
     cpus: navigator.hardwareConcurrency,
     ...(mem ? { memMiB: Math.round(Number(mem) / 1024) } : {}),
     disks,

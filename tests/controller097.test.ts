@@ -14,7 +14,7 @@ import {
   controllerName,
   localProbe,
 } from "../src/archon/adopt/controller.ts";
-import { parseProbe, PROBE_SCRIPT_WINDOWS } from "../src/archon/adopt/probe.ts";
+import { parseProbe, PROBE_SCRIPT_WINDOWS, PROBE_VERSION } from "../src/archon/adopt/probe.ts";
 import { policies } from "../src/archon/adopt/policy.ts";
 
 const NOW = Date.parse("2026-11-16T12:00:00Z");
@@ -71,9 +71,9 @@ proves(
     assert(r.ok, r.err);
     const o = toObserved(parseProbe(r.out));
     assert(o.os.family !== "unknown", "the OS is known");
-    assertEquals(o.probe, "2");
+    assertEquals(o.probe, PROBE_VERSION);
     const v = await localProbe("version");
-    assertEquals(v.out.trim(), "2");
+    assertEquals(v.out.trim(), PROBE_VERSION);
   },
 );
 
@@ -136,7 +136,7 @@ proves(
     const other = await probe({ ...machine, name: "zz-other-controller" }, "facts");
     assert(!other.ok && other.err.includes("another controller PC"), other.err);
     const self = await probe(d, "version");
-    assertEquals([self.ok, self.out.trim()], [true, "2"]);
+    assertEquals([self.ok, self.out.trim()], [true, PROBE_VERSION]);
   },
 );
 

@@ -284,6 +284,11 @@ stolos:TagCardinality a owl:Class ;
     skos:definition "How many values of a tag dimension one machine may hold: one-of (at most one) or many-of (any number)."@en ;
     stolos:spec "108-tags FR-001, FR-004" .
 
+stolos:TagClaim a owl:Class ;
+    rdfs:label "Tag claim"@en ;
+    skos:definition "A tag a machine says about itself (`env:prod` in its `/etc/machine-info`, a row of its own `archon tag` table, its firmware's maker and model): a statement made by the machine, never the fleet's own tag, read over the authenticated channel (reported) or heard on the network (announced). It is untrusted input: it is read with the tag grammar, capped and counted, and where it disagrees with the fleet in a dimension the fleet wins and the disagreement is a finding."@en ;
+    stolos:spec "112-machine-reported-tags FR-001, FR-002, FR-006" .
+
 stolos:TagColour a owl:Class ;
     rdfs:label "Tag colour"@en ;
     skos:definition "A named colour of the console's palette that a defined tag is drawn in, light and dark."@en ;
@@ -301,8 +306,9 @@ stolos:TagGroup a owl:Class ;
 
 stolos:TagOrigin a owl:Class ;
     rdfs:label "Tag origin"@en ;
-    skos:definition "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, or a group it inherits from."@en ;
-    stolos:spec "108-tags FR-009, FR-010, FR-011" .
+    skos:definition "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, a group it inherits from, or, below those, a claim the machine made about itself (reported over the authenticated channel, or announced on the network)."@en ;
+    stolos:spec "108-tags FR-009, FR-010, FR-011",
+        "112-machine-reported-tags FR-002" .
 
 stolos:TagRule a owl:Class ;
     rdfs:label "Tag rule"@en ;
@@ -313,6 +319,16 @@ stolos:TagSelection a owl:Class ;
     rdfs:label "Tag selection"@en ;
     skos:definition "A choice of machines by their tags: tags that must all hold, tags of which one must hold, or a small expression (`env:prod and not role:db`) read by a typed parser, never evaluated as code."@en ;
     stolos:spec "108-tags FR-012, FR-013" .
+
+stolos:TagSource a owl:Class ;
+    rdfs:label "Tag source"@en ;
+    skos:definition "Where on a machine a reported tag was read: its `/etc/machine-info`, its own `archon tag` table (local or fleet rows), or its firmware's SMBIOS facts."@en ;
+    stolos:spec "112-machine-reported-tags FR-005, FR-007, FR-008" .
+
+stolos:TagTrust a owl:Class ;
+    rdfs:label "Tag trust"@en ;
+    skos:definition "What a fleet does with the tags machines report in one dimension of its `tags.ts`: accept them (used like a rule's tags, below the fleet's own), keep them as hints (shown, never used to choose machines or scope policies), or ignore them (dropped and counted)."@en ;
+    stolos:spec "112-machine-reported-tags FR-003" .
 
 stolos:TrustedNetwork a owl:Class ;
     rdfs:label "Trusted network"@en ;
@@ -774,6 +790,12 @@ stolos:onListener a owl:ObjectProperty ;
     skos:definition "The listener a pairing door is served on."@en ;
     stolos:spec "103-three-ports FR-004" .
 
+stolos:origin-announced a stolos:TagOrigin ;
+    rdfs:label "announced"@en ;
+    skos:definition "A claim heard on the network without authentication: a hint only, below a reported one. No source announces yet; the value exists so that a later spec has a place for it."@en ;
+    skos:notation "announced" ;
+    stolos:spec "112-machine-reported-tags FR-002" .
+
 stolos:origin-inherited a stolos:TagOrigin ;
     rdfs:label "inherited"@en ;
     skos:definition "Inherited from a group of the fleet's `tags.ts` the machine belongs to."@en ;
@@ -785,6 +807,12 @@ stolos:origin-person a stolos:TagOrigin ;
     skos:definition "Added by a person: `stolos tag add`, or the tags of `stolos pair`. It wins over a rule and over a group."@en ;
     skos:notation "person" ;
     stolos:spec "108-tags FR-006, FR-008, FR-011" .
+
+stolos:origin-reported a stolos:TagOrigin ;
+    rdfs:label "reported"@en ;
+    skos:definition "A claim the machine made about itself, read over the authenticated channel (SSH to a machine whose host key is pinned in Git). Below a group's tag; it never overrides what the fleet says."@en ;
+    skos:notation "reported" ;
+    stolos:spec "112-machine-reported-tags FR-001, FR-002" .
 
 stolos:origin-rule a stolos:TagOrigin ;
     rdfs:label "rule"@en ;
@@ -1087,6 +1115,30 @@ stolos:signing-unlocked a stolos:SigningOutcome ;
     skos:notation "unlocked" ;
     stolos:spec "106-one-passphrase-speed FR-003" .
 
+stolos:source-archon-fleet a stolos:TagSource ;
+    rdfs:label "archon-fleet"@en ;
+    skos:definition "A row of the machine's own `archon tag` table that the machine worked out from the fleet repository it holds, at its last apply."@en ;
+    skos:notation "archon-fleet" ;
+    stolos:spec "112-machine-reported-tags FR-008" .
+
+stolos:source-archon-local a stolos:TagSource ;
+    rdfs:label "archon-local"@en ;
+    skos:definition "A row of the machine's own `archon tag` table that a person on the machine added with `archon tag add`."@en ;
+    skos:notation "archon-local" ;
+    stolos:spec "112-machine-reported-tags FR-007" .
+
+stolos:source-machine-info a stolos:TagSource ;
+    rdfs:label "machine-info"@en ;
+    skos:definition "The machine's `/etc/machine-info` (systemd machine-info(5)): DEPLOYMENT, LOCATION, CHASSIS and TAGS."@en ;
+    skos:notation "machine-info" ;
+    stolos:spec "112-machine-reported-tags FR-005" .
+
+stolos:source-smbios a stolos:TagSource ;
+    rdfs:label "smbios"@en ;
+    skos:definition "The machine's firmware facts (DMTF DSP0134 SMBIOS: maker, model, chassis type, and a cloud provider's name), read from /sys/class/dmi/id."@en ;
+    skos:notation "smbios" ;
+    stolos:spec "112-machine-reported-tags FR-006" .
+
 stolos:spec a owl:DatatypeProperty ;
     rdfs:label "spec"@en ;
     rdfs:range xsd:string ;
@@ -1147,6 +1199,24 @@ stolos:tier-repo a stolos:CommandTier ;
     skos:definition "Writes the fleet repository."@en ;
     skos:notation "repo" ;
     stolos:spec "030-agent-layer FR-003" .
+
+stolos:trust-accept a stolos:TagTrust ;
+    rdfs:label "accept"@en ;
+    skos:definition "A reported tag in the dimension is used like a rule's tag, below the fleet's own."@en ;
+    skos:notation "accept" ;
+    stolos:spec "112-machine-reported-tags FR-003" .
+
+stolos:trust-hint a stolos:TagTrust ;
+    rdfs:label "hint"@en ;
+    skos:definition "A reported tag in the dimension is shown with its origin, and never used to choose machines or scope policies. The default."@en ;
+    skos:notation "hint" ;
+    stolos:spec "112-machine-reported-tags FR-003" .
+
+stolos:trust-ignore a stolos:TagTrust ;
+    rdfs:label "ignore"@en ;
+    skos:definition "A reported tag in the dimension is dropped and counted; shown only in verbose."@en ;
+    skos:notation "ignore" ;
+    stolos:spec "112-machine-reported-tags FR-003" .
 
 stolos:verbosity-calm a stolos:Verbosity ;
     rdfs:label "calm"@en ;
@@ -1961,6 +2031,14 @@ mzid:term-stolos-TagCardinality a mz:OntologyTerm ;
     mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
     mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#TagCardinality" .
 
+mzid:term-stolos-TagClaim a mz:OntologyTerm ;
+    rdfs:label "stolos:TagClaim"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "narrowMatch" ;
+    mz:standardTerm "http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#TagClaim" .
+
 mzid:term-stolos-TagColour a mz:OntologyTerm ;
     rdfs:label "stolos:TagColour"@en ;
     mz:basis mz:Maps ;
@@ -2010,6 +2088,22 @@ mzid:term-stolos-TagSelection a mz:OntologyTerm ;
     mz:definedBy "101-ladder" ;
     mz:justification "No standard adopted yet. Candidates to examine: none found; a boolean expression over concepts (SKOS has no query language). Kept unaligned by the owner's decision of 2026-11-17 (stolos issue #37); reviewed again by 2027-02-15." ;
     mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#TagSelection" .
+
+mzid:term-stolos-TagSource a mz:OntologyTerm ;
+    rdfs:label "stolos:TagSource"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "closeMatch" ;
+    mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#TagSource" .
+
+mzid:term-stolos-TagTrust a mz:OntologyTerm ;
+    rdfs:label "stolos:TagTrust"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "closeMatch" ;
+    mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#TagTrust" .
 
 mzid:term-stolos-TrustedNetwork a mz:OntologyTerm ;
     rdfs:label "stolos:TrustedNetwork"@en ;

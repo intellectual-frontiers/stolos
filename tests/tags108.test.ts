@@ -150,7 +150,7 @@ proves(
   () => {
     assertEquals(Object.keys(CODE_LISTS.TagColour.list), [...TAG_COLOURS]);
     assertEquals([...TAG_CARDINALITIES], ["one-of", "many-of"]);
-    assertEquals([...TAG_ORIGINS], ["person", "rule", "inherited"]);
+    assertEquals([...TAG_ORIGINS], ["person", "rule", "inherited", "reported", "announced"]);
     assertEquals(Object.keys(CODE_LISTS.TagOrigin.list), [...TAG_ORIGINS]);
     assertEquals(Object.keys(CODE_LISTS.TagCardinality.list), [...TAG_CARDINALITIES]);
   },

@@ -13,6 +13,7 @@
 // Spec: 100-remote-access FR-008, FR-010
 // Spec: 107-pairing-and-query FR-008, FR-012
 // Spec: 108-tags FR-013, FR-014, FR-015
+// Spec: 112-machine-reported-tags FR-013, FR-014, FR-015
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
@@ -32,7 +33,15 @@ import { logo, logoFor } from "./logos.ts";
 import { GUIDES } from "../core/guides.ts";
 import { originWords, tagRecord } from "../fleet/tags.ts";
 import type { TaggingView } from "../fleet/tags.ts";
-import { groupByDimension, groupLinks, tagChips, tagFacets, tagIds, tagPicker } from "./tags.ts";
+import {
+  claimsPanel,
+  groupByDimension,
+  groupLinks,
+  tagChips,
+  tagFacets,
+  tagIds,
+  tagPicker,
+} from "./tags.ts";
 
 /** The logo for an operating system's name. */
 export function osLogo(os: string): string | undefined {
@@ -1118,6 +1127,14 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
       }
     </div>
     ${tagsCard(f, x)}
+    ${
+      x.says?.length || x.reportedAt
+        ? claimsPanel(x.name, x.says ?? [], x.disagreements ?? [], {
+            canAccept: x.kind === "server" || x.kind === "workstation" || x.kind === "adopted",
+            ...(x.claimsDropped ? { gaps: x.claimsDropped } : {}),
+          })
+        : ""
+    }
     ${
       a
         ? html`

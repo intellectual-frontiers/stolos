@@ -71,6 +71,7 @@ export const stolos = vocabulary(STOLOS, {
   TagRule: "owl:Class",
   TagGroup: "owl:Class",
   TagSelection: "owl:Class",
+  TagClaim: "owl:Class",
   // Spec 109-integrations-api: an account's API as a typed integration, and what it reads.
   ApiIntegration: "owl:Class",
   NetworkClient: "owl:Class",
@@ -110,6 +111,8 @@ export const stolos = vocabulary(STOLOS, {
   TagColour: "owl:Class",
   TagCardinality: "owl:Class",
   TagOrigin: "owl:Class",
+  TagTrust: "owl:Class",
+  TagSource: "owl:Class",
   ApiKind: "owl:Class",
   ApiCapability: "owl:Class",
   // Properties.
@@ -214,6 +217,10 @@ export const TagColourSchema = classSchema(stolos.TagColour, CODE);
 export const TagCardinalitySchema = classSchema(stolos.TagCardinality, CODE);
 /** The schema of a tag origin (spec 108-tags): where a tag on a machine came from. */
 export const TagOriginSchema = classSchema(stolos.TagOrigin, CODE);
+/** The schema of a tag trust (spec 112-machine-reported-tags): what a fleet does with the tags machines report in one dimension. */
+export const TagTrustSchema = classSchema(stolos.TagTrust, CODE);
+/** The schema of a tag source (spec 112-machine-reported-tags): where on a machine a reported tag was read. */
+export const TagSourceSchema = classSchema(stolos.TagSource, CODE);
 
 /** The schema of a kind of API an integration is (spec 109-integrations-api): what an account's API is a kind of, and so which capabilities it can offer. */
 export const ApiKindSchema = classSchema(stolos.ApiKind, CODE);
@@ -535,6 +542,13 @@ export const classes = [
     ),
     spec: ["108-tags FR-012, FR-013"],
   }),
+  StolosClass.make(stolos.TagClaim, {
+    label: en("Tag claim"),
+    definition: en(
+      "A tag a machine says about itself (`env:prod` in its `/etc/machine-info`, a row of its own `archon tag` table, its firmware's maker and model): a statement made by the machine, never the fleet's own tag, read over the authenticated channel (reported) or heard on the network (announced). It is untrusted input: it is read with the tag grammar, capped and counted, and where it disagrees with the fleet in a dimension the fleet wins and the disagreement is a finding.",
+    ),
+    spec: ["112-machine-reported-tags FR-001, FR-002, FR-006"],
+  }),
   StolosClass.make(stolos.TagColour, {
     label: en("Tag colour"),
     definition: en(
@@ -552,9 +566,23 @@ export const classes = [
   StolosClass.make(stolos.TagOrigin, {
     label: en("Tag origin"),
     definition: en(
-      "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, or a group it inherits from.",
+      "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, a group it inherits from, or, below those, a claim the machine made about itself (reported over the authenticated channel, or announced on the network).",
     ),
-    spec: ["108-tags FR-009, FR-010, FR-011"],
+    spec: ["108-tags FR-009, FR-010, FR-011", "112-machine-reported-tags FR-002"],
+  }),
+  StolosClass.make(stolos.TagTrust, {
+    label: en("Tag trust"),
+    definition: en(
+      "What a fleet does with the tags machines report in one dimension of its `tags.ts`: accept them (used like a rule's tags, below the fleet's own), keep them as hints (shown, never used to choose machines or scope policies), or ignore them (dropped and counted).",
+    ),
+    spec: ["112-machine-reported-tags FR-003"],
+  }),
+  StolosClass.make(stolos.TagSource, {
+    label: en("Tag source"),
+    definition: en(
+      "Where on a machine a reported tag was read: its `/etc/machine-info`, its own `archon tag` table (local or fleet rows), or its firmware's SMBIOS facts.",
+    ),
+    spec: ["112-machine-reported-tags FR-005, FR-007, FR-008"],
   }),
   StolosClass.make(stolos.ApiIntegration, {
     label: en("API integration"),

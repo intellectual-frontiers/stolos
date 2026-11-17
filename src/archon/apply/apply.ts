@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 112-machine-reported-tags FR-008
 
 import { errors, fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { splitArgs } from "@intellectual-frontiers/commons/ts/kernel";
@@ -154,6 +155,11 @@ export async function apply(host: HostDef, opts: ApplyOptions): Promise<ApplyRes
     // the next apply that succeeds.
     const ok = !result.failed && !ui.problems.some((p) => p.level === "fail");
     if (ok) await settleInstallRecord(host.name);
+    // Spec 112-machine-reported-tags FR-008: the tags the fleet knows for this machine, from the repository it holds, into its own tags table.
+    if (!opts.only) {
+      const { refreshFleetTags } = await import("../fleet/machine-tags.ts");
+      await refreshFleetTags(host).catch(() => undefined);
+    }
     // Spec 025: a message when a full apply changes state (failing, recovered).
     if (!opts.only) {
       const { applyOutcome } = await import("../notify/events.ts");

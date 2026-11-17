@@ -9,6 +9,7 @@
 // Spec: 066-stolos-console
 // Spec: 107-pairing-and-query FR-012
 // Spec: 108-tags FR-014
+// Spec: 112-machine-reported-tags FR-015
 
 import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
@@ -60,7 +61,8 @@ const TAG_PALETTE: Record<TagColour, { fg: string; soft: string; dfg: string; ds
 
 /**
  * Spec 108-tags FR-014: the tag chips. A defined tag is drawn in its colour; a free-form one is always drawn apart (a dashed outline,
- * italics, and the word "custom" in the chip); one written but not defined says so, in the warning colour.
+ * italics, and the word "custom" in the chip); one written but not defined says so, in the warning colour. Spec 112-machine-reported-tags FR-015: a tag a machine
+ * reported is outlined in its colour, not filled (dotted while it is only a hint), with a badge "reported"; one announced is outlined dotted in grey.
  */
 export const TAG_CSS = `
 :root { ${TAG_COLOURS.map((c) => `--tag-${c}: ${TAG_PALETTE[c].fg}; --tag-${c}-soft: ${TAG_PALETTE[c].soft};`).join(" ")} }
@@ -74,6 +76,12 @@ button.tag { cursor: pointer; }
 .tag[aria-pressed="true"] { border-color: var(--tg); box-shadow: 0 0 0 1px var(--tg); }
 .tag.custom { background: transparent; border: 1px dashed var(--muted); color: var(--muted); font-style: italic; }
 .tag .kind { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; border-radius: 4px; background: var(--code); padding: 0 4px; color: var(--muted); }
+.tag.reported, .tag.announced { background: transparent; border: 1px solid var(--tg); }
+.tag.reported.hint { border-style: dotted; }
+.tag.announced { border: 1px dotted var(--muted); color: var(--muted); opacity: .85; }
+.tag.custom.reported, .tag.custom.announced { border-style: dashed; }
+.tag .kind.reported { background: var(--tg-soft); color: var(--tg); border: 1px solid var(--tg); }
+.tag .kind.announced { background: transparent; color: var(--muted); border: 1px dotted var(--muted); }
 .tag.undefined { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); }
 .tag.undefined .kind { background: transparent; color: var(--warn); }
 ${TAG_COLOURS.map((c) => `.tag.c-${c} { --tg: var(--tag-${c}); --tg-soft: var(--tag-${c}-soft); }`).join("\n")}

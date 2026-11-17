@@ -8,6 +8,7 @@
 // Spec: 098-pair FR-009
 // Spec: 107-pairing-and-query FR-007, FR-010, FR-011
 // Spec: 108-tags FR-004, FR-008, FR-013
+// Spec: 112-machine-reported-tags FR-011
 
 import {
   array,
@@ -25,6 +26,7 @@ import {
   adoptedDir,
   ensureProbeKey,
   installScript,
+  keepReported,
   loadAdopted,
   MACHINE_NAME,
   machineSource,
@@ -172,6 +174,7 @@ export async function hostAdopt(o: {
     return fail();
   }
   await fs.writeTextFile(path.join(adoptedDir(o.name), "observed.ts"), observedSource(r.observed));
+  await keepReported(o.name, r.reported);
   ob.done(`${r.observed.os.name} ${r.observed.os.version} · ${r.observed.os.arch}`);
   report(o.name, policies(machine, r.observed));
   ui.next.push(`keep it: bun run stolos apply -m "067-adopt: adopt ${o.name}"`);
@@ -261,6 +264,7 @@ export async function hostObserve(name?: string): Promise<number> {
         path.join(adoptedDir(machine.name), "observed.ts"),
         observedSource(r.observed),
       );
+      await keepReported(machine.name, r.reported);
       p.done(`${r.observed.os.name} ${r.observed.os.version}`);
     }),
   );
@@ -419,10 +423,12 @@ export async function queryTargets(sql: string): Promise<AskTarget[]> {
  * machine's tags.
  */
 export async function askFleet(sql: string, o: AskOptions = {}): Promise<QueryAnswer[]> {
-  const { selection, ...pool } = o;
+  const { selection, reported, ...pool } = o;
   const { chosen, loadFleetTags } = await import("../fleet/tags.ts");
   const ft = await loadFleetTags();
-  const keep = selection ? new Set(chosen(ft.machines, selection).map((m) => m.name)) : undefined;
+  const keep = selection
+    ? new Set(chosen(ft.machines, selection, reported === true).map((m) => m.name))
+    : undefined;
   const tags = new Map(
     ft.machines.map((m) => [
       m.name,
@@ -431,6 +437,7 @@ export async function askFleet(sql: string, o: AskOptions = {}): Promise<QueryAn
         standing: t.standing,
         origin: t.origin,
         ...(t.from === undefined ? {} : { from: t.from }),
+        ...(t.trust === undefined ? {} : { trust: t.trust }),
       })),
     ]),
   );
@@ -454,7 +461,7 @@ export async function fleetQuery(
   sql: string,
   json = false,
   timeoutS?: number,
-  pick: { tag?: unknown; "any-tag"?: unknown; select?: unknown } = {},
+  pick: { tag?: unknown; "any-tag"?: unknown; select?: unknown; reported?: unknown } = {},
 ): Promise<number> {
   const { queryRefusal, table } = await import("../state/query.ts");
   const why = queryRefusal(sql);
@@ -478,7 +485,8 @@ export async function fleetQuery(
     );
     return fail();
   }
-  if (sel.selection && !chosen(ft.machines, sel.selection).length) {
+  const reported = pick.reported === true;
+  if (sel.selection && !chosen(ft.machines, sel.selection, reported).length) {
     p.fail(
       `no machine has ${selectionText(sel.selection)}: nothing was asked`,
       "stolos tag list shows which machines hold which tags",
@@ -489,7 +497,7 @@ export async function fleetQuery(
   let got = 0;
   const answers = await askFleet(sql, {
     timeoutMs: (timeoutS ?? QUERY_TIMEOUT_S) * 1000,
-    ...(sel.selection ? { selection: sel.selection } : {}),
+    ...(sel.selection ? { selection: sel.selection, reported } : {}),
     onStart: (ms) => {
       asked = ms.length;
       p.status(`Asking ${asked} machine(s), ${Math.min(QUERY_CAP, asked)} at a time`);
@@ -743,6 +751,7 @@ export async function adoptCheckIn(
   if (observed) {
     await fs.writeTextFile(path.join(adoptedDir(o.name), "observed.ts"), observedSource(observed));
   }
+  await keepReported(o.name, r.reported);
   if (r.observed) ob.done(`${r.observed.os.name} ${r.observed.os.version} · ${r.observed.os.arch}`);
   else if (observed) {
     ob.warn(

@@ -14,6 +14,7 @@
  * @module
  */
 // Spec: 108-tags FR-006, FR-007, FR-015
+// Spec: 112-machine-reported-tags FR-004, FR-011, FR-012, FR-013
 
 import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
@@ -22,6 +23,8 @@ import { ui } from "../core/ui.ts";
 import {
   addAssigned,
   classifyTag,
+  type ClaimView,
+  isClaimOrigin,
   type ResolvedTag,
   removeAssigned,
   tokensOf,
@@ -206,16 +209,99 @@ export async function tagRemove(opts: TagChangeOptions, deps: TagChangeDeps = {}
   return await send(o, deps, `108-tags: untag ${machine.name} ${o.tags.join(" ")}`);
 }
 
+/**
+ * `stolos tag accept <machine> <tag...>` (spec 112-machine-reported-tags FR-012): turn what a machine claims about itself into a tag a
+ * person gave, sent as one signed commit by the same code as `tag add`. A tag the machine does not claim, and a claim `tags.ts` does not
+ * define, are refused with what to do.
+ */
+export async function tagAccept(opts: TagChangeOptions, deps: TagChangeDeps = {}): Promise<number> {
+  const words = wordsOf(opts.tags);
+  const c = ui.phase("Tags");
+  if (!words.length) {
+    c.fail(
+      "no tag given",
+      "stolos tag accept <machine> env:prod (stolos tag list <machine> shows what it says)",
+    );
+    return fail();
+  }
+  const found = await findMachine(c, opts.machine);
+  if (!found) return fail();
+  const { machine } = found;
+  const says = machine.resolved.claims.filter((x) => x.status !== "ignored");
+  const refused: string[] = [];
+  for (const w of words.map((x) => x.trim().toLowerCase())) {
+    const claim = says.find((x) => x.id === w);
+    if (!claim) {
+      refused.push(w);
+      c.fail(
+        `${machine.name} does not claim ${w}`,
+        says.length
+          ? `it says: ${[...new Set(says.map((x) => x.id))].join(", ")} (stolos tag list ${machine.name})`
+          : `it has said nothing yet: stolos host observe ${machine.name} (an adopted machine), or stolos fleet status (a managed one)`,
+      );
+    } else if (claim.status === "undefined") {
+      refused.push(w);
+      c.fail(
+        `${w} is not defined in this fleet's tags.ts, so it cannot be accepted`,
+        "define it in fleets/<fleet>/tags.ts (the spec loop), then accept it; or give the machine a tag that is defined",
+      );
+    }
+  }
+  if (refused.length) return fail();
+  return await tagAdd(
+    {
+      ...opts,
+      tags: words,
+      custom: false,
+      message:
+        opts.message ?? `112-machine-reported-tags: accept ${machine.name} ${words.join(" ")}`,
+    },
+    deps,
+  );
+}
+
+/** One claim as the records `--json` and evidence carry. */
+export function claimRecord(x: ClaimView): Record<string, unknown> {
+  return {
+    id: x.id,
+    origin: x.origin,
+    source: x.source,
+    trust: x.trust,
+    status: x.status,
+    ...(x.against ? { against: x.against } : {}),
+    ...(x.setBy ? { set_by: x.setBy } : {}),
+    ...(x.setAt ? { set_at: x.setAt } : {}),
+  };
+}
+
 /** One machine's tags as the records `--json` and evidence carry. */
 export function machineRecord(
-  m: Pick<TagMachine, "name" | "kind" | "resolved">,
+  m: Pick<TagMachine, "name" | "kind" | "resolved"> &
+    Partial<Pick<TagMachine, "claimsDropped" | "gaps">>,
 ): Record<string, unknown> {
   return {
     machine: m.name,
     kind: m.kind,
     tags: m.resolved.tags.map(tagRecord),
     ...(m.resolved.dropped.length ? { overridden: m.resolved.dropped } : {}),
+    ...(m.resolved.claims.length ? { claims: m.resolved.claims.map(claimRecord) } : {}),
+    ...(m.resolved.disagreements.length ? { disagreements: m.resolved.disagreements } : {}),
+    ...(m.resolved.ignored ? { ignored: m.resolved.ignored } : {}),
+    ...(m.claimsDropped ? { claimsDropped: m.claimsDropped, gaps: m.gaps ?? [] } : {}),
   };
+}
+
+/** One claim of `tag list <machine>`: the tag, where it was read, what the fleet does with it, and what became of it. */
+function claimDetail(x: ClaimView): string {
+  const what: Record<ClaimView["status"], string> = {
+    held: x.trust === "accept" ? "held, used like a rule's tag" : "held as a hint",
+    agrees: "agrees with the fleet",
+    disagrees: `disagrees: the fleet says ${x.against ?? "another"}`,
+    overridden: `not held: ${x.against ?? "another claim"} is held instead`,
+    undefined: "not defined in tags.ts (cannot be accepted)",
+    ignored: "ignored by this dimension (fromMachine: ignore)",
+  };
+  return `  says ${x.id.padEnd(22)} ${String(x.source).padEnd(13)} ${what[x.status]}`;
 }
 
 /** `stolos tag list [<machine>] [--tag t ...] [--any-tag t ...] [--select expr]` (spec 108-tags FR-007). */
@@ -225,8 +311,11 @@ export async function tagList(
     tag?: string;
     anyTag?: string;
     select?: string;
+    /** Spec 112-machine-reported-tags FR-011: choose by the hints machines reported too. */
+    reported?: boolean;
   },
   json = false,
+  verbose = false,
 ): Promise<number> {
   const c = ui.phase("Tags");
   const ft = await loadFleetTags();
@@ -266,10 +355,33 @@ export async function tagList(
     for (const d of m.resolved.dropped) {
       out(`  overridden: ${d.id} (${originWords(d)}) by ${d.by}`);
     }
+    // Spec 112-machine-reported-tags FR-011, FR-013: what the machine says, and where it disagrees with the fleet.
+    for (const x of m.resolved.claims.filter((y) => verbose || y.status !== "ignored")) {
+      out(claimDetail(x));
+    }
+    if (m.resolved.ignored && !verbose) {
+      out(
+        `  ${m.resolved.ignored} claim(s) ignored by the fleet's dimensions (--verbose lists them)`,
+      );
+    }
+    for (const d of m.resolved.disagreements) {
+      c.warn(
+        `${d.text}`,
+        `if the machine is right: stolos tag add ${m.name} ${d.reported}; if the fleet is: change the machine (its /etc/machine-info, or archon tag remove ${d.reported})`,
+      );
+    }
+    if (m.claimsDropped) {
+      out(
+        `  gap: ${m.claimsDropped} thing(s) the machine said were not tags and were dropped (${m.gaps.join("; ")})`,
+      );
+    }
     for (const p of m.resolved.problems) c.warn(p, `fix ${where} or the machine's tags`);
+    if (m.resolved.claims.some((x) => x.status === "held" || x.status === "agrees")) {
+      c.note(`accept what it says: stolos tag accept ${m.name} <tag>`);
+    }
     return 0;
   }
-  const machines = chosen(ft.machines, sel.selection);
+  const machines = chosen(ft.machines, sel.selection, o.reported === true);
   if (json) {
     out(
       JSON.stringify(
@@ -337,9 +449,14 @@ export async function tagList(
       })),
     ),
   );
+  for (const m of machines) {
+    for (const d of m.resolved.disagreements) {
+      c.warn(d.text, `stolos tag list ${m.name} says what to do`);
+    }
+  }
   c.done(
     sel.selection
-      ? `${machines.length} of ${ft.machines.length} machine(s) chosen by ${selectionText(sel.selection)}`
+      ? `${machines.length} of ${ft.machines.length} machine(s) chosen by ${selectionText(sel.selection)}${o.reported ? " (hints included)" : ""}`
       : `${ft.machines.length} machine(s)`,
   );
   return sel.selection && !machines.length ? 1 : 0;
@@ -348,6 +465,12 @@ export async function tagList(
 /** One tag of `tag list <machine>`: its id, label, origin, and a mark where it is custom or not defined. */
 function tagDetail(t: ResolvedTag): string {
   const mark =
-    t.standing === "custom" ? "  [custom]" : t.standing === "unknown" ? "  [not defined]" : "";
+    t.standing === "custom"
+      ? "  [custom]"
+      : t.standing === "unknown"
+        ? "  [not defined]"
+        : isClaimOrigin(t.origin)
+          ? "  [claim]"
+          : "";
   return `  ${t.id.padEnd(22)} ${t.label.padEnd(16)} ${originWords(t)}${mark}`;
 }

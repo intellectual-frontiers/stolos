@@ -41,6 +41,8 @@ import {
   TagCardinalitySchema,
   TagColourSchema,
   TagOriginSchema,
+  TagTrustSchema,
+  TagSourceSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
 } from "./vocabulary.ts";
@@ -98,6 +100,8 @@ export const citingSchemas = [
   TagColourSchema,
   TagCardinalitySchema,
   TagOriginSchema,
+  TagTrustSchema,
+  TagSourceSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
   RungSchema,

@@ -51,6 +51,13 @@
  * sudo tail -f /var/log/osquery/osqueryd.results.log | jq .
  * ```
  *
+ * Archon's own records are tables too (`archon_install`, `archon_verify`, `archon_prov`, `archon_optin`,
+ * `archon_inventory`, `archon_tags`, built from `archon.sql`). `archon_tags` is what the machine says
+ * about itself (spec 112-machine-reported-tags): `archon tag add env:prod` keeps a tag with its
+ * dimension, value, source (`local`, said here; `fleet`, what the fleet's checkout says of it, written at
+ * each apply), who and when, and `archon query "select * from archon_tags"` (or `stolos fleet query`, for
+ * every machine) reads it. It is a claim, never configuration: the fleet decides what to do with it.
+ *
  * ## Files, buckets, and databases (DuckDB)
  *
  * ```sh
@@ -104,5 +111,6 @@
  *
  * @module
  */
+// Spec: 112-machine-reported-tags FR-009, FR-018
 
 export {};

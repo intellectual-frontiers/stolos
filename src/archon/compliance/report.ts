@@ -11,6 +11,7 @@
  * @module
  */
 // Spec: 068-compliance
+// Spec: 112-machine-reported-tags FR-013
 
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { PcFacts } from "../console/pc.ts";
@@ -169,6 +170,30 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
       status: recent(m.seen) ? "pass" : m.seen ? "warn" : "unknown",
       detail: m.seen ? `last recorded ${m.seen.slice(0, 10)}` : "no record on this PC",
       fix: "bun run stolos fleet status",
+    });
+  }
+  // Spec 112-machine-reported-tags FR-013: a machine that reported says whether its own words agree with the fleet's inventory
+  // (NIST SP 800-53 CM-8: the inventory is accurate). A machine that never reported gives no evidence either way.
+  for (const m of f.machines.filter(
+    (x) =>
+      (x.kind === "server" || x.kind === "workstation" || x.kind === "adopted") && x.reportedAt,
+  )) {
+    const dis = m.disagreements ?? [];
+    out.push({
+      scf: ["AST-04"],
+      subject: m.name,
+      source: m.kind === "adopted" ? "adopted" : "managed",
+      check: "Reported tags agree with the fleet's",
+      status: dis.length ? "fail" : "pass",
+      detail: dis.length
+        ? dis.join("; ")
+        : `what it says about itself agrees with the fleet's tags (read ${m.reportedAt?.slice(0, 10)})`,
+      ...(m.reportedAt ? { observedAt: m.reportedAt } : {}),
+      ...(dis.length
+        ? {
+            fix: `bun run stolos tag list ${m.name} (the fleet's tags win; change the machine, or accept what it says)`,
+          }
+        : {}),
     });
   }
   for (const a of f.adopted) {

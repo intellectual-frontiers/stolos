@@ -50,19 +50,32 @@
  * @module
  */
 // Spec: 108-tags FR-001, FR-002, FR-004, FR-005, FR-009, FR-010, FR-011, FR-012
+// Spec: 112-machine-reported-tags FR-002, FR-003, FR-005, FR-011
 
 import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   TAG_CARDINALITIES,
   TAG_COLOURS,
   type TagCardinality,
+  TAG_TRUSTS,
   type TagColour,
   type TagOrigin,
+  type TagSource,
+  type TagTrust,
   type WayOfJoining,
 } from "../ontology.auto.ts";
 import { inCidr } from "./site.ts";
 
-export { TAG_CARDINALITIES, TAG_COLOURS, type TagCardinality, type TagColour, type TagOrigin };
+export {
+  TAG_CARDINALITIES,
+  TAG_COLOURS,
+  TAG_TRUSTS,
+  type TagCardinality,
+  type TagColour,
+  type TagOrigin,
+  type TagSource,
+  type TagTrust,
+};
 
 // ------------------------------------------------------------------------------ the definitions
 
@@ -84,6 +97,11 @@ export interface TagDimensionDef {
   description: string;
   /** `one-of`: a machine holds at most one of its tags; `many-of`: any number (`stolos:TagCardinality`). */
   cardinality: TagCardinality;
+  /**
+   * What to do with the tags machines report in this dimension (spec 112-machine-reported-tags FR-003, `stolos:TagTrust`): `accept` (used like a
+   * rule's tag, below the fleet's own), `hint` (shown, never used to choose machines; the default) or `ignore` (dropped and counted).
+   */
+  fromMachine?: TagTrust;
   /** Its tags, by value: `prod` in the dimension `env` is the tag `env:prod`. */
   tags: Readonly<Record<string, TagValueDef>>;
 }
@@ -144,6 +162,20 @@ export interface TagGroupDef<T extends string = string> {
   tags: readonly T[];
 }
 
+/**
+ * What a fleet says a machine's `/etc/machine-info` means in its own tags (spec 112-machine-reported-tags FR-005): each map is from what the
+ * machine writes (`production`, a place's name, `laptop`) to a tag the fleet defines; typed by the fleet's own tag ids. What it does not
+ * name is read as the plain claim (`env:production`, `site:<the text, as a word>`, `kind:laptop`).
+ */
+export interface MachineInfoMap<T extends string = string> {
+  /** `DEPLOYMENT=` (`production`, `staging`, ...) to a tag: `production: "env:prod"`. */
+  readonly deployment?: Readonly<Record<string, T>>;
+  /** `LOCATION=` (free text, matched without case and surrounding space) to a tag: `"berlin office": "site:main"`. */
+  readonly location?: Readonly<Record<string, T>>;
+  /** `CHASSIS=` (`laptop`, `server`, ...) to a tag. */
+  readonly chassis?: Readonly<Record<string, T>>;
+}
+
 /** A fleet's tags: its dimensions, rules and groups, as `defineTags` makes them. */
 export interface TagSet<D extends TagDimensions = TagDimensions, T extends string = string> {
   /** The dimensions, in the order the console shows them. */
@@ -152,6 +184,16 @@ export interface TagSet<D extends TagDimensions = TagDimensions, T extends strin
   readonly rules: readonly TagRuleDef<T>[];
   /** The groups, in order. */
   readonly groups: readonly TagGroupDef<T>[];
+  /** What `/etc/machine-info` values mean here (spec 112-machine-reported-tags FR-005), when the fleet says. */
+  readonly machineInfoMap?: MachineInfoMap<T>;
+}
+
+/** What a fleet does with what machines report in a dimension (`hint` where it does not say). */
+export function fromMachineOf(
+  set: Pick<TagSet, "dimensions"> | undefined,
+  dimension: string,
+): TagTrust {
+  return set?.dimensions[dimension]?.fromMachine ?? "hint";
 }
 
 /** The lowercase id of a dimension. */
@@ -177,7 +219,7 @@ export const dimensionOf = (id: string): string => id.slice(0, Math.max(0, id.in
 
 /** What is wrong with a set of definitions: where, what, and the fix. Empty when sound. */
 export function tagSetProblems(
-  set: Pick<TagSet, "dimensions" | "rules" | "groups">,
+  set: Pick<TagSet, "dimensions" | "rules" | "groups" | "machineInfoMap">,
 ): Array<{ where: string; message: string; fix: string }> {
   const out: Array<{ where: string; message: string; fix: string }> = [];
   const add = (where: string, message: string, fix: string) => out.push({ where, message, fix });
@@ -194,6 +236,13 @@ export function tagSetProblems(
     if (!def.description.trim()) add(w, "it has no description", "say what question it answers");
     if (!TAG_CARDINALITIES.includes(def.cardinality)) {
       add(w, `cardinality '${String(def.cardinality)}' is not known`, "one-of or many-of");
+    }
+    if (def.fromMachine !== undefined && !TAG_TRUSTS.includes(def.fromMachine)) {
+      add(
+        w,
+        `fromMachine '${String(def.fromMachine)}' is not known`,
+        `${TAG_TRUSTS.join(", ")} (what to do with the tags machines report; hint where left out)`,
+      );
     }
     const values = Object.entries(def.tags);
     if (values.length === 0) add(w, "it has no tags", "define at least one tag in it");
@@ -237,6 +286,22 @@ export function tagSetProblems(
       if (!ids.has(t)) add(w, `it gives ${t}, which is not defined`, nearest(set, t));
     }
   }
+  // Spec 112-machine-reported-tags FR-005: what /etc/machine-info values mean must name defined tags.
+  const maps: Array<[string, Readonly<Record<string, string>> | undefined]> = [
+    ["deployment", set.machineInfoMap?.deployment],
+    ["location", set.machineInfoMap?.location],
+    ["chassis", set.machineInfoMap?.chassis],
+  ];
+  for (const [what, map] of maps) {
+    for (const [from, to] of Object.entries(map ?? {})) {
+      const w = `tags.ts machineInfoMap.${what}`;
+      if (from.length > 64)
+        add(w, `'${from.slice(0, 20)}...' is longer than 64 characters`, "shorten it");
+      if (!ids.has(String(to))) {
+        add(w, `'${from}' gives ${String(to)}, which is not defined`, nearest(set, String(to)));
+      }
+    }
+  }
   return out;
 }
 
@@ -259,12 +324,14 @@ export function defineTags<const D extends TagDimensions>(
   extra: {
     rules?: readonly TagRuleDef<TagIdOf<D>>[];
     groups?: readonly TagGroupDef<TagIdOf<D>>[];
+    machineInfoMap?: MachineInfoMap<TagIdOf<D>>;
   } = {},
 ): TagSet<D, TagIdOf<D>> {
   const set: TagSet<D, TagIdOf<D>> = {
     dimensions,
     rules: extra.rules ?? [],
     groups: extra.groups ?? [],
+    ...(extra.machineInfoMap ? { machineInfoMap: extra.machineInfoMap } : {}),
   };
   const problems = tagSetProblems(set);
   if (problems.length) {
@@ -470,8 +537,10 @@ export interface ResolvedTag {
   dimension?: string;
   /** Where it came from (`stolos:TagOrigin`). */
   origin: TagOrigin;
-  /** The rule or the group it came from (not a person's). */
+  /** The rule or the group it came from (not a person's), or, for a reported tag, the source on the machine (`stolos:TagSource`). */
   from?: string;
+  /** For a reported or announced tag: what the fleet does with it (`hint`: shown, never used to choose machines; `accept`: used). */
+  trust?: TagTrust;
 }
 
 /** A tag a machine would hold, and what beat it. */
@@ -486,6 +555,65 @@ export interface DroppedTag {
   by: string;
 }
 
+/** A claim a machine made about itself (`stolos:TagClaim`), read and checked, before the fleet decides what to do with it. */
+export interface ReportedClaim {
+  /** `env:prod`, or a free-form word: already read with the tag grammar. */
+  id: string;
+  /** `reported` (read over the authenticated channel) or `announced` (heard on the network: a hint only). */
+  origin: Extract<TagOrigin, "reported" | "announced">;
+  /** Where on the machine it was read (`stolos:TagSource`). */
+  source: TagSource;
+  /** Who set it, where the machine says (a row of its tags table). */
+  setBy?: string;
+  /** When it was set, where the machine says. */
+  setAt?: string;
+}
+
+/** What became of a claim (spec 112-machine-reported-tags FR-002, FR-003, FR-014). */
+export type ClaimStatus =
+  /** It is a tag the machine holds now, with the origin `reported`. */
+  | "held"
+  /** The fleet holds the same tag: the stronger origin shows. */
+  | "agrees"
+  /** The fleet holds another tag of the same one-of dimension: the fleet wins (a finding). */
+  | "disagrees"
+  /** Another claim of the same one-of dimension is held instead. */
+  | "overridden"
+  /** The fleet's `tags.ts` does not define it: listed, never held, never accepted. */
+  | "undefined"
+  /** The dimension says `fromMachine: "ignore"`: dropped and counted. */
+  | "ignored";
+
+/** One claim, with what the fleet did with it. */
+export interface ClaimView extends ReportedClaim {
+  /** What became of it. */
+  status: ClaimStatus;
+  /** What the fleet does with the tags of its dimension. */
+  trust: TagTrust;
+  /** For a disagreement, the fleet's own tag it lost to. */
+  against?: string;
+  /** Its label, when it is a defined tag. */
+  label?: string;
+  /** Its colour, when it is a defined tag. */
+  colour?: TagColour;
+}
+
+/** A machine that says one thing where the fleet says another, in a one-of dimension: a finding of inventory accuracy (NIST SP 800-53 CM-8). */
+export interface TagDisagreement {
+  /** The machine. */
+  machine: string;
+  /** The dimension. */
+  dimension: string;
+  /** What the machine reports. */
+  reported: string;
+  /** What the fleet says. */
+  fleet: string;
+  /** Where on the machine it said so. */
+  source: TagSource;
+  /** `alpha reports env:prod; the fleet says env:lab`. */
+  text: string;
+}
+
 /** A machine's resolved tags. */
 export interface ResolvedTags {
   /** The tags it holds: the defined ones in the order of the definitions, then the free-form ones. */
@@ -494,9 +622,24 @@ export interface ResolvedTags {
   dropped: DroppedTag[];
   /** What is wrong: an unknown tag, two values in a one-of dimension, a rule that threw. */
   problems: string[];
+  /** Every claim the machine made, with what became of it (spec 112-machine-reported-tags). */
+  claims: ClaimView[];
+  /** Where a claim disagrees with the fleet's tag in a one-of dimension: the fleet wins, and this is the finding. */
+  disagreements: TagDisagreement[];
+  /** How many claims a dimension's `fromMachine: "ignore"` dropped. */
+  ignored: number;
 }
 
-const STRENGTH: Record<TagOrigin, number> = { person: 3, rule: 2, inherited: 1 };
+const STRENGTH: Record<TagOrigin, number> = {
+  person: 5,
+  rule: 4,
+  inherited: 3,
+  reported: 2,
+  announced: 1,
+};
+
+/** Whether an origin is a claim of the machine (reported or announced), not the fleet's own. */
+export const isClaimOrigin = (o: TagOrigin): boolean => o === "reported" || o === "announced";
 
 /** Whether a machine is a member of a group. */
 export function inGroup(
@@ -524,12 +667,18 @@ export function inGroup(
  * The tags a machine holds: the ones a person gave, then the rules' (run over `facts`), then its groups', each with its origin. A
  * one-of dimension holds one value: the strongest origin's (person, then rule, then inherited) is kept and the other is listed as
  * dropped; two values of the same strength are a problem, and the first stays. Free-form tags come last, always as custom.
+ *
+ * Spec 112-machine-reported-tags: then the machine's own claims, reported before announced, below everything the fleet says. A claim
+ * in a dimension that says `fromMachine: "ignore"` is dropped and counted; one the fleet does not define is listed and never held; one
+ * of a one-of dimension where the fleet holds another value is dropped and is a disagreement (the fleet wins, and says so); the rest
+ * are held with the origin `reported` (or `announced`), with the trust of their dimension (`hint` or `accept`).
  */
 export function resolveTags(
   set: Pick<TagSet, "dimensions" | "rules" | "groups"> | undefined,
   facts: TagFacts,
   assigned: TagAssignment = {},
   networks: Readonly<Record<string, string>> = {},
+  claims: readonly ReportedClaim[] = [],
 ): ResolvedTags {
   const problems: string[] = [];
   const dropped: DroppedTag[] = [];
@@ -605,6 +754,81 @@ export function resolveTags(
   for (const g of set?.groups ?? []) {
     if (inGroup(g, facts, networks)) for (const t of g.tags) put(t, "inherited", g.id);
   }
+  const claimViews: ClaimView[] = [];
+  const disagreements: TagDisagreement[] = [];
+  let ignored = 0;
+  const byStrength = [...claims].sort(
+    (a, b) => STRENGTH[b.origin] - STRENGTH[a.origin] || a.id.localeCompare(b.id),
+  );
+  const customHeld = new Map<string, ResolvedTag>();
+  for (const c of byStrength) {
+    const dim = dimensionOf(c.id);
+    const def = c.id.includes(":") ? set?.dimensions[dim] : undefined;
+    const value = def?.tags[c.id.slice(c.id.indexOf(":") + 1)];
+    const trust: TagTrust = c.id.includes(":") ? fromMachineOf(set, dim) : "hint";
+    const view: ClaimView = { ...c, status: "held", trust };
+    claimViews.push(view);
+    if (!c.id.includes(":")) {
+      // A free-form word: always a hint, always custom.
+      if (!customHeld.has(c.id) && !(assigned.customTags ?? []).includes(c.id)) {
+        customHeld.set(c.id, {
+          id: c.id,
+          standing: "custom",
+          label: c.id,
+          origin: c.origin,
+          from: c.source,
+          trust: "hint",
+        });
+      } else view.status = "agrees";
+      continue;
+    }
+    if (!def || !value) {
+      view.status = "undefined";
+      continue;
+    }
+    view.label = value.label;
+    view.colour = value.colour;
+    if (trust === "ignore") {
+      view.status = "ignored";
+      ignored++;
+      continue;
+    }
+    const have = held.get(c.id);
+    if (have) {
+      view.status = "agrees";
+      continue;
+    }
+    if (def.cardinality === "one-of") {
+      const other = [...held.values()].find((h) => h.standing === "defined" && h.dimension === dim);
+      if (other) {
+        view.against = other.id;
+        if (isClaimOrigin(other.origin)) view.status = "overridden";
+        else {
+          view.status = "disagrees";
+          disagreements.push({
+            machine: facts.name,
+            dimension: dim,
+            reported: c.id,
+            fleet: other.id,
+            source: c.source,
+            text: `${facts.name} ${c.origin === "reported" ? "reports" : "announces"} ${c.id}; the fleet says ${other.id}`,
+          });
+        }
+        continue;
+      }
+    }
+    held.set(c.id, {
+      id: c.id,
+      standing: "defined",
+      label: value.label,
+      colour: value.colour,
+      description: value.description,
+      dimension: dim,
+      origin: c.origin,
+      from: c.source,
+      trust,
+    });
+  }
   const order = set ? definedIds(set) : [];
   const defined = [...held.values()]
     .filter((t) => t.standing !== "custom")
@@ -613,18 +837,35 @@ export function resolveTags(
       const ib = order.indexOf(b.id);
       return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib) || a.id.localeCompare(b.id);
     });
-  const custom: ResolvedTag[] = [...new Set(assigned.customTags ?? [])].sort().map((id) => ({
-    id,
-    standing: "custom" as const,
-    label: id,
-    origin: "person" as const,
-  }));
-  return { tags: [...defined, ...custom], dropped, problems };
+  const custom: ResolvedTag[] = [
+    ...[...new Set(assigned.customTags ?? [])].sort().map((id) => ({
+      id,
+      standing: "custom" as const,
+      label: id,
+      origin: "person" as const,
+    })),
+    ...[...customHeld.values()].sort((a, b) => a.id.localeCompare(b.id)),
+  ];
+  return {
+    tags: [...defined, ...custom],
+    dropped,
+    problems,
+    claims: claimViews,
+    disagreements,
+    ignored,
+  };
 }
 
-/** The ids a machine holds, as a set (what a selection is matched against). */
-export const idSet = (r: Pick<ResolvedTags, "tags">): ReadonlySet<string> =>
-  new Set(r.tags.map((t) => t.id));
+/** Whether a resolved tag is one the fleet uses: its own, or a claim of a dimension that says `accept` (never a hint). */
+export const isUsed = (t: Pick<ResolvedTag, "origin" | "trust">): boolean =>
+  !isClaimOrigin(t.origin) || t.trust === "accept";
+
+/**
+ * The ids a machine holds, as a set (what a selection is matched against): the fleet's own tags and the claims of dimensions that say
+ * `accept`; the hints only with `reported` (spec 112-machine-reported-tags FR-011).
+ */
+export const idSet = (r: Pick<ResolvedTags, "tags">, reported = false): ReadonlySet<string> =>
+  new Set(r.tags.filter((t) => reported || isUsed(t)).map((t) => t.id));
 
 // ------------------------------------------------------------------------------ choosing machines by tag
 
@@ -879,6 +1120,7 @@ export const STARTER_DIMENSIONS = {
     label: "Environment",
     description: "Where the machine's work runs.",
     cardinality: "one-of",
+    fromMachine: "accept",
     tags: {
       prod: {
         label: "Production",
@@ -897,6 +1139,7 @@ export const STARTER_DIMENSIONS = {
     label: "Role",
     description: "What the machine is for.",
     cardinality: "many-of",
+    fromMachine: "hint",
     tags: {
       server: { label: "Server", colour: "blue", description: "Serves other machines or people." },
       workstation: { label: "Workstation", colour: "teal", description: "A person works on it." },
@@ -914,6 +1157,7 @@ export const STARTER_DIMENSIONS = {
     label: "Site",
     description: "Where the machine is.",
     cardinality: "one-of",
+    fromMachine: "accept",
     tags: {
       main: { label: "Main site", colour: "blue", description: "The fleet's own premises." },
       remote: {
@@ -928,6 +1172,7 @@ export const STARTER_DIMENSIONS = {
     label: "Owner",
     description: "The team accountable for the machine.",
     cardinality: "one-of",
+    fromMachine: "hint",
     tags: {
       it: { label: "IT", colour: "violet", description: "Run by the people who run IT." },
       engineering: {
@@ -946,6 +1191,7 @@ export const STARTER_DIMENSIONS = {
     label: "Criticality",
     description: "How much the business suffers if it is lost (FIPS 199's impact levels).",
     cardinality: "one-of",
+    fromMachine: "ignore",
     tags: {
       low: { label: "Low", colour: "green", description: "Its loss has a limited effect." },
       moderate: {
@@ -960,6 +1206,7 @@ export const STARTER_DIMENSIONS = {
     label: "Data class",
     description: "The most sensitive class of data the machine holds.",
     cardinality: "one-of",
+    fromMachine: "ignore",
     tags: {
       public: { label: "Public", colour: "green", description: "Anyone may see it." },
       internal: { label: "Internal", colour: "yellow", description: "For the organization only." },
@@ -987,6 +1234,7 @@ export function dimensionsSource(dims: TagDimensions = STARTER_DIMENSIONS): stri
       `      label: ${q(def.label)},`,
       `      description: ${q(def.description)},`,
       `      cardinality: ${q(def.cardinality)},`,
+      ...(def.fromMachine === undefined ? [] : [`      fromMachine: ${q(def.fromMachine)},`]),
       `      tags: {`,
     );
     for (const [v, t] of Object.entries(def.tags)) {
@@ -1028,6 +1276,11 @@ ${dimensionsSource()}
     //   groups: [{ id: "servers-net", network: "Servers", tags: ["site:main"] }],
     rules: [],
     groups: [],
+    // What a machine's /etc/machine-info means here (spec 112-machine-reported-tags): DEPLOYMENT= becomes an environment.
+    // \`fromMachine\` on a dimension says what to do with what machines report: accept, hint (the default) or ignore.
+    machineInfoMap: {
+      deployment: { production: "env:prod", staging: "env:staging", development: "env:lab" },
+    },
   },
 );
 

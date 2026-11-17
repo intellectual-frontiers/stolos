@@ -1,4 +1,4 @@
-# stolos-probe 2: read-only facts for the fleet's Stolos, on Windows (spec 069). Installed by
+# stolos-probe 3: read-only facts for the fleet's Stolos, on Windows (spec 069). Installed by
 # bin/integrate.windows.ps1 -Adopt; run only by the fleet's probe key (authorized_keys forces it).
 # It changes nothing. The same requests and output as the POSIX probe (bin/stolos-probe.sh):
 #   facts             @section and key=value lines
@@ -7,7 +7,7 @@
 # Windows PowerShell 5.1 and PowerShell 7. Anything it cannot read (BitLocker without
 # administrator rights, say) it reports as unknown.
 $ErrorActionPreference = 'SilentlyContinue'
-$version = '2'
+$version = '3'
 $req = $env:SSH_ORIGINAL_COMMAND
 if (-not $req) { $req = if ($args.Count) { $args -join ' ' } else { 'facts' } }
 
@@ -56,6 +56,11 @@ function Get-Facts {
   kv manager 'windows'; kv packages (@(Get-ItemProperty $keys | Where-Object { $_.DisplayName }).Count)
   $oq = Join-Path $env:ProgramFiles 'osquery\osqueryi.exe'
   if (Test-Path $oq) { kv osquery ((& $oq --version) -split ' ')[-1] }
+  # Spec 112-machine-reported-tags: the firmware's SMBIOS facts, which the fleet reads as claims (Windows has no machine-info).
+  Write-Output '@reported'
+  $enc2 = Get-CimInstance Win32_SystemEnclosure
+  kv smbios_vendor $cs.Manufacturer; kv smbios_model $cs.Model
+  kv smbios_chassis_type (@($enc2.ChassisTypes)[0]); kv smbios_bios_vendor $bios.Manufacturer
   Write-Output '@listening'
   $ports = Get-NetTCPConnection -State Listen | Select-Object -ExpandProperty LocalPort | Sort-Object -Unique
   kv ports (@($ports) -join ' ')

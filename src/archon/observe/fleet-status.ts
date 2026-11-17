@@ -9,6 +9,7 @@
  */
 // Spec: 107-pairing-and-query FR-009
 // Spec: 108-tags FR-015
+// Spec: 112-machine-reported-tags FR-010, FR-013
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";
@@ -63,7 +64,7 @@ export async function fleetStatus(): Promise<number> {
   const tokens = await loadTokens().catch(() => []);
   // Spec 108-tags FR-015: each machine's tags on its line, the free-form ones apart (`custom: pilot`).
   const { loadFleetTags, tagLine } = await import("../fleet/tags.ts");
-  const ft = await loadFleetTags({ fleet, hosts }).catch(() => undefined);
+  let ft = await loadFleetTags({ fleet, hosts }).catch(() => undefined);
   const tagsOf = (name: string): string => {
     const t = ft?.machines.find((m) => m.name === name)?.resolved.tags ?? [];
     return t.length ? `tags ${tagLine(t)}` : "";
@@ -111,6 +112,28 @@ export async function fleetStatus(): Promise<number> {
             await putRecord(h.name, "verify", "latest", st.verify, P.state, st.verify.since);
           }
           if (st.inventory) await putRecord(h.name, "inventory", "latest", st.inventory, P.state);
+          // Spec 112-machine-reported-tags FR-010: what it says about itself, kept in this PC's cache (never committed).
+          const { keepReport } = await import("../state/reported.ts");
+          const inv = st.inventory;
+          await keepReport(
+            h.name,
+            {
+              at: st.at,
+              ...(st.reported?.machineInfo ? { machineInfo: st.reported.machineInfo } : {}),
+              ...(st.reported?.tags?.length ? { tags: st.reported.tags } : {}),
+              ...(inv
+                ? {
+                    smbios: {
+                      vendor: inv.vendor,
+                      model: inv.model,
+                      chassis: inv.chassis,
+                      biosVendor: inv.biosVendor,
+                    },
+                  }
+                : {}),
+            },
+            P.state,
+          ).catch(() => false);
           // Spec 066: the commit it applies, and its last pull (the Stolos Console shows them).
           if (st.applied) await putRecord(h.name, "applied", "latest", st.applied, P.state);
           if (st.sync) await putRecord(h.name, "sync", "latest", st.sync, P.state, st.sync.at);
@@ -120,6 +143,8 @@ export async function fleetStatus(): Promise<number> {
         }
       }),
   );
+  // What the servers said just now is in the cache: the tags below are resolved with it.
+  ft = await loadFleetTags({ fleet, hosts }).catch(() => ft);
   for (const h of hosts) {
     const p = ui.phase(h.name);
     const inst = await getRecord<Installed>(h.name, "install", "install", P.state);
@@ -136,6 +161,22 @@ export async function fleetStatus(): Promise<number> {
     // Spec 051: the machine, as it reports itself.
     const inv = (await getRecord<Inventory>(h.name, "inventory", "latest", P.state))?.body;
     if (inv) p.note(`machine: ${describeInventory(inv)}`);
+    // Spec 112-machine-reported-tags FR-013: where the machine says another value than the fleet (the fleet wins; this is the finding).
+    const me = ft?.machines.find((m) => m.name === h.name);
+    for (const d of me?.resolved.disagreements ?? []) {
+      p.warn(
+        d.text,
+        `stolos tag list ${h.name} (if the machine is right: stolos tag accept ${h.name} ${d.reported})`,
+      );
+    }
+    if (ui.verbose && me?.claimsDropped) {
+      p.note(
+        `gap: ${me.claimsDropped} thing(s) it said were not tags and were dropped (${me.gaps.join("; ")})`,
+      );
+    }
+    if (ui.verbose && me?.resolved.ignored) {
+      p.note(`${me.resolved.ignored} claim(s) ignored by the fleet's dimensions`);
+    }
     if (latest) {
       for (const f of latest.failed) p.warn(`failing at its last verify: ${f}`);
       for (const w of latest.warned) p.note(`warning at its last verify: ${w}`);

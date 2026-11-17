@@ -31,7 +31,7 @@ import {
 import { MemoryPairStore, newPairRecord } from "../src/archon/adopt/pair-store.ts";
 import { DEVICE_PAIR_PATH } from "../src/archon/ontology.auto.ts";
 import { parseCheckIn } from "../src/archon/adopt/checkin.ts";
-import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "../src/archon/adopt/probe.ts";
+import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS, PROBE_VERSION } from "../src/archon/adopt/probe.ts";
 import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
 import { servePair, untilDelivered } from "./integrate/pair-server.ts";
 
@@ -437,7 +437,7 @@ proves(
       assertEquals(await fs.readTextFile(`${home}/.local/bin/stolos-probe`), PROBE_SCRIPT);
       const ci = parseCheckIn(`stolos1:${toBase64(new TextEncoder().encode(got))}`);
       assertEquals([ci.fleet, ci.kinds, ci.port], ["lab", ["adopt"], ssh.addr.port]);
-      assertEquals(ci.observed?.probe, "2");
+      assertEquals(ci.observed?.probe, PROBE_VERSION);
       // The session is still open for the next machine; the one that came is adopted.
       assertEquals(await srv.session.ended(), undefined);
       assertEquals(

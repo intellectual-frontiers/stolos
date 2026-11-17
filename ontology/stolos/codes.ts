@@ -29,6 +29,8 @@ import {
   TagCardinalitySchema,
   TagColourSchema,
   TagOriginSchema,
+  TagTrustSchema,
+  TagSourceSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
 } from "./vocabulary.ts";
@@ -560,6 +562,77 @@ export const tagOrigins = codeList(TagOriginSchema, "origin", {
     definition: en("Inherited from a group of the fleet's `tags.ts` the machine belongs to."),
     spec: ["108-tags FR-010"],
   },
+  reported: {
+    label: en("reported"),
+    definition: en(
+      "A claim the machine made about itself, read over the authenticated channel (SSH to a machine whose host key is pinned in Git). Below a group's tag; it never overrides what the fleet says.",
+    ),
+    spec: ["112-machine-reported-tags FR-001, FR-002"],
+  },
+  announced: {
+    label: en("announced"),
+    definition: en(
+      "A claim heard on the network without authentication: a hint only, below a reported one. No source announces yet; the value exists so that a later spec has a place for it.",
+    ),
+    spec: ["112-machine-reported-tags FR-002"],
+  },
+});
+
+/** What a fleet does with the tags machines report in one dimension (spec 112-machine-reported-tags FR-003). */
+export const tagTrusts = codeList(TagTrustSchema, "trust", {
+  accept: {
+    label: en("accept"),
+    definition: en(
+      "A reported tag in the dimension is used like a rule's tag, below the fleet's own.",
+    ),
+    spec: ["112-machine-reported-tags FR-003"],
+  },
+  hint: {
+    label: en("hint"),
+    definition: en(
+      "A reported tag in the dimension is shown with its origin, and never used to choose machines or scope policies. The default.",
+    ),
+    spec: ["112-machine-reported-tags FR-003"],
+  },
+  ignore: {
+    label: en("ignore"),
+    definition: en(
+      "A reported tag in the dimension is dropped and counted; shown only in verbose.",
+    ),
+    spec: ["112-machine-reported-tags FR-003"],
+  },
+});
+
+/** Where on a machine a reported tag was read (spec 112-machine-reported-tags FR-005, FR-007, FR-008). */
+export const tagSources = codeList(TagSourceSchema, "source", {
+  "machine-info": {
+    label: en("machine-info"),
+    definition: en(
+      "The machine's `/etc/machine-info` (systemd machine-info(5)): DEPLOYMENT, LOCATION, CHASSIS and TAGS.",
+    ),
+    spec: ["112-machine-reported-tags FR-005"],
+  },
+  "archon-local": {
+    label: en("archon-local"),
+    definition: en(
+      "A row of the machine's own `archon tag` table that a person on the machine added with `archon tag add`.",
+    ),
+    spec: ["112-machine-reported-tags FR-007"],
+  },
+  "archon-fleet": {
+    label: en("archon-fleet"),
+    definition: en(
+      "A row of the machine's own `archon tag` table that the machine worked out from the fleet repository it holds, at its last apply.",
+    ),
+    spec: ["112-machine-reported-tags FR-008"],
+  },
+  smbios: {
+    label: en("smbios"),
+    definition: en(
+      "The machine's firmware facts (DMTF DSP0134 SMBIOS: maker, model, chassis type, and a cloud provider's name), read from /sys/class/dmi/id.",
+    ),
+    spec: ["112-machine-reported-tags FR-006"],
+  },
 });
 
 /** The kinds of API an integration may be (spec 109-integrations-api FR-001). */
@@ -725,6 +798,16 @@ export const CODE_LISTS = {
     array: "TAG_ORIGINS",
     list: tagOrigins,
     what: "Where a tag on a machine came from",
+  },
+  TagTrust: {
+    array: "TAG_TRUSTS",
+    list: tagTrusts,
+    what: "What a fleet does with the tags machines report in one dimension",
+  },
+  TagSource: {
+    array: "TAG_SOURCES",
+    list: tagSources,
+    what: "Where on a machine a reported tag was read",
   },
   ApiKind: {
     array: "API_KINDS",

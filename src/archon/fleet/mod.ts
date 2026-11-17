@@ -251,6 +251,45 @@
  * gave wins over a rule's, and a rule's over a group's. The Stolos Console draws a chip for every tag,
  * filters and groups the machines by them, and picks the machines for "Ask every machine".
  *
+ * ### What a machine says about itself (spec 112-machine-reported-tags)
+ *
+ * A machine can say what it is: its `/etc/machine-info` (systemd's `DEPLOYMENT=`, `LOCATION=`, `CHASSIS=`,
+ * and `TAGS=`), its firmware's facts (the maker and model, an Amazon EC2 instance's name), and a table of
+ * tags of its own that a person on it keeps with `archon tag add`, `archon tag remove` and `archon tag list`
+ * (root; in its state database, where osquery reads them: `archon query "select * from archon_tags"`). Each
+ * `archon apply` also writes there the tags the fleet knows for the machine. The PC reads all of it over the
+ * SSH it already trusts (`stolos fleet status` for the servers, `stolos host observe` for the adopted
+ * machines), keeps it in its own cache (no commit), and shows it as **claims**, never as the fleet's own tags:
+ *
+ * ```mermaid
+ * flowchart LR
+ *   m["the machine says<br/>machine-info, firmware, archon tag"] -->|"SSH, pinned host key"| pc["the PC's cache"]
+ *   pc --> d{"fromMachine<br/>per dimension"}
+ *   d -->|accept| u["used like a rule's tag,<br/>below the fleet's own"]
+ *   d -->|hint| h["shown, never used to choose machines"]
+ *   d -->|ignore| x["dropped and counted"]
+ *   f["the fleet's tags"] -->|"wins; a disagreement is a finding"| u
+ *   u --> a["stolos tag accept: a signed person tag"]
+ * ```
+ *
+ * ```sh
+ * bun run stolos tag list alpha                      # what alpha says, and what the fleet did with it
+ * bun run stolos tag accept alpha env:prod           # a claim becomes a person's tag (one signed commit)
+ * bun run stolos tag list --tag role:web --reported  # choose by the hints too (never done otherwise)
+ * archon tag add env:prod pilot                      # on the machine itself, as root
+ * ```
+ *
+ * In `tags.ts`, a dimension says `fromMachine: "accept" | "hint" | "ignore"` (hint where it says nothing; the
+ * starter kit accepts the environment and the site, ignores the criticality and the data class), and an
+ * optional `machineInfoMap` says what the machine's words mean here (`production` is `env:prod`). The
+ * precedence is a person, a rule, a group, then what the machine reports: a machine never overrides the
+ * fleet, and where it says another value in a one-of dimension (`alpha reports env:prod; the fleet says
+ * env:lab`) the fleet's stays and the disagreement is shown in `fleet status`, `tag list`, the console's
+ * machine page and the compliance evidence (SCF AST-04). What a machine says is untrusted: each tag is read
+ * with the tag grammar (at most 64 characters, at most 64 a machine), never evaluated, and a word that is not
+ * a tag is dropped and counted as a gap. The console's **Machines say** panel lists each claim with Accept
+ * (the same `tag accept`) and Ignore (hides it for the visit; nothing is kept).
+ *
  * ## Signing: your keys (spec 057)
  *
  * Each operator signs with their own key, listed in the fleet's `signers.ts`. The key is a file,
@@ -309,5 +348,6 @@
  * @module
  */
 // Spec: 108-tags FR-006, FR-007
+// Spec: 112-machine-reported-tags FR-018
 
 export {};

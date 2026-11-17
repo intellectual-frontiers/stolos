@@ -183,7 +183,8 @@ export async function recordController(): Promise<void> {
   try {
     const c = await ensureController();
     if (!("name" in c)) return;
-    const { adoptedDir, loadAdopted, observe, observedSource } = await import("./adopt.ts");
+    const { adoptedDir, keepReported, loadAdopted, observe, observedSource } =
+      await import("./adopt.ts");
     const m = (await loadAdopted()).find((a) => a.machine.name === c.name)?.machine;
     if (!m) return;
     const r = await observe(m);
@@ -192,6 +193,7 @@ export async function recordController(): Promise<void> {
         path.join(adoptedDir(c.name), "observed.ts"),
         observedSource(r.observed),
       );
+      await keepReported(c.name, r.reported);
     }
     const { ui } = await import("../core/ui.ts");
     if (c.added) {

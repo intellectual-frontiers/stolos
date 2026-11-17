@@ -3,6 +3,7 @@
  * criticality and a data class), and one dimension of its own (the operating system) that a rule gives. A tag is
  * `<dimension>:<value>`; a one-of dimension holds one value per machine, a many-of one any number. A tag that is not defined
  * here is a type error and a problem of `stolos build`. Give a machine tags with `stolos tag add <machine> env:lab`.
+ * Spec 112-machine-reported-tags: `fromMachine` says what to do with the tags machines report in a dimension (accept, hint, ignore).
  *
  * @module
  */
@@ -20,6 +21,7 @@ export const tags = defineTags(
       label: "Environment",
       description: "Where the machine's work runs.",
       cardinality: "one-of",
+      fromMachine: "accept",
       tags: {
         prod: {
           label: "Production",
@@ -42,6 +44,7 @@ export const tags = defineTags(
       label: "Role",
       description: "What the machine is for.",
       cardinality: "many-of",
+      fromMachine: "hint",
       tags: {
         server: {
           label: "Server",
@@ -79,6 +82,7 @@ export const tags = defineTags(
       label: "Site",
       description: "Where the machine is.",
       cardinality: "one-of",
+      fromMachine: "accept",
       tags: {
         main: {
           label: "Main site",
@@ -101,6 +105,7 @@ export const tags = defineTags(
       label: "Owner",
       description: "The team accountable for the machine.",
       cardinality: "one-of",
+      fromMachine: "hint",
       tags: {
         it: {
           label: "IT",
@@ -123,6 +128,7 @@ export const tags = defineTags(
       label: "Criticality",
       description: "How much the business suffers if it is lost (FIPS 199's impact levels).",
       cardinality: "one-of",
+      fromMachine: "ignore",
       tags: {
         low: {
           label: "Low",
@@ -145,6 +151,7 @@ export const tags = defineTags(
       label: "Data class",
       description: "The most sensitive class of data the machine holds.",
       cardinality: "one-of",
+      fromMachine: "ignore",
       tags: {
         public: {
           label: "Public",
@@ -206,6 +213,13 @@ export const tags = defineTags(
         tags: ["site:main", "role:server"],
       },
     ],
+    // What a machine's /etc/machine-info means here (spec 112-machine-reported-tags): DEPLOYMENT= becomes an environment, and a
+    // place's name a site. What it does not name is read as the plain claim (env:testing, site:<the place>), which the fleet lists but
+    // does not hold.
+    machineInfoMap: {
+      deployment: { production: "env:prod", staging: "env:staging", development: "env:lab" },
+      location: { "main office": "site:main" },
+    },
   },
 );
 
