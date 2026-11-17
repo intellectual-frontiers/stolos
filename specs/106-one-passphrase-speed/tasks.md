@@ -34,7 +34,15 @@
 - [x] T016 `adopt/pair-command.ts`: the Firewall phase closed before the instructions, the waiting line, the pairing outcome always shown (UAT of v0.136.0; proved in `tests/pair098.test.ts`) (FR-006)
 - [x] T015 `tests/speed106.test.ts` (FR-006 to FR-010)
 
+### Fix forward (v0.139.0: CI of v0.137.0 and v0.138.0 failed)
+
+- [x] T017 `archon-boot/firewall.ts`: a hard limit of 20 seconds on reading the firewall, by signal and by race, one warning where it could not be read, never kept; `core/run-memo.ts`: a limit on `git fetch`; `core/passphrase.ts`: a limit on an askpass program, the end of the command never waits on the broker's close (FR-002, FR-008; proved in `tests/speed106.test.ts`, `tests/passphrase106.test.ts`)
+- [x] T018 `core/passphrase.ts`: on Windows no broker (`PerSigningSession`: spec 105's askpass for each signing), the other systems keep it (FR-002; proved in `tests/passphrase106.test.ts`; its two end-to-end broker tests do not run on Windows)
+- [x] T019 `archon-boot/doctor.ts`: `EACCES` on a port below 1024 is a warning, not a failure, so a run that is not root passes (FR-008; proved in `tests/speed106.test.ts`)
+
 ## Wave 2: later, not built
+
+- [ ] L103 One passphrase per command on Windows awaits a real Windows test of the broker: the loopback server, the `.cmd` helper that ssh-keygen runs, and the helper reaching the broker. Until then Windows asks once per signing (spec 105's way). Turn it on by `brokerHere` in `core/passphrase.ts`, and restore the two end-to-end tests on Windows
 
 - [ ] L101 The passphrase prompt on Windows and macOS terminals is Stolos's own raw-mode read: check it by hand on both (the unit tests cover the reading rules, not a real console)
 - [ ] L102 Cache the engine's newest-release lookup (`git ls-remote`) for a few minutes too (spec 099 FR-002 caches it for the consoles only)

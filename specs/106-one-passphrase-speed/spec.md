@@ -46,7 +46,12 @@ The terms this spec uses, defined in `ontology/stolos/` with this spec as their 
   arguments, telemetry, a report or an MCP tool, and Stolos never keeps or sees it beyond that lifetime. The token is not the
   passphrase: it only lets a process of the same user, started by the command, ask for it, and it dies with the command. A
   child process (a nested run that needs a new engine) inherits the helper and the token and asks the same command: one place
-  holds the passphrase. The helper's own files hold no secret and are removed at the end.
+  holds the passphrase. The helper's own files hold no secret and are removed at the end. Nothing waits for the helper or the
+  person for ever: the person has five minutes, an askpass program the environment names is stopped at that limit, and the end of
+  the command does not wait on the broker's own close. **On Windows the broker is not used** (v0.139.0): the first release with it
+  made every signing command time out on Windows CI (see the tasks), so Windows keeps spec 105's way, OpenSSH's own askpass or
+  terminal for each signing, and a command that signs twice asks twice, until the broker has had a real Windows test. Every other
+  system keeps the broker.
 - **FR-003** A wrong passphrase is retried in place, three tries in all, saying "That passphrase didn't unlock your daily key (2
   left)" (spec 105-calm-output FR-013, unchanged). What was typed is kept for the rest of the command only after it unlocked the
   key (`stolos:signing-unlocked`); a passphrase the key refused (`stolos:signing-refused`) is thrown away, and one kept before is
@@ -71,12 +76,16 @@ The terms this spec uses, defined in `ontology/stolos/` with this spec as their 
   repository cloned, its engine installed, GitHub reachable) on an ordinary PC. A test fails where a no-op `update` against a
   sandbox fleet takes more than a bound that is generous (a CI machine, Windows, other tests running at once) and says why; a
   second test fails where it starts any child process.
-- **FR-008** The firewall check (read-only, spec 004-install) is kept in `firewall.json` in the program's state folder for five
+- **FR-008** The firewall check (read-only, spec 004-install) is kept in `probe-cache.json` in the program's state folder for five
   minutes, for the same needs on the same system, so the next run does not ask the system again: it holds the warnings, never the
   rules. It never makes a run wrong for more than those five minutes after a rule changed. It is not used, and not written, by a
   report (verbose by default: `boot doctor`, `boot serve`), by `--verbose`, or by `--fresh` (a global option on every command: do not
   use what an earlier run remembered), and a check that could not be completed is not kept. Within one run the system is asked at
-  most once (the console's check and the boot server's share it), and the check runs while the doctor's other checks do.
+  most once (the console's check and the boot server's share it), and the check runs while the doctor's other checks do. Reading
+  the firewall has a hard limit of 20 seconds, on every system: past it the check stops its programs, does not wait for them,
+  says as one warning that the firewall could not be checked and how to look by hand (and `--fresh`), is not kept, and the command
+  neither fails nor waits any longer. A bind that an account may not do on a port below 1024 (`EACCES`) is no failure of the
+  doctor's port check: it is a warning that the port could not be checked.
 - **FR-009** One run asks Git and the model once where it can: `git fetch origin` is done once per run (the update's, the send's and
   the doctor's share it), and the fleet's `fleet.ts` and signers are read once per run until a file of them changes.
 - **FR-010** Every phase writes a timing line to the run log, never to the screen (`TIME <phase> <milliseconds>ms`), and a run ends with

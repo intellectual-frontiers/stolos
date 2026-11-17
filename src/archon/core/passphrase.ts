@@ -46,6 +46,9 @@ export const SCOPE_HEADER = "x-stolos-scope";
 /** How long the person has to answer before OpenSSH is told no. */
 export const ASK_TIMEOUT_MS = 5 * 60_000;
 
+/** How long the end of a command waits for the broker to close (spec 106-one-passphrase-speed FR-002). */
+export const WIPE_LIMIT_MS = 3_000;
+
 /** Whether two strings are equal, compared in constant time. */
 function sameToken(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -120,13 +123,38 @@ async function fromTerminal(prompt: string): Promise<Uint8Array | undefined> {
 }
 
 /** Ask the askpass program the environment names (the console's page, a desktop's, a test's). */
-async function fromAskpass(program: string, prompt: string): Promise<Uint8Array | undefined> {
-  const r = await proc.output([program, prompt], {
+async function fromAskpass(
+  program: string,
+  prompt: string,
+  limitMs: number,
+): Promise<Uint8Array | undefined> {
+  // A program that never answers is stopped at the limit, and the race below lets go of it even
+  // where stopping it leaves a child holding its pipes (Windows): nothing waits forever on it.
+  const stop = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const cut = new Promise<undefined>((resolve) => {
+    timer = setTimeout(() => {
+      stop.abort();
+      resolve(undefined);
+    }, limitMs);
+  });
+  const asked = proc.output([program, prompt], {
     stdin: "null",
     stdout: "piped",
     stderr: "inherit",
+    signal: stop.signal,
+    killAfterMs: 1000,
   });
-  if (!r.success) return undefined;
+  asked.catch(() => undefined);
+  let r: Awaited<typeof asked> | undefined;
+  try {
+    r = await Promise.race([asked, cut]);
+  } catch {
+    r = undefined;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!r?.success) return undefined;
   let end = r.stdout.length;
   while (end > 0 && (r.stdout[end - 1] === 0x0a || r.stdout[end - 1] === 0x0d)) end--;
   const answer = r.stdout.slice(0, end);
@@ -139,11 +167,14 @@ async function fromAskpass(program: string, prompt: string): Promise<Uint8Array 
  * program, with no echo; else through the askpass the environment names (`SSH_ASKPASS`, when it is
  * forced or there is no terminal); else nowhere.
  */
-export function askThePerson(prompt: string): Promise<Uint8Array | undefined> {
+export function askThePerson(
+  prompt: string,
+  limitMs = ASK_TIMEOUT_MS,
+): Promise<Uint8Array | undefined> {
   const askpass = proc.env.get("SSH_ASKPASS") || undefined;
   const terminal = tty.isTerminal("stdin");
   const forced = proc.env.get("SSH_ASKPASS_REQUIRE") === "force";
-  if (askpass && (forced || !terminal)) return fromAskpass(askpass, prompt);
+  if (askpass && (forced || !terminal)) return fromAskpass(askpass, prompt, limitMs);
   if (terminal) return fromTerminal(prompt);
   return Promise.resolve(undefined);
 }
@@ -350,7 +381,12 @@ export class PassphraseSession implements Passphrases {
     this.token = "";
     await new Promise<void>((resolve) => {
       if (!server) return resolve();
-      server.close(() => resolve());
+      // Never waits on the server's own close: where it does not come, the command still ends.
+      const giveUp = setTimeout(resolve, WIPE_LIMIT_MS);
+      server.close(() => {
+        clearTimeout(giveUp);
+        resolve();
+      });
       server.closeAllConnections();
     });
     if (dir) await fs.remove(dir, { recursive: true }).catch(() => undefined);
@@ -428,14 +464,49 @@ export class InheritedSession implements Passphrases {
   }
 }
 
+/**
+ * What a command holds where there is no broker (Windows, until the broker has had a real Windows
+ * test, spec 106-one-passphrase-speed FR-002): nothing. Each signing is OpenSSH's own, as in spec
+ * 105-calm-output (the person's `SSH_ASKPASS`, or the terminal), so a command that signs twice asks
+ * twice. No server, no helper script, no child process of ours is involved in signing.
+ */
+export class PerSigningSession implements Passphrases {
+  childEnv(): Promise<Record<string, string>> {
+    return Promise.resolve({});
+  }
+
+  signingEnv(): Promise<Record<string, string>> {
+    return Promise.resolve({});
+  }
+
+  settle(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  wipe(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+/** Whether this system keeps the passphrase in a broker (every system but Windows). */
+export function brokerHere(os: string = proc.build.os): boolean {
+  return os !== "windows";
+}
+
 /** This process's passphrases: its parent's where it was started to sign for one, else its own. */
-function make(): Passphrases {
+function make(os: string = proc.build.os): Passphrases {
+  if (!brokerHere(os)) return new PerSigningSession();
   const url = proc.env.get(ENV_URL);
   const token = proc.env.get(ENV_TOKEN);
   const helper = proc.env.get(ENV_HELPER);
   return url && token && helper
     ? new InheritedSession(url, token, helper)
     : new PassphraseSession();
+}
+
+/** The passphrases a command on the system named `os` would make (a test's way to see Windows' from anywhere). */
+export function passphrasesFor(os: string): Passphrases {
+  return make(os);
 }
 
 let current: Passphrases | undefined;

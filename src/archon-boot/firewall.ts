@@ -175,9 +175,11 @@ export function forgetWindowsState(): void {
   winState = undefined;
 }
 
-function windowsState(): Promise<WinState | undefined> {
+function windowsState(signal?: AbortSignal): Promise<WinState | undefined> {
   winState ??= (async () => {
-    const r = await run(["powershell", "-NoProfile", "-NonInteractive", "-Command", PROBE]);
+    const r = await run(["powershell", "-NoProfile", "-NonInteractive", "-Command", PROBE], {
+      ...(signal ? { signal } : {}),
+    });
     if (!r.ok || !r.stdout.trim()) return undefined;
     return normalizeWinState(JSON.parse(r.stdout) as WinState);
   })();
@@ -185,8 +187,8 @@ function windowsState(): Promise<WinState | undefined> {
 }
 
 /** The warnings for these needs, or undefined where the rules could not be read. */
-async function windows(needs: Need[]): Promise<string[] | undefined> {
-  const s = await windowsState();
+async function windows(needs: Need[], signal?: AbortSignal): Promise<string[] | undefined> {
+  const s = await windowsState(signal);
   if (!s) return undefined;
   const blocked = evaluateWindows(s, needs);
   const lines: string[] = [];
@@ -233,11 +235,12 @@ export function evaluateUfw(status: string, needs: Need[]): Need[] {
   );
 }
 
-async function linux(needs: Need[]): Promise<string[]> {
+async function linux(needs: Need[], signal?: AbortSignal): Promise<string[]> {
+  const lim = signal ? { signal } : {};
   const lines: string[] = [];
-  const ufwActive = (await run(["systemctl", "is-active", "--quiet", "ufw"])).ok;
+  const ufwActive = (await run(["systemctl", "is-active", "--quiet", "ufw"], lim)).ok;
   if (ufwActive) {
-    const st = await run(["ufw", "status"]);
+    const st = await run(["ufw", "status"], lim);
     const missing = st.ok ? evaluateUfw(st.stdout, needs) : needs;
     for (const n of missing) {
       lines.push(
@@ -247,9 +250,9 @@ async function linux(needs: Need[]): Promise<string[]> {
       );
     }
   }
-  if ((await run(["firewall-cmd", "--state"])).ok) {
-    const ports = await run(["firewall-cmd", "--list-ports"]);
-    const services = await run(["firewall-cmd", "--list-services"]);
+  if ((await run(["firewall-cmd", "--state"], lim)).ok) {
+    const ports = await run(["firewall-cmd", "--list-ports"], lim);
+    const services = await run(["firewall-cmd", "--list-services"], lim);
     for (const n of needs) {
       const open =
         ports.stdout.split(/\s+/).includes(`${n.port}/${n.protocol.toLowerCase()}`) ||
@@ -264,29 +267,68 @@ async function linux(needs: Need[]): Promise<string[]> {
   return lines;
 }
 
+/** How long the firewall may be read before the check gives up (spec 106-one-passphrase-speed FR-008). */
+export const FIREWALL_LIMIT_MS = 20_000;
+
+/** How the firewall is read: the warnings, or undefined where it could not be (tests replace it). */
+export type FirewallProbe = (needs: Need[], signal: AbortSignal) => Promise<string[] | undefined>;
+
+/** What a firewall check is given (tests replace the reading and the limit). */
+export interface FirewallOptions {
+  /** `pair` opens a window that is only useful if the answer is true now: do not use a kept answer. */
+  fresh?: boolean;
+  /** The hard limit on reading the firewall (default: {@link FIREWALL_LIMIT_MS}). */
+  limitMs?: number;
+  /** Reads the firewall (default: this system's). */
+  probe?: FirewallProbe;
+}
+
+/** What is said where the firewall could not be read in time: a warning, with what to do by hand. */
+export function unreadable(limitMs: number): string {
+  const seconds = Math.max(1, Math.round(limitMs / 1000));
+  return proc.build.os === "windows"
+    ? `The firewall could not be checked in ${seconds} seconds, so it is not known whether it blocks the boot server. Look at the rules yourself (PowerShell): Get-NetFirewallRule -Direction Inbound -Enabled True -Action Block | Format-Table DisplayName, Profile; or ask again with: stolos boot doctor --fresh`
+    : `The firewall could not be checked in ${seconds} seconds, so it is not known whether it blocks the boot server. Look at it yourself (sudo ufw status, or sudo firewall-cmd --list-all); or ask again with: stolos boot doctor --fresh`;
+}
+
 /**
- * Warnings for this machine's firewall; empty when it is fine or cannot be read. The answer is kept
- * for five minutes in the program's state folder (spec 106-one-passphrase-speed FR-008), unless the
- * run is a report, `--verbose` or `--fresh` (or the caller asks for `fresh`: `pair` opens a window that
- * is only useful if the answer is true now), and is not kept where the check could not be completed.
+ * Warnings for this machine's firewall; empty when it is fine. Reading it has a hard time limit
+ * ({@link FIREWALL_LIMIT_MS}, spec 106-one-passphrase-speed FR-008): where it could not be read in
+ * time (or at all) the answer is one warning saying so, with what to do by hand, and nothing waits
+ * longer. The answer is kept for five minutes in the program's state folder, unless the run is a
+ * report, `--verbose` or `--fresh` (or the caller asks for `fresh`), and is not kept where the check
+ * could not be completed.
  */
-export async function firewallWarnings(
-  needs: Need[],
-  o: { fresh?: boolean } = {},
-): Promise<string[]> {
+export async function firewallWarnings(needs: Need[], o: FirewallOptions = {}): Promise<string[]> {
   const key = JSON.stringify([
     "firewall",
     proc.build.os,
     needs.map((n) => `${n.protocol} ${n.port} ${n.what}`).sort(),
   ]);
+  const limit = o.limitMs ?? FIREWALL_LIMIT_MS;
+  const read: FirewallProbe =
+    o.probe ??
+    ((n, signal) => (proc.build.os === "windows" ? windows(n, signal) : linux(n, signal)));
   const answer = await probed<{ done: boolean; lines: string[] }>(
     key,
     async () => {
+      const stop = new AbortController();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      // The limit is a race, not only a signal: a program stopped on Windows can leave a child that
+      // keeps its pipes open, and the run's own end would then never come.
+      const cut = new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => {
+          stop.abort();
+          resolve(undefined);
+        }, limit);
+      });
       try {
-        const lines = proc.build.os === "windows" ? await windows(needs) : await linux(needs);
-        return lines ? { done: true, lines } : { done: false, lines: [] };
+        const lines = await Promise.race([read(needs, stop.signal), cut]);
+        return lines ? { done: true, lines } : { done: false, lines: [unreadable(limit)] };
       } catch {
-        return { done: false, lines: [] };
+        return { done: false, lines: [unreadable(limit)] };
+      } finally {
+        clearTimeout(timer);
       }
     },
     { keep: (v) => (v as { done: boolean }).done, ...(o.fresh ? { bypass: true } : {}) },

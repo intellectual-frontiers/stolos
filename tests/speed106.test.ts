@@ -13,6 +13,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { portNotCheckable } from "../src/archon-boot/doctor.ts";
 import { firewallWarnings, forgetWindowsState } from "../src/archon-boot/firewall.ts";
 import { runNested, setNestedRunner } from "../src/archon/core/nested.ts";
 import {
@@ -445,5 +446,76 @@ proves(
     } finally {
       await fs.remove(dir, { recursive: true });
     }
+  },
+);
+
+proves(
+  ["106-one-passphrase-speed FR-008"],
+  "106: reading the firewall has a hard time limit: a probe that never answers is cut, stopped by its signal, and says it could not check, as one warning with what to do; the answer is not kept",
+  async () => {
+    const home = await fs.makeTempDir({ prefix: "stolos-fwlimit106-" });
+    const saved = ["HOME", "LOCALAPPDATA", "USERPROFILE"].map((k) => [k, proc.env.get(k)] as const);
+    try {
+      proc.env.set("HOME", home);
+      proc.env.set("LOCALAPPDATA", path.join(home, "local"));
+      proc.env.set("USERPROFILE", home);
+      const was = ui.mode;
+      ui.setMode("calm");
+      const needs = [{ protocol: "UDP" as const, port: 69, what: "TFTP" }];
+      let stopped = false;
+      forgetRun();
+      const start = performance.now();
+      // A probe that ignores its signal and never settles (a stuck PowerShell with a child holding its pipes).
+      const lines = await firewallWarnings(needs, {
+        limitMs: 200,
+        probe: (_n, signal) => {
+          signal.addEventListener("abort", () => (stopped = true));
+          return new Promise<string[] | undefined>(() => {});
+        },
+      });
+      assert(performance.now() - start < 10_000, "cut at the limit");
+      assertEquals(lines.length, 1, lines.join("\n"));
+      assertStringIncludes(lines[0] ?? "", "could not be checked");
+      assertStringIncludes(lines[0] ?? "", "--fresh");
+      assert(!/\u2014/.test(lines[0] ?? ""), "no em dash");
+      assert(stopped, "the probe was told to stop");
+      assert(!(await fs.exists(probeCacheFile())), "an unfinished check is not kept");
+      // A probe that cannot read the rules says the same.
+      forgetRun();
+      const none = await firewallWarnings(needs, {
+        limitMs: 200,
+        probe: () => Promise.resolve(undefined),
+      });
+      assertEquals(none, lines);
+      // One that answers in time is believed and kept.
+      forgetRun();
+      assertEquals(
+        await firewallWarnings(needs, { limitMs: 5_000, probe: () => Promise.resolve([]) }),
+        [],
+      );
+      ui.setMode(was);
+    } finally {
+      for (const [k, v] of saved) {
+        if (v === undefined) proc.env.delete(k);
+        else proc.env.set(k, v);
+      }
+      forgetRun();
+      await fs.remove(home, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["106-one-passphrase-speed FR-008"],
+  "106: a port below 1024 that an account may not bind is not a taken port: the doctor cannot check it and says so (a warning), never a failure",
+  () => {
+    assert(portNotCheckable("EACCES", 69, "linux"));
+    assert(portNotCheckable("EACCES", 443, "darwin"));
+    assert(!portNotCheckable("EADDRINUSE", 69, "linux"), "taken is taken");
+    assert(
+      !portNotCheckable("EACCES", 8080, "linux"),
+      "an ordinary port that is refused is a real problem",
+    );
+    assert(!portNotCheckable("EACCES", 69, "windows"));
   },
 );

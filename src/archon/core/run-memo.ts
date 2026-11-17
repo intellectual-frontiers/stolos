@@ -13,6 +13,9 @@ import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run, type RunResult } from "./exec.ts";
 import { ui } from "./ui.ts";
 
+/** How long a `git fetch` may take before it is stopped (a failed fetch is a warning, not a hang). */
+export const FETCH_LIMIT_MS = 120_000;
+
 /** What this run has fetched: each repository, and what of its origin (everything, or some branches). */
 const fetched = new Map<
   string,
@@ -39,7 +42,10 @@ export function fetchOnce(repo: string, branch?: string): Promise<RunResult> {
     ui.log(`   git fetch origin${branch ? ` ${branch}` : ""}: done already in this run`);
     return earlier;
   }
-  const r = run(["git", "-C", repo, "fetch", "--quiet", "origin", ...(branch ? [branch] : [])]);
+  // A hard limit: a fetch that waits on a credential or a dead network never holds the run.
+  const r = run(["git", "-C", repo, "fetch", "--quiet", "origin", ...(branch ? [branch] : [])], {
+    signal: AbortSignal.timeout(FETCH_LIMIT_MS),
+  });
   if (branch === undefined) mine.all = r;
   else mine.branches.set(branch, r);
   return r;

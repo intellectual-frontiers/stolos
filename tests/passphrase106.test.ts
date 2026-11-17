@@ -19,7 +19,10 @@ import {
   ENV_HELPER,
   ENV_TOKEN,
   ENV_URL,
+  askThePerson,
   PassphraseSession,
+  passphrasesFor,
+  PerSigningSession,
   TOKEN_HEADER,
 } from "../src/archon/core/passphrase.ts";
 import { SIGNING_OUTCOMES } from "../src/archon/ontology.auto.ts";
@@ -28,6 +31,10 @@ import { VERSION } from "../src/archon/version.ts";
 import { runtimeCommand } from "../src/archon/install/bun.ts";
 import { ENGINE_ROOT } from "./sandbox.ts";
 import { countingAskpass, engineRepo, fleet, PASS } from "./lab-fleet.ts";
+
+/** Why the broker's end-to-end tests do not run on Windows (spec 106-one-passphrase-speed tasks). */
+const NO_BROKER_ON_WINDOWS =
+  "Windows keeps spec 105's one askpass per signing until the broker has had a real Windows test";
 
 const te = new TextEncoder();
 const td = new TextDecoder();
@@ -262,6 +269,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { skip: proc.build.os === "windows" && NO_BROKER_ON_WINDOWS },
 );
 
 proves(
@@ -388,7 +396,8 @@ proves(
   },
   {
     skip:
-      proc.which("bun") === undefined && "bun is not installed (fleet upgrade runs bun install)",
+      (proc.build.os === "windows" && NO_BROKER_ON_WINDOWS) ||
+      (proc.which("bun") === undefined && "bun is not installed (fleet upgrade runs bun install)"),
   },
 );
 
@@ -491,6 +500,55 @@ proves(
     for (const rel of ["identity/keys-commands.ts", "identity/keys.ts", "mcp/server.ts"]) {
       const text = await fs.readTextFile(path.join(root, rel));
       assert(!/passphrase\.ts/.test(text), `${rel} imports the passphrase session`);
+    }
+  },
+);
+
+proves(
+  ["106-one-passphrase-speed FR-002", "106-one-passphrase-speed FR-004"],
+  "106: Windows keeps one askpass per signing (no broker, no helper script, no server, nothing added to the environment), every other system keeps the broker",
+  async () => {
+    const win = passphrasesFor("windows");
+    assert(win instanceof PerSigningSession);
+    assertEquals(await win.signingEnv(), {});
+    assertEquals(await win.childEnv(), {});
+    await win.wipe();
+    for (const os of ["linux", "darwin"]) {
+      const other = passphrasesFor(os);
+      assert(other instanceof PassphraseSession, os);
+      await other.wipe();
+    }
+  },
+);
+
+proves(
+  ["106-one-passphrase-speed FR-004"],
+  "106: an askpass program that never answers is stopped at the limit: the person is told no, and nothing waits for it",
+  async () => {
+    const dir = await fs.makeTempDir({ prefix: "stolos-ask106-" });
+    const saved = ["SSH_ASKPASS", "SSH_ASKPASS_REQUIRE"].map((k) => [k, proc.env.get(k)] as const);
+    try {
+      const program =
+        proc.build.os === "windows" ? path.join(dir, "never.cmd") : path.join(dir, "never.sh");
+      await fs.writeTextFile(
+        program,
+        proc.build.os === "windows"
+          ? "@ping -n 60 127.0.0.1 >nul\r\n"
+          : "#!/bin/sh\nexec sleep 60\n",
+      );
+      if (proc.build.os !== "windows") await fs.chmod(program, 0o700);
+      proc.env.set("SSH_ASKPASS", program);
+      proc.env.set("SSH_ASKPASS_REQUIRE", "force");
+      const start = performance.now();
+      const typed = await askThePerson("Enter passphrase:", 300);
+      assertEquals(typed, undefined);
+      assert(performance.now() - start < 15_000, "stopped at the limit, not at the program's end");
+    } finally {
+      for (const [k, v] of saved) {
+        if (v === undefined) proc.env.delete(k);
+        else proc.env.set(k, v);
+      }
+      await fs.remove(dir, { recursive: true });
     }
   },
 );

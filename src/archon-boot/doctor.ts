@@ -12,7 +12,7 @@
 // Spec: 103-three-ports FR-001, FR-009, FR-011
 // Spec: 106-one-passphrase-speed FR-008
 
-import { fs, path, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
 import { P } from "../archon/core/paths.ts";
 import { ui } from "../archon/core/ui.ts";
@@ -25,6 +25,14 @@ import { cacheDir } from "./assets.ts";
 import { UBUNTU } from "./pins.ts";
 import { firewallWarnings } from "./firewall.ts";
 import { fetchOnce } from "../archon/core/run-memo.ts";
+
+/**
+ * Whether a failed bind says "not allowed" (a port below 1024 on a system that keeps those for
+ * privileged accounts) and not "taken": the check cannot tell, and says so as a warning.
+ */
+export function portNotCheckable(code: string, port: number, os: string): boolean {
+  return code === "EACCES" && port < 1024 && os !== "windows";
+}
 
 /**
  * Run the boot doctor: check the checkout, model, secrets, Ubuntu's files,
@@ -220,6 +228,15 @@ export async function doctor(o: {
         }
       } catch (e) {
         const code = (e as { code?: string }).code ?? (e as Error).name;
+        // A port below 1024 is a privilege, not a neighbour: where this account may not bind it, it is
+        // not known to be taken (the check cannot say), and what serves it runs with that privilege.
+        if (portNotCheckable(code, port, proc.build.os)) {
+          n.warn(
+            `${proto} port ${port} could not be checked (${code}: this account may not bind a port below 1024)`,
+            "run the doctor with sudo to check it, or serve with the privilege that binds it",
+          );
+          continue;
+        }
         n.fail(
           `${proto} port ${port} is not free (${code})`,
           port === standardPort("boot-tftp")
