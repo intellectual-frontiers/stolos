@@ -30,6 +30,7 @@ import {
   StolosDatatypeProperty,
   StolosObjectProperty,
   stolosOntology,
+  SigningOutcomeSchema,
   VerbositySchema,
 } from "./vocabulary.ts";
 
@@ -68,6 +69,7 @@ export const citingSchemas = [
   OutputClassSchema,
   VerbositySchema,
   LineKindSchema,
+  SigningOutcomeSchema,
   MachineKindSchema,
   SignerRoleSchema,
   CommandTierSchema,

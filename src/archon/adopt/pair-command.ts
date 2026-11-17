@@ -10,6 +10,7 @@
 // Spec: 097-controller FR-001
 // Spec: 098-pair FR-001, FR-005, FR-006, FR-007, FR-008
 // Spec: 103-three-ports FR-004, FR-005, FR-006, FR-008, FR-011
+// Spec: 106-one-passphrase-speed FR-006
 
 import { dns, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
@@ -328,7 +329,7 @@ export async function pair(o: {
           }
         : { protocol: "TCP" as const, port: choice.port, what: "Stolos pair (HTTP)" },
     );
-    for (const w of await firewallWarnings(needs)) {
+    for (const w of await firewallWarnings(needs, { fresh: true })) {
       fw.action(w, "allow it, or the machine cannot reach this PC");
     }
     if (choice.explicit && found.doors.some((d) => d.door === "lan-http")) {
@@ -337,18 +338,31 @@ export async function pair(o: {
         firewallRule(proc.build.os, "tcp", choice.port, "pair (HTTP)"),
       );
     }
+    // The checks are done: close the phase before the instructions, so nothing spins under them.
+    fw.done(fw.actions ? "see above" : "allows the pairing (or no firewall to check)");
     ui.pause();
     stdio.stdout.writeSync(pairInstructions(found.doors, code));
     ui.resume();
+    // Now the command waits for the machine, and says so.
+    const until = Date.now() + 10 * 60_000;
+    w = ui.phase("Waiting");
+    const say = (): void =>
+      w?.status(
+        `Waiting for a machine to run the line above (code expires in ${Math.max(1, Math.ceil((until - Date.now()) / 60_000))} minutes)`,
+      );
+    say();
+    tick = proc.unrefTimer(say, 15_000);
     return true;
   };
 
-  const w = ui.phase("Waiting");
+  let w: ReturnType<typeof ui.phase> | undefined;
+  let tick: { clear(): void } | undefined;
+  let decision: { ok: boolean; message: string } | undefined;
   const end = await runPairing({
     store,
     record,
     doors,
-    approve: (text, hello) => approve(text, hello, o),
+    approve: async (text, hello) => (decision = await approve(text, hello, o)),
     close: () => {
       listener?.close();
       return Promise.resolve();
@@ -358,14 +372,30 @@ export async function pair(o: {
       return () => proc.removeSignalListener("SIGINT", cb);
     },
   });
+  tick?.clear();
   if (end === "no-door") return fail();
-  if (end === "paired") w.done("paired");
-  else if (end === "expired")
-    w.fail("the code expired; nothing was written", "bun run stolos pair");
-  else if (end === "tries") {
-    w.fail("5 wrong codes: the pairing ended; nothing was written", "bun run stolos pair");
-  } else w.warn("not approved; nothing was written", "bun run stolos pair");
+  endPairing(w ?? ui.phase("Waiting"), end, decision);
   return fail();
+}
+
+/**
+ * How a pairing ends (spec 106-one-passphrase-speed FR-006): a pairing says what happened, in a line
+ * that is always shown ("intrepid is adopted by the fleet lab"); a refusal, an expiry and too many
+ * wrong codes are the failures they were.
+ */
+export function endPairing(
+  wait: ReturnType<typeof ui.phase>,
+  end: string,
+  decision?: { ok: boolean; message: string },
+): void {
+  if (end === "paired") {
+    wait.done("paired");
+    ui.outcome(decision?.message ?? "the machine is adopted by the fleet");
+  } else if (end === "expired") {
+    wait.fail("the code expired; nothing was written", "bun run stolos pair");
+  } else if (end === "tries") {
+    wait.fail("5 wrong codes: the pairing ended; nothing was written", "bun run stolos pair");
+  } else wait.warn("not approved; nothing was written", "bun run stolos pair");
 }
 
 /** A URL's text with the certificate checked, or undefined where it cannot be reached or does not answer 200. */

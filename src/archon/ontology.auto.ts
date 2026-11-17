@@ -42,6 +42,12 @@ export const LINE_KINDS: readonly LineKind[] = [
   "outcome",
 ];
 
+/** How an attempt to sign ended, for the passphrase held in memory (`stolos:SigningOutcome`; 106-one-passphrase-speed FR-003). */
+export type SigningOutcome = "unlocked" | "refused" | "failed";
+
+/** Every {@link SigningOutcome}, in the ontology's order. */
+export const SIGNING_OUTCOMES: readonly SigningOutcome[] = ["unlocked", "refused", "failed"];
+
 /** What a machine of a fleet is to Stolos (`stolos:MachineKind`; 002-model, 020-workstation, 067-adopt, 069-integrate FR-005, 066-stolos-console FR-003, 097-controller FR-001). */
 export type MachineKind =
   "server" | "workstation" | "adopted" | "device" | "discovered" | "cloud" | "controller";

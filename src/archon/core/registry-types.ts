@@ -212,4 +212,10 @@ export const GLOBAL_ARGS: ArgSpec[] = [
     description:
       "Print one verdict line and exit with the code, nothing else (also -q); the run log still has everything.",
   },
+  {
+    name: "fresh",
+    type: "boolean",
+    description:
+      "Do not use what an earlier run remembered (the firewall check is kept for five minutes): ask the system again (spec 106-one-passphrase-speed).",
+  },
 ];

@@ -131,6 +131,21 @@ stolos:PairingCode a owl:Class ;
     skos:definition "Eight characters with no look-alikes that a person types on a machine to pair it with the controller; every message after the script is signed with it."@en ;
     stolos:spec "098-pair FR-002, FR-004" .
 
+stolos:PassphraseSession a owl:Class ;
+    rdfs:label "Passphrase session"@en ;
+    skos:definition "The daily key's passphrase held in the memory of one command, and of the runs nested in it, from the first time it is asked to the end of the command: handed to a signing tool by a per-run askpass helper, never stored, never in an environment variable, a file, a log or an argument, and wiped when the command ends."@en ;
+    stolos:spec "106-one-passphrase-speed FR-001, FR-002" .
+
+stolos:PhaseTiming a owl:Class ;
+    rdfs:label "Phase timing"@en ;
+    skos:definition "A line of a run's log that says how long a phase took, in milliseconds, and a closing line for the whole run: for finding what is slow, never drawn on the screen."@en ;
+    stolos:spec "106-one-passphrase-speed FR-010" .
+
+stolos:ProbeCache a owl:Class ;
+    rdfs:label "Probe cache"@en ;
+    skos:definition "What an earlier run found out about this PC's firewall, kept for a short time in the program's state folder so that the next run does not ask the system again; never stale across a rule change by more than its time to live."@en ;
+    stolos:spec "106-one-passphrase-speed FR-008" .
+
 stolos:Record a owl:Class ;
     rdfs:label "Record"@en ;
     skos:definition "A file Stolos writes in a fleet repository about what happened (a registration, an observation): sent by `stolos update`."@en ;
@@ -150,6 +165,11 @@ stolos:SignerRole a owl:Class ;
     rdfs:label "Signer role"@en ;
     skos:definition "daily (approves changes) or recovery (kept offline, replaces a lost daily key)."@en ;
     stolos:spec "047-intent-and-identity FR-001" .
+
+stolos:SigningOutcome a owl:Class ;
+    rdfs:label "Signing outcome"@en ;
+    skos:definition "How an attempt to sign ended, which decides what happens to the passphrase held in memory: kept, thrown away and asked again, or thrown away."@en ;
+    stolos:spec "106-one-passphrase-speed FR-003" .
 
 stolos:TrustedNetwork a owl:Class ;
     rdfs:label "Trusted network"@en ;
@@ -658,6 +678,24 @@ stolos:signer-recovery a stolos:SignerRole ;
     skos:notation "recovery" ;
     stolos:spec "047-intent-and-identity FR-001",
         "057-keys" .
+
+stolos:signing-failed a stolos:SigningOutcome ;
+    rdfs:label "failed"@en ;
+    skos:definition "Signing failed for another reason: a passphrase typed for this attempt is thrown away, one kept before stays."@en ;
+    skos:notation "failed" ;
+    stolos:spec "106-one-passphrase-speed FR-003" .
+
+stolos:signing-refused a stolos:SigningOutcome ;
+    rdfs:label "refused"@en ;
+    skos:definition "The key did not unlock with the passphrase given: it is thrown away, the person is asked again (three tries in all), and what was kept before stays until a new one unlocks."@en ;
+    skos:notation "refused" ;
+    stolos:spec "106-one-passphrase-speed FR-003" .
+
+stolos:signing-unlocked a stolos:SigningOutcome ;
+    rdfs:label "unlocked"@en ;
+    skos:definition "The key unlocked and the commit was signed: the passphrase is kept for the rest of the command."@en ;
+    skos:notation "unlocked" ;
+    stolos:spec "106-one-passphrase-speed FR-003" .
 
 stolos:spec a owl:DatatypeProperty ;
     rdfs:label "spec"@en ;

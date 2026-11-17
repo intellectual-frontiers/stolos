@@ -27,12 +27,14 @@
  * @module
  */
 // Spec: 080-risks-vendors
+// Spec: 106-one-passphrase-speed FR-001
 
 import { run } from "../core/exec.ts";
 import { type Literal, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path as paths, proc, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { log } from "../core/log.ts";
 import { isDay } from "./register.ts";
+import { commitSigned } from "../fleet/signing.ts";
 import type { Vendor } from "./vendors.ts";
 
 /** A risk's `nextReview` in risks.ts's text, set to `next`; throws when the risk or its date is not found. */
@@ -204,6 +206,10 @@ export function realRunner(repo: string): ReviewRunner {
   return {
     run: (argv) => run(argv, { cwd: repo }),
     async interactive(argv) {
+      // A signed commit asks for the passphrase once per command (spec 106-one-passphrase-speed FR-001).
+      if (argv[0] === "git" && argv[1] === "commit") {
+        return (await commitSigned(repo, argv.slice(2))).ok;
+      }
       const r = await proc.output(argv, {
         cwd: repo,
         stdin: "inherit",

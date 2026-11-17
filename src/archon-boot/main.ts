@@ -25,10 +25,12 @@
 // Spec: 105-calm-output FR-001, FR-002
 // Spec: 004-install
 // Spec: 103-three-ports FR-001, FR-004, FR-010, FR-011
+// Spec: 106-one-passphrase-speed FR-006, FR-008
 
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { VERSION } from "../archon/version.ts";
 import { muteOutput, ui } from "../archon/core/ui.ts";
+import { setFresh } from "../archon/core/probe-cache.ts";
 import { P, resetRoots } from "../archon/core/paths.ts";
 import { armHost, liveToken, loadTokens } from "../archon/core/secrets.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
@@ -430,7 +432,9 @@ export async function bootMain(argv: readonly string[]): Promise<number> {
   if (cmd === "vault") return await main(argv);
   const quiet = argv.some((a) => a === "-q" || a === "--quiet");
   const verbose = argv.some((a) => a === "-v" || a === "--verbose");
-  const rest = argv.filter((a) => !["-q", "--quiet", "-v", "--verbose"].includes(a));
+  const rest = argv.filter((a) => !["-q", "--quiet", "-v", "--verbose", "--fresh"].includes(a));
+  // Spec 106-one-passphrase-speed FR-008: --fresh asks the system again (children follow).
+  if (argv.includes("--fresh")) setFresh(true);
   if (verbose) ui.verbose = true;
   const report = cmd === undefined || ["doctor", "serve", "status", "observe"].includes(cmd);
   ui.setMode(quiet ? "quiet" : verbose || report ? "verbose" : "calm");
@@ -445,6 +449,21 @@ export async function bootMain(argv: readonly string[]): Promise<number> {
     if (!ui.closed) ui.quietVerdict(`boot ${cmd ?? ""}`.trim(), code);
   }
   return code;
+}
+
+/**
+ * `stolos boot doctor` as a phase of the run that is running now, in this process (spec
+ * 106-one-passphrase-speed FR-006): the doctor's checks, with the parent's mode and log. Gives the
+ * exit code, or undefined for any other boot command, which is a process of its own.
+ */
+export async function bootNested(argv: readonly string[]): Promise<number | undefined> {
+  const rest = argv.filter((a) => !a.startsWith("-"));
+  if (rest[0] !== "doctor" || argv.includes("--send")) return undefined;
+  return await main(
+    argv.filter(
+      (a) => a !== "--fresh" && a !== "-v" && a !== "--verbose" && a !== "-q" && a !== "--quiet",
+    ),
+  );
 }
 
 if (import.meta.main) await run();

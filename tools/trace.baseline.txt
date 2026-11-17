@@ -94,6 +94,5 @@ trace/no-spec-line src/archon/vault/commands.ts
 trace/no-spec-line src/archon/vault/mod.ts
 trace/no-spec-line src/archon/web/mod.ts
 trace/no-spec-line src/mod.ts
-trace/no-spec-line src/stolos/main.ts
 trace/no-spec-line tools/fedramp-gen.ts
 trace/no-spec-line tools/ocsf-gen.ts

@@ -380,8 +380,12 @@ export class Ui {
   quiet: boolean;
   /** How much of the run reaches the screen (spec 105-calm-output FR-002). */
   mode: Verbosity;
-  /** Run inside another run (spec 105-calm-output FR-005): the parent's mode, else undefined. */
-  readonly nested: Verbosity | undefined;
+  /**
+   * Run inside another run (spec 105-calm-output FR-005): the parent's mode, else undefined. A run
+   * in another process is told by the environment; one in this process by {@link Ui.nestedRun}
+   * (spec 106-one-passphrase-speed FR-006).
+   */
+  nested: Verbosity | undefined;
   /** The word that opens the closing verdict ("Up to date", "Updated to v0.136.0"). */
   verdictTitle: string | undefined;
   /** Optional features that are off, found by this run. */
@@ -406,13 +410,17 @@ export class Ui {
   /** Suggested next steps printed under the closing line. */
   next: string[] = [];
   /** The secrets backup panel (spec 029), shown once: by finish, or by the entry point on exit. */
-  panel?: {
-    lines: string[];
-    level: "amber" | "red";
-    /** The same, as one thing for the person to do (spec 105-calm-output FR-017). */
-    summary?: { text: string; command: string };
-  };
+  panel?:
+    | {
+        lines: string[];
+        level: "amber" | "red";
+        /** The same, as one thing for the person to do (spec 105-calm-output FR-017). */
+        summary?: { text: string; command: string };
+      }
+    | undefined;
   private panelShown = false;
+  /** Set while a run nested in this process is running (spec 106-one-passphrase-speed FR-006): what it found, when it ends. */
+  private scope: { summary?: RunSummary } | undefined;
 
   /** The closing block was printed already (once per run). */
   get closed(): boolean {
@@ -759,6 +767,8 @@ export class Ui {
           ? this.yellow(p.summary())
           : p.summary();
     this.log(`-- ${p.name}: ${p.summary()} (${fmtDuration(took)})`);
+    // Spec 106-one-passphrase-speed FR-010: the time of every phase, for the log only.
+    this.log(`   TIME ${p.name} ${took}ms`);
     // Calm: a phase that went well is not printed; what did not is in the closing block.
     if (this.shows("step")) this.out(`${mark} ${this.bold(p.name.padEnd(16))} ${summary}${time}`);
     else this.clearLine();
@@ -813,25 +823,21 @@ export class Ui {
     if (this.current) this.endPhase(this.current);
     this.stopSpinner();
     const fails = this.problems.filter((p) => p.level === "fail");
+    // A run nested in this process hands what it found to its parent, which draws it once.
+    if (this.scope) {
+      this.scope.summary = this.summarize();
+      return fails.length ? 1 : 0;
+    }
     // Once per run: a command that ends with its own summary, run by main (which
     // ends every operation with one), would otherwise print it twice.
     if (this.finished) return fails.length ? 1 : 0;
     this.finished = true;
     // A caller that ran this as a step (stolos update runs boot doctor) reads every problem.
     const summaryFile = env("STOLOS_SUMMARY");
-    // A nested run hands the secrets reminder to its parent as one thing to do.
-    const nestedPanel = this.nested !== undefined ? this.takePanel(true) : undefined;
     if (summaryFile !== undefined) {
       try {
-        const sum: RunSummary = {
-          fails: fails.length,
-          warns: this.problems.filter((p) => p.level === "warn").length,
-          pending: this.problems.filter((p) => p.level === "pending").length,
-          actions: this.problems.filter((p) => p.level === "action").length,
-          problems: [...this.problems, ...(nestedPanel ? [nestedPanel] : [])],
-          outcomes: this.outcomes,
-        };
-        fs.writeTextFileSync(summaryFile, JSON.stringify(sum));
+        // A nested run hands the secrets reminder to its parent as one thing to do.
+        fs.writeTextFileSync(summaryFile, JSON.stringify(this.summarize()));
       } catch (e) {
         console.error(`could not write ${summaryFile}: ${(e as Error).message}`);
       }
@@ -841,6 +847,7 @@ export class Ui {
     const actions = this.problems.filter((p) => p.level === "action");
     const code = fails.length ? 1 : 0;
     const closeLog = (): void => {
+      this.log(`   TIME total ${this.now() - this.started}ms`);
       this.log(
         `== finished: ${fails.length} failure(s), ${warns.length} warning(s), ${pending.length} not set up yet, ${actions.length} for you to do, ${
           this.deferred.length
@@ -945,6 +952,81 @@ export class Ui {
     return code;
   }
 
+  /** What this run found, as a parent wants it: every problem (a nested run's secrets reminder as one more), the outcomes, the counts. */
+  private summarize(): RunSummary {
+    const count = (l: Problem["level"]): number =>
+      this.problems.filter((p) => p.level === l).length;
+    const nestedPanel = this.nested !== undefined ? this.takePanel(true) : undefined;
+    return {
+      fails: count("fail"),
+      warns: count("warn"),
+      pending: count("pending"),
+      actions: count("action"),
+      problems: [...this.problems, ...(nestedPanel ? [nestedPanel] : [])],
+      outcomes: [...this.outcomes],
+    };
+  }
+
+  /**
+   * Run `fn` as a run nested in this one, in this process (spec 106-one-passphrase-speed FR-006):
+   * what a child process does by its environment (no header, no summary, no log of its own), with
+   * this run's phases, problems, outcomes, hints and secrets reminder set aside until it ends.
+   * Gives what `fn` returned and what it found, as the child's `STOLOS_SUMMARY` would have.
+   */
+  async nestedRun<T>(fn: () => Promise<T>): Promise<{ value: T; summary: RunSummary }> {
+    this.pause();
+    const saved = {
+      problems: this.problems.splice(0),
+      outcomes: this.outcomes.splice(0),
+      deferred: this.deferred.splice(0),
+      hints: this.hints.splice(0),
+      phases: this.phases,
+      current: this.current,
+      finished: this.finished,
+      nested: this.nested,
+      scope: this.scope,
+      panel: this.panel,
+      panelShown: this.panelShown,
+      next: this.next,
+      verdictTitle: this.verdictTitle,
+    };
+    const scope: { summary?: RunSummary } = {};
+    this.phases = [];
+    this.current = undefined;
+    this.finished = false;
+    this.scope = scope;
+    this.panel = undefined;
+    this.panelShown = false;
+    this.next = [];
+    this.nested =
+      this.mode === "quiet" || this.mode === "json"
+        ? "quiet"
+        : this.mode === "verbose"
+          ? "verbose"
+          : "calm";
+    try {
+      const value = await fn();
+      if (this.current) this.endPhase(this.current);
+      return { value, summary: scope.summary ?? this.summarize() };
+    } finally {
+      this.stopSpinner();
+      this.problems.splice(0, this.problems.length, ...saved.problems);
+      this.outcomes.splice(0, this.outcomes.length, ...saved.outcomes);
+      this.deferred.splice(0, this.deferred.length, ...saved.deferred);
+      this.hints.splice(0, this.hints.length, ...saved.hints);
+      this.phases = saved.phases;
+      this.current = saved.current;
+      this.finished = saved.finished;
+      this.nested = saved.nested;
+      this.scope = saved.scope;
+      this.panel = saved.panel;
+      this.panelShown = saved.panelShown;
+      this.next = saved.next;
+      this.verdictTitle = saved.verdictTitle;
+      this.resume();
+    }
+  }
+
   /** The one line `--quiet` prints for a command that draws no phases of its own (spec 105-calm-output FR-002). */
   quietVerdict(command: string, code: number): void {
     (this.customWrite ? this.write : this.screen)(
@@ -990,13 +1072,20 @@ function hintClock(now: () => number): number {
   return Number(env("STOLOS_HINT_NOW")) || now();
 }
 
-/** Where this PC remembers when each hint was shown: `hints.json` in the program's local state folder (never in Git). */
-export function defaultHintsFile(): string | null {
+/**
+ * The program's local state folder, never in Git: `%LOCALAPPDATA%\\stolos` on Windows, else
+ * `~/.local/state/<program>` (spec 105-calm-output FR-008, spec 106-one-passphrase-speed FR-008).
+ */
+export function stateFolder(): string {
   const win = proc.build.os === "windows";
-  const dir = win
+  return win
     ? `${env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`}\\${logProgram}`
     : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}`;
-  return `${dir}${win ? "\\" : "/"}hints.json`;
+}
+
+/** Where this PC remembers when each hint was shown: `hints.json` in the program's local state folder (never in Git). */
+export function defaultHintsFile(): string | null {
+  return `${stateFolder()}${proc.build.os === "windows" ? "\\" : "/"}hints.json`;
 }
 
 /** The hints' times (id to milliseconds); empty where there is no file or it is unreadable. */

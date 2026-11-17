@@ -21,6 +21,7 @@ import {
   OutcomeLevelSchema,
   OutputClassSchema,
   SignerRoleSchema,
+  SigningOutcomeSchema,
   VerbositySchema,
 } from "./vocabulary.ts";
 
@@ -152,6 +153,31 @@ export const lineKinds = codeList(LineKindSchema, "line", {
     label: en("outcome"),
     definition: en("A line the person needs (what was sent, what happens next): always shown."),
     spec: ["105-calm-output FR-003"],
+  },
+});
+
+/** How an attempt to sign ended, and so what is done with the passphrase held in memory (spec 106-one-passphrase-speed FR-003). */
+export const signingOutcomes = codeList(SigningOutcomeSchema, "signing", {
+  unlocked: {
+    label: en("unlocked"),
+    definition: en(
+      "The key unlocked and the commit was signed: the passphrase is kept for the rest of the command.",
+    ),
+    spec: ["106-one-passphrase-speed FR-003"],
+  },
+  refused: {
+    label: en("refused"),
+    definition: en(
+      "The key did not unlock with the passphrase given: it is thrown away, the person is asked again (three tries in all), and what was kept before stays until a new one unlocks.",
+    ),
+    spec: ["106-one-passphrase-speed FR-003"],
+  },
+  failed: {
+    label: en("failed"),
+    definition: en(
+      "Signing failed for another reason: a passphrase typed for this attempt is thrown away, one kept before stays.",
+    ),
+    spec: ["106-one-passphrase-speed FR-003"],
   },
 });
 
@@ -375,6 +401,11 @@ export const CODE_LISTS = {
     array: "LINE_KINDS",
     list: lineKinds,
     what: "What a line of a run is",
+  },
+  SigningOutcome: {
+    array: "SIGNING_OUTCOMES",
+    list: signingOutcomes,
+    what: "How an attempt to sign ended, for the passphrase held in memory",
   },
   MachineKind: {
     array: "MACHINE_KINDS",

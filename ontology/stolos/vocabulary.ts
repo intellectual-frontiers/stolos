@@ -59,6 +59,9 @@ export const stolos = vocabulary(STOLOS, {
   TrustedNetwork: "owl:Class",
   EngineRelease: "owl:Class",
   ConsoleName: "owl:Class",
+  PassphraseSession: "owl:Class",
+  ProbeCache: "owl:Class",
+  PhaseTiming: "owl:Class",
   // The architecture.
   Rung: "owl:Class",
   // The code lists' classes.
@@ -66,6 +69,7 @@ export const stolos = vocabulary(STOLOS, {
   OutputClass: "owl:Class",
   Verbosity: "owl:Class",
   LineKind: "owl:Class",
+  SigningOutcome: "owl:Class",
   MachineKind: "owl:Class",
   SignerRole: "owl:Class",
   CommandTier: "owl:Class",
@@ -132,6 +136,9 @@ export const OutputClassSchema = classSchema(stolos.OutputClass, CODE);
 export const VerbositySchema = classSchema(stolos.Verbosity, CODE);
 /** The schema of a kind of output line (spec 105-calm-output): what a line of a run is, which decides whether calm shows it. */
 export const LineKindSchema = classSchema(stolos.LineKind, CODE);
+
+/** The schema of a signing outcome (spec 106-one-passphrase-speed): how an attempt to sign ended for the passphrase held in memory. */
+export const SigningOutcomeSchema = classSchema(stolos.SigningOutcome, CODE);
 
 /** The schema of a machine kind. */
 export const MachineKindSchema = classSchema(stolos.MachineKind, CODE);
@@ -354,6 +361,34 @@ export const classes = [
       "What a line of a run is: a step that went well, a problem, something for the person to do, something waiting, a hint, or an outcome the person needs.",
     ),
     spec: ["105-calm-output FR-003"],
+  }),
+  StolosClass.make(stolos.SigningOutcome, {
+    label: en("Signing outcome"),
+    definition: en(
+      "How an attempt to sign ended, which decides what happens to the passphrase held in memory: kept, thrown away and asked again, or thrown away.",
+    ),
+    spec: ["106-one-passphrase-speed FR-003"],
+  }),
+  StolosClass.make(stolos.PassphraseSession, {
+    label: en("Passphrase session"),
+    definition: en(
+      "The daily key's passphrase held in the memory of one command, and of the runs nested in it, from the first time it is asked to the end of the command: handed to a signing tool by a per-run askpass helper, never stored, never in an environment variable, a file, a log or an argument, and wiped when the command ends.",
+    ),
+    spec: ["106-one-passphrase-speed FR-001, FR-002"],
+  }),
+  StolosClass.make(stolos.ProbeCache, {
+    label: en("Probe cache"),
+    definition: en(
+      "What an earlier run found out about this PC's firewall, kept for a short time in the program's state folder so that the next run does not ask the system again; never stale across a rule change by more than its time to live.",
+    ),
+    spec: ["106-one-passphrase-speed FR-008"],
+  }),
+  StolosClass.make(stolos.PhaseTiming, {
+    label: en("Phase timing"),
+    definition: en(
+      "A line of a run's log that says how long a phase took, in milliseconds, and a closing line for the whole run: for finding what is slow, never drawn on the screen.",
+    ),
+    spec: ["106-one-passphrase-speed FR-010"],
   }),
   StolosClass.make(stolos.MachineKind, {
     label: en("Machine kind"),

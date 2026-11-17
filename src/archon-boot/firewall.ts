@@ -7,9 +7,11 @@
  * @module
  */
 // Spec: 004-install
+// Spec: 106-one-passphrase-speed FR-008
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
+import { probed } from "../archon/core/probe-cache.ts";
 
 /** A port the boot server needs reachable from the network. */
 export interface Need {
@@ -161,10 +163,31 @@ export function normalizeWinState(raw: WinState): WinState {
   };
 }
 
-async function windows(needs: Need[]): Promise<string[]> {
-  const r = await run(["powershell", "-NoProfile", "-NonInteractive", "-Command", PROBE]);
-  if (!r.ok || !r.stdout.trim()) return [];
-  const s = normalizeWinState(JSON.parse(r.stdout) as WinState);
+/**
+ * Windows Defender Firewall's rules, read once per run (spec 106-one-passphrase-speed FR-008): the
+ * boot server's check and the console's share one PowerShell run. Never written to a file (rule
+ * names are the person's); undefined where they could not be read.
+ */
+let winState: Promise<WinState | undefined> | undefined;
+
+/** Forget the rules read in this run (a test's). */
+export function forgetWindowsState(): void {
+  winState = undefined;
+}
+
+function windowsState(): Promise<WinState | undefined> {
+  winState ??= (async () => {
+    const r = await run(["powershell", "-NoProfile", "-NonInteractive", "-Command", PROBE]);
+    if (!r.ok || !r.stdout.trim()) return undefined;
+    return normalizeWinState(JSON.parse(r.stdout) as WinState);
+  })();
+  return winState;
+}
+
+/** The warnings for these needs, or undefined where the rules could not be read. */
+async function windows(needs: Need[]): Promise<string[] | undefined> {
+  const s = await windowsState();
+  if (!s) return undefined;
   const blocked = evaluateWindows(s, needs);
   const lines: string[] = [];
   for (const b of blocked) {
@@ -241,11 +264,32 @@ async function linux(needs: Need[]): Promise<string[]> {
   return lines;
 }
 
-/** Warnings for this machine's firewall; empty when it is fine or cannot be read. */
-export async function firewallWarnings(needs: Need[]): Promise<string[]> {
-  try {
-    return proc.build.os === "windows" ? await windows(needs) : await linux(needs);
-  } catch {
-    return [];
-  }
+/**
+ * Warnings for this machine's firewall; empty when it is fine or cannot be read. The answer is kept
+ * for five minutes in the program's state folder (spec 106-one-passphrase-speed FR-008), unless the
+ * run is a report, `--verbose` or `--fresh` (or the caller asks for `fresh`: `pair` opens a window that
+ * is only useful if the answer is true now), and is not kept where the check could not be completed.
+ */
+export async function firewallWarnings(
+  needs: Need[],
+  o: { fresh?: boolean } = {},
+): Promise<string[]> {
+  const key = JSON.stringify([
+    "firewall",
+    proc.build.os,
+    needs.map((n) => `${n.protocol} ${n.port} ${n.what}`).sort(),
+  ]);
+  const answer = await probed<{ done: boolean; lines: string[] }>(
+    key,
+    async () => {
+      try {
+        const lines = proc.build.os === "windows" ? await windows(needs) : await linux(needs);
+        return lines ? { done: true, lines } : { done: false, lines: [] };
+      } catch {
+        return { done: false, lines: [] };
+      }
+    },
+    { keep: (v) => (v as { done: boolean }).done, ...(o.fresh ? { bypass: true } : {}) },
+  );
+  return answer.lines;
 }

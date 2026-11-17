@@ -19,10 +19,12 @@
  */
 // Spec: 060-stolos-apply
 // Spec: 105-calm-output FR-006, FR-007, FR-012 to FR-014, FR-017
+// Spec: 106-one-passphrase-speed FR-009
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
+import { fetchOnce } from "../core/run-memo.ts";
 import { ui } from "../core/ui.ts";
 import { adoptMessage, commitSigned, describeCommit, describeSigning } from "./signing.ts";
 import { porcelainPath } from "./records.ts";
@@ -103,10 +105,11 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   // 2. Catch up (never a merge).
   const u = ui.phase("Catch up");
   // A new repository: GitHub has no branch yet, so there is nothing to catch up with.
-  const exists = (await git(["ls-remote", "--heads", "origin", branch])).stdout.trim() !== "";
-  const fetch = exists
-    ? await git(["fetch", "--quiet", "origin", branch])
-    : { ok: true, stderr: "", stdout: "" };
+  // A remote-tracking branch from an earlier fetch says it exists without asking GitHub again.
+  const exists =
+    (await git(["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${branch}`])).ok ||
+    (await git(["ls-remote", "--heads", "origin", branch])).stdout.trim() !== "";
+  const fetch = exists ? await fetchOnce(P.repo, branch) : { ok: true, stderr: "", stdout: "" };
   if (!fetch.ok) {
     u.fail(
       `git fetch: ${last(fetch)}`,

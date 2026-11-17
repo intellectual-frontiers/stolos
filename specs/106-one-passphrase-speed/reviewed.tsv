@@ -1,0 +1,2 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+106-one-passphrase-speed FR-011	spec 057-keys FR-007, the guides of core/passphrase.ts and fleet/signing.ts, and the wave 2 list of specs/105-calm-output/tasks.md say what is true now (read in this change)

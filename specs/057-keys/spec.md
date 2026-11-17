@@ -29,9 +29,11 @@ remembers. A newbie should run one command, and see every problem with its one f
   interrupted; idempotent.
 - **FR-006** `archon keys check-push` (the pre-push hook): each pushed tip of the fleet's branch is
   checked against the signers of what the remote has (as servers check it); refused with the fix.
-- **FR-007** Passphrases are typed into OpenSSH and Git only; never seen, stored, or passed by
-  archon (tests use SSH_ASKPASS and a passphrase honored only inside ARCHON_SANDBOX). No key is
-  loaded into an ssh-agent. No `keys` command is offered over MCP.
+- **FR-007** In the `keys` commands passphrases are typed into OpenSSH and Git only; never seen,
+  stored, or passed by archon (tests use SSH_ASKPASS and a passphrase honored only inside
+  ARCHON_SANDBOX). The commands that sign commits (`update`, `apply`, `fleet upgrade`) hold the
+  daily key's passphrase in memory for the one command, never stored (spec 106-one-passphrase-speed).
+  No key is loaded into an ssh-agent. No `keys` command is offered over MCP.
 - **FR-008** `boot doctor`, `archon` (where am I), `archon signers`, `fleet init`'s next steps, and
   the backup's restore steps use these checks and commands.
 

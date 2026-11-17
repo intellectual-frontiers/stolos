@@ -289,3 +289,31 @@ proves(
     assertStringIncludes(meshGuide([]), "This PC has no mesh address yet");
   },
 );
+
+proves(
+  ["106-one-passphrase-speed FR-006"],
+  "106: a pairing ends with an outcome line that calm mode shows, and a successful one records no failure (exit 0)",
+  async () => {
+    const { endPairing } = await import("../src/archon/adopt/pair-command.ts");
+    const { ui } = await import("../src/archon/core/ui.ts");
+    const was = ui.mode;
+    const fails = (): number => ui.problems.filter((p) => p.level === "fail").length;
+    const before = fails();
+    try {
+      ui.setMode("calm");
+      assert(ui.shows("outcome"), "calm shows outcome lines");
+      endPairing(ui.phase("Waiting"), "paired", {
+        ok: true,
+        message: "intrepid is adopted by the fleet lab",
+      });
+      assert(ui.outcomes.includes("intrepid is adopted by the fleet lab"), "the outcome line");
+      assertEquals(fails(), before, "exit code 0");
+      endPairing(ui.phase("Waiting"), "expired");
+      assertEquals(fails(), before + 1);
+    } finally {
+      ui.setMode(was);
+      ui.outcomes.splice(0);
+      ui.problems.splice(0);
+    }
+  },
+);

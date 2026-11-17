@@ -34,8 +34,8 @@ contract made the new one.
 
 ## Wave 2: later, not built
 
-- [ ] L001 One passphrase per command: an in-memory key held only for the command (today: one per signed commit)
-- [ ] L002 Speed: in-process runs where the engine has not changed, cache and parallelize the firewall probe; target under 3 s typical
+- [x] L001 (built in 106-one-passphrase-speed) One passphrase per command: an in-memory key held only for the command (today: one per signed commit)
+- [x] L002 (built in 106-one-passphrase-speed) Speed: in-process runs where the engine has not changed, cache and parallelize the firewall probe; target under 3 s typical
 - [ ] L003 A new-release hint on any command, at most once a day (the hint mechanism is built; the lookup is not)
 - [ ] L004 A plain-label vocabulary pass: "Catch up", "rendered", "Compliance impact", "Keys: Git's allowed signers..."
 - [ ] L005 One vocabulary for update, apply, upgrade and send

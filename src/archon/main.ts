@@ -7,6 +7,7 @@
  */
 // Spec: 059-stolos-and-archon
 // Spec: 105-calm-output FR-001 to FR-003, FR-005, FR-006
+// Spec: 106-one-passphrase-speed FR-002, FR-006, FR-008
 
 import { fs, lock, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, onHost, P, resetRoots } from "./core/paths.ts";
@@ -25,6 +26,9 @@ import {
   phaseListener,
   startRun,
 } from "./core/telemetry.ts";
+import { wipePassphrases } from "./core/passphrase.ts";
+import { setFresh } from "./core/probe-cache.ts";
+import { resetRunMemo } from "./core/run-memo.ts";
 import { VERSION } from "./version.ts";
 
 /**
@@ -79,8 +83,8 @@ function usage(surface: Surface): string {
       : []),
     "",
     surface === "pc"
-      ? "Global options: --fleet <id>, --client <id> (a provider's client), --host <name>, --json, -v/--verbose (every step), -q/--quiet (one line and the exit code)."
-      : "Global options: --fleet <id>, --host <name>, --json, -v/--verbose (every step), -q/--quiet (one line and the exit code).",
+      ? "Global options: --fleet <id>, --client <id> (a provider's client), --host <name>, --json, -v/--verbose (every step), -q/--quiet (one line and the exit code), --fresh (ask the system again)."
+      : "Global options: --fleet <id>, --host <name>, --json, -v/--verbose (every step), -q/--quiet (one line and the exit code), --fresh (ask the system again).",
     surface === "pc"
       ? "Where you are, and the one thing to do next: bun run stolos (no arguments). A problem's code: stolos explain <code>."
       : "This machine's state: archon (no arguments). Every command has a man page: man archon-<command>. A problem's code: archon explain <code>.",
@@ -100,6 +104,7 @@ type Globals = {
   json?: boolean;
   verbose?: boolean;
   quiet?: boolean;
+  fresh?: boolean;
 };
 
 /** Pull global options out of argv. */
@@ -127,6 +132,7 @@ function globals(argv: readonly string[]): { rest: string[]; g: Globals } {
       case "json":
       case "verbose":
       case "quiet":
+      case "fresh":
         g[k] = true;
         break;
       case "fleet":
@@ -155,11 +161,24 @@ function debug(e: unknown): void {
     complain(e instanceof Error ? (e.stack ?? e.message) : String(e));
 }
 
-/** The CLI: parses global options, finds the command offered here, and runs it. Returns the exit code. */
+/**
+ * The CLI: parses global options, finds the command offered here, and runs it. Returns the exit
+ * code. The passphrase the command held in memory is wiped when it ends (spec
+ * 106-one-passphrase-speed FR-002).
+ */
 export async function main(
   argvIn: readonly string[],
   surface: Surface = "machine",
 ): Promise<number> {
+  try {
+    return await mainRun(argvIn, surface);
+  } finally {
+    await wipePassphrases();
+  }
+}
+
+async function mainRun(argvIn: readonly string[], surface: Surface): Promise<number> {
+  resetRunMemo(); // spec 106-one-passphrase-speed FR-009: each command asks Git once, afresh
   let argv = [...argvIn];
   await ensureHome();
   // Spec 059: the run log's folder is named after the command (stolos on your PC).
@@ -278,6 +297,8 @@ export async function main(
       quiet: g.quiet === true,
     };
     if (ctx.verbose) ui.verbose = true;
+    // Spec 106-one-passphrase-speed FR-008: --fresh asks the system again (children follow).
+    if (g.fresh) setFresh(true);
     // Spec 105-calm-output FR-001, FR-002: a report is verbose by default, an action calm.
     ui.setMode(
       ctx.json
@@ -370,6 +391,49 @@ export async function main(
 }
 
 /**
+ * A registry command run as a phase of the run that is running now, in this process (spec
+ * 106-one-passphrase-speed FR-006): what `main` does between the options and the closing summary,
+ * with no header, no summary, no log of its own and no second telemetry run (the parent's). Gives
+ * the exit code, or undefined where the command needs a process of its own (`sudo`, the host lock,
+ * a precheck, an unknown command), which the caller then starts.
+ */
+export async function runCommandNested(
+  argv: readonly string[],
+  surface: Surface,
+): Promise<number | undefined> {
+  const { rest, g } = globals(argv);
+  const found = findCommand(rest, surface);
+  if (!found || found.rest.includes("--help")) return undefined;
+  const { cmd } = found;
+  if (cmd.precheck) return undefined;
+  let args: ReturnType<typeof parseArgs>;
+  try {
+    args = parseArgs(cmd, found.rest);
+  } catch {
+    return undefined;
+  }
+  const tier = effectiveTier(cmd, args);
+  const hostChanging = tier === "mutate" || tier === "destructive";
+  if ((hostChanging || cmd.asOwner) && !asRoot() && !args["root"] && proc.build.os !== "windows") {
+    return undefined;
+  }
+  if (hostChanging && asRoot() && !cmd.unlocked) return undefined;
+  const ctx: RunContext = {
+    hostName: g.host ?? (await localHostName()),
+    json: false,
+    verbose: ui.verbose,
+    quiet: ui.mode === "quiet",
+  };
+  try {
+    return await cmd.run(args, ctx);
+  } catch (e) {
+    ui.active(cmd.name).fail(e instanceof Error ? e.message : String(e));
+    debug(e);
+    return 1;
+  }
+}
+
+/**
  * Run as a program and exit: from this file, or from a fleet repository's own
  * entry file, which imports this one by the package's name (spec 096).
  */
@@ -379,6 +443,7 @@ export async function run(
 ): Promise<never> {
   const code = await main(argv, surface);
   ui.printPanel(); // spec 029: a secret changed and is not backed up yet
+  await wipePassphrases();
   return proc.exit(code);
 }
 

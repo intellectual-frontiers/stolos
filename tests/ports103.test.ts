@@ -132,6 +132,10 @@ interface Allowed {
 /** Every file of `src/` that opens a socket, with the allow-list's reason: a new listener elsewhere fails the scan. */
 const ALLOW: readonly Allowed[] = [
   {
+    file: "src/archon/core/passphrase.ts",
+    why: "the passphrase broker of one command (spec 106-one-passphrase-speed FR-002): loopback only, an ephemeral port chosen by the system, a token made for the run, gone when the command ends; not one of the three ports",
+  },
+  {
     file: "src/archon-boot/http.ts",
     why: "the boot server's HTTP listener (door A of pairing too): its default port is the ontology's boot-http",
     standard: true,

@@ -33,10 +33,14 @@
 // Spec: 058-operator-update
 // Spec: 099-engine-update FR-001, FR-004, FR-006
 // Spec: 105-calm-output FR-005, FR-007, FR-012 to FR-016
+// Spec: 106-one-passphrase-speed FR-001, FR-006, FR-009
 
 import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
+import { runNested } from "../core/nested.ts";
+import { passphrases } from "../core/passphrase.ts";
 import { P, repoRel } from "../core/paths.ts";
+import { fetchOnce } from "../core/run-memo.ts";
 import { type Problem, type RunSummary, ui } from "../core/ui.ts";
 import { SECRETS } from "../core/secrets.ts";
 import {
@@ -104,12 +108,37 @@ export function readSummary(text: string): Pick<RunSummary, "problems" | "outcom
   }
 }
 
+/** How a nested run is started (spec 106-one-passphrase-speed FR-006). */
+interface StepOptions {
+  /** A process of its own: the engine changed (the pin moved), so what runs must be the new one. */
+  child?: boolean;
+  /** It may sign: a child inherits the way to ask this run's passphrase session, which holds the one passphrase. */
+  signs?: boolean;
+}
+
 /**
- * Run `stolos <args>` in the checkout as a phase of this run (spec 105-calm-output FR-005): a fresh
- * process with the terminal (it may ask for a passphrase) that prints no header, no summary and no
- * `next:`, appends to this run's log, and hands its problems back to be merged.
+ * Run `stolos <args>` in the checkout as a phase of this run (spec 105-calm-output FR-005): no
+ * header, no summary and no `next:`, appending to this run's log, its problems handed back to be
+ * merged. In this process (spec 106-one-passphrase-speed FR-006) wherever the engine did not
+ * change; else a fresh process with the terminal (it may sign, with the passphrase this run holds).
  */
-async function stolos(args: string[]): Promise<StepSummary> {
+async function stolos(args: string[], o: StepOptions = {}): Promise<StepSummary> {
+  if (!o.child) {
+    const here = await runNested(args);
+    if (here) {
+      const count = (l: Problem["level"]): number =>
+        here.summary.problems.filter((p) => p.level === l).length;
+      return {
+        code: here.code,
+        fails: count("fail"),
+        warns: count("warn"),
+        pending: count("pending"),
+        problems: here.summary.problems,
+        outcomes: here.summary.outcomes,
+      };
+    }
+  }
+  ui.log(`   nested (child process): ${args.join(" ")}`);
   const summary = await fs.makeTempFile({ prefix: "stolos-summary-" });
   ui.pause();
   try {
@@ -130,6 +159,8 @@ async function stolos(args: string[]): Promise<StepSummary> {
         ARCHON_UI_START: String(ui.started),
         ...(ui.logPath ? { ARCHON_LOG: ui.logPath } : {}),
         ...(ui.verbose ? { ARCHON_VERBOSE: "1" } : {}),
+        // Spec 106-one-passphrase-speed FR-001, FR-002: the address and token of this run's passphrase session, never the passphrase.
+        ...(o.signs ? await passphrases().childEnv() : {}),
       },
     });
     const c = readSummary((await fs.readTextOr(summary)) ?? "");
@@ -211,7 +242,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   }
   const branch = (await git(["rev-parse", "--abbrev-ref", "HEAD"])).stdout.trim() || "main";
   p.status(`git fetch origin ${branch}`);
-  const fetch = await git(["fetch", "--quiet", "origin", branch]);
+  const fetch = await fetchOnce(P.repo, branch);
   if (!fetch.ok) {
     ui.log(`   git fetch: ${fetch.stderr.trim()}`);
     p.fail(
@@ -443,7 +474,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     if (
       !took(
         up,
-        await stolos(["fleet", "upgrade", upgradeTo]),
+        await stolos(["fleet", "upgrade", upgradeTo], { child: true, signs: true }),
         `The engine upgrade to ${upgradeTo} did not finish. Nothing was sent.`,
         "bun run stolos update",
       )
@@ -457,7 +488,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     if (
       !took(
         pub,
-        await stolos(["apply"]),
+        await stolos(["apply"], { child: true, signs: true }),
         "The upgrade is signed here but not sent.",
         "bun run stolos apply",
       )
@@ -493,7 +524,10 @@ async function announce(from: string, to: string): Promise<void> {
  */
 async function onNewEngine(o: OperatorUpdateOptions, tag: string): Promise<number> {
   const n = ui.phase(`The engine ${tag}`);
-  const r = await stolos(["update", "--no-upgrade", ...(o.noDoctor ? ["--no-doctor"] : [])]);
+  const r = await stolos(["update", "--no-upgrade", ...(o.noDoctor ? ["--no-doctor"] : [])], {
+    child: true,
+    signs: true,
+  });
   took(n, r, `The rest of the update on ${tag} did not finish.`, "bun run stolos update");
   n.done();
   return ui.problems.some((x) => x.level === "fail") ? 1 : 0;

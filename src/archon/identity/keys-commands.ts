@@ -11,8 +11,8 @@
  * - `keys lost --recovery <file>`: a new daily key, approved by the recovery key.
  * - `keys check-push`: the pre-push check (Git runs it).
  *
- * Passphrases are typed into OpenSSH and Git themselves: archon never sees,
- * stores, or passes one, and never loads a key into an ssh-agent. None of these
+ * Passphrases are typed into OpenSSH and Git themselves: these commands never see,
+ * store, or pass one (the commands that sign hold it in memory for one command: spec 106), and never loads a key into an ssh-agent. None of these
  * commands is offered over MCP.
  *
  * ```mermaid

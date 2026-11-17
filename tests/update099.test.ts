@@ -261,8 +261,8 @@ proves(
   async () => {
     const root = path.fromFileUrl(new URL("../src/", import.meta.url));
     const op = await fs.readTextFile(path.join(root, "archon/update/operator.ts"));
-    const upgrade = op.indexOf('stolos(["fleet", "upgrade", upgradeTo])');
-    const apply = op.indexOf('stolos(["apply"])', upgrade);
+    const upgrade = op.indexOf('stolos(["fleet", "upgrade", upgradeTo]');
+    const apply = op.indexOf('stolos(["apply"]', upgrade);
     assert(upgrade > 0 && apply > upgrade, "fleet upgrade, then stolos apply");
     // Every fix and next step the engine prints says stolos apply, never git push.
     const offenders: string[] = [];

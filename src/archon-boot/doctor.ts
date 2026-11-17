@@ -10,6 +10,7 @@
 // Spec: 099-engine-update FR-006, FR-007
 // Spec: 100-remote-access FR-012
 // Spec: 103-three-ports FR-001, FR-009, FR-011
+// Spec: 106-one-passphrase-speed FR-008
 
 import { fs, path, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
@@ -23,6 +24,7 @@ import { HOST_KEY_TYPES } from "../archon/install/host-keys.ts";
 import { cacheDir } from "./assets.ts";
 import { UBUNTU } from "./pins.ts";
 import { firewallWarnings } from "./firewall.ts";
+import { fetchOnce } from "../archon/core/run-memo.ts";
 
 /**
  * Run the boot doctor: check the checkout, model, secrets, Ubuntu's files,
@@ -40,12 +42,20 @@ export async function doctor(o: {
   if (o.embedded) ui.say(`${ui.emoji ? "🩺" : "*"} ${ui.dim("boot doctor")}`);
   else ui.header("Stolos boot doctor", "read-only");
 
+  // The firewall check is the slowest (Windows reads every rule): it runs while the others do (spec
+  // 106-one-passphrase-speed FR-008), and is read at its phase.
+  const firewall = firewallWarnings([
+    { protocol: "TCP", port: o.port, what: "HTTP" },
+    { protocol: "UDP", port: standardPort("boot-tftp"), what: "TFTP" },
+  ]);
+
   // ------------------------------------------------------------ checkout
   const g = ui.phase("Checkout");
   const git = (args: string[]) => run(["git", "-C", P.repo, ...args]);
   g.status("fetching origin");
-  const fetched = (await git(["fetch", "--quiet", "origin"])).ok;
   const branch = (await git(["rev-parse", "--abbrev-ref", "HEAD"])).stdout.trim();
+  // Spec 106-one-passphrase-speed FR-009: the branch's fetch, once per run (an update did it already).
+  const fetched = (await fetchOnce(P.repo, branch === "HEAD" ? undefined : branch)).ok;
   // The whole repository, new files included (fleets/<fleet>/ first of all); .gitignore keeps out/ out.
   const dirty = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout
     .split("\n")
@@ -227,10 +237,7 @@ export async function doctor(o: {
 
   // ------------------------------------------------------------ firewall
   const f = ui.phase("Firewall");
-  const warnings = await firewallWarnings([
-    { protocol: "TCP", port: o.port, what: "HTTP" },
-    { protocol: "UDP", port: standardPort("boot-tftp"), what: "TFTP" },
-  ]);
+  const warnings = await firewall;
   for (const w of warnings) f.warn(w);
   f.done(warnings.length ? "see the warnings" : "allows TFTP and HTTP (or no firewall to check)");
 

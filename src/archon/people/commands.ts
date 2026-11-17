@@ -12,6 +12,7 @@
  * @module
  */
 // Spec: 077-people-controls
+// Spec: 106-one-passphrase-speed FR-001
 
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -52,6 +53,7 @@ import {
   readPeopleFiles,
 } from "./records.ts";
 import { reviewFiles } from "./reviews.ts";
+import { commitSigned } from "../fleet/signing.ts";
 
 /** What `gatherPeople` found: the facts the controls compare, and the files as read. */
 export interface PeopleGathered {
@@ -223,8 +225,12 @@ export async function peopleStatus(json = false): Promise<number> {
   return failed();
 }
 
-/** Run git with the terminal (it may ask for the signing key's passphrase). */
+/**
+ * Run git with the terminal; a commit is signed through the command's passphrase session, so the
+ * key's passphrase is asked once for the command (spec 106-one-passphrase-speed FR-001).
+ */
 async function gitInteractive(repo: string, args: string[]): Promise<boolean> {
+  if (args[0] === "commit") return (await commitSigned(repo, args.slice(1))).ok;
   ui.pause();
   try {
     const r = await proc.output(["git", "-C", repo, ...args], {
