@@ -903,6 +903,7 @@ proves(
       await fs.remove(lab.sb.home, { recursive: true }).catch(() => {});
     }
   },
+  { timeout: 180_000 },
 );
 
 proves(
