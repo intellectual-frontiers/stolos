@@ -1172,4 +1172,4 @@ stolos:verbosity-verbose a stolos:Verbosity ;
 <https://intellectual-frontiers.github.io/stolos/ontology> a owl:Ontology ;
     dcterms:description "The terms of Stolos, the fleet engine: the machines of a fleet, its signers and decisions, its checks and findings, the code lists the engine branches on, and the ladder its repository is built on."@en ;
     rdfs:label "Stolos"@en ;
-    owl:versionInfo "1" .
+    owl:versionInfo "1.0.0" .

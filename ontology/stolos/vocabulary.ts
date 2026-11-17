@@ -251,7 +251,7 @@ export const stolosOntology = OwlOntology.make(ontologyOf(STOLOS), {
   description: en(
     "The terms of Stolos, the fleet engine: the machines of a fleet, its signers and decisions, its checks and findings, the code lists the engine branches on, and the ladder its repository is built on.",
   ),
-  versionInfo: "1",
+  versionInfo: "1.0.0",
 });
 
 const LADDER = "101-ladder FR-004";
