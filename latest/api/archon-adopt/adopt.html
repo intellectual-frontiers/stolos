@@ -28,7 +28,7 @@
   m --&gt; obs[&quot;observed.ts&quot;] --&gt; check[&quot;stolos host check&lt;br/&gt;(policies, SCF controls)&quot;]</code></pre></figure><p class="meta">Source: <a href="https://github.com/intellectual-frontiers/stolos/blob/main/src/archon/adopt/adopt.ts" rel="noopener" class="ext"><code>src/archon/adopt/adopt.ts</code></a></p><section class="entry" id="AdoptedDef"><div class="entry-head"><a class="entry-name" href="#AdoptedDef"><code>AdoptedDef</code></a><span class="badges"><span class="badge badge-neutral">type</span></span></div><details class="sig-long"><summary><code>type AdoptedDef&lt;T extends string = string&gt; = {
   /** Its name in the fleet (a DNS label). */
   name: string;
-  /** What …</code> <span class="muted">(1762 characters)</span></summary><pre class="sig lang-ts"><code><span class="tk-keyword">type</span> <span class="tk-type">AdoptedDef</span><span class="tk-punct">&lt;</span><span class="tk-type">T</span> <span class="tk-keyword">extends</span> <span class="tk-keyword">string</span> <span class="tk-punct">=</span> <span class="tk-keyword">string</span><span class="tk-punct">&gt;</span> <span class="tk-punct">=</span> <span class="tk-punct">{</span>
+  /** What …</code> <span class="muted">(2035 characters)</span></summary><pre class="sig lang-ts"><code><span class="tk-keyword">type</span> <span class="tk-type">AdoptedDef</span><span class="tk-punct">&lt;</span><span class="tk-type">T</span> <span class="tk-keyword">extends</span> <span class="tk-keyword">string</span> <span class="tk-punct">=</span> <span class="tk-keyword">string</span><span class="tk-punct">&gt;</span> <span class="tk-punct">=</span> <span class="tk-punct">{</span>
   <span class="tk-comment">/** Its name in the fleet (a DNS label). */</span>
   name<span class="tk-punct">:</span> <span class="tk-keyword">string</span><span class="tk-punct">;</span>
   <span class="tk-comment">/** What it is, for people (&quot;Shahid's MacBook Pro&quot;). */</span>
@@ -61,6 +61,11 @@
   tags<span class="tk-punct">?:</span> <span class="tk-keyword">readonly</span> <span class="tk-type">T</span><span class="tk-punct">[];</span>
   <span class="tk-comment">/** Spec 108-tags FR-005: the free-form tags a person gave it (`pilot`), always shown as custom. */</span>
   customTags<span class="tk-punct">?:</span> <span class="tk-keyword">readonly</span> <span class="tk-keyword">string</span><span class="tk-punct">[];</span>
+  <span class="tk-comment">/**
+   * Spec 110-network-assets FR-006: the MAC addresses it checked in with, so that a client the router's controller reports is matched to
+   * this machine by MAC. Absent in an older declaration: the match falls back to its address.
+   */</span>
+  macs<span class="tk-punct">?:</span> <span class="tk-keyword">readonly</span> <span class="tk-keyword">string</span><span class="tk-punct">[];</span>
   <span class="tk-comment">/**
    * Risks the owner accepted, each for a while: a policy that fails is shown
    * as accepted (not as passing) until the date, with who and why (for an
