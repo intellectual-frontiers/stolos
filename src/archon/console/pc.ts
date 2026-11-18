@@ -15,13 +15,14 @@
 // Spec: 112-machine-reported-tags FR-011, FR-013, FR-014, FR-015
 // Spec: 115-compatibility FR-009, FR-010
 // Spec: 110-network-assets FR-002, FR-006, FR-008, FR-009
+// Spec: 117-adopted-in-status FR-006
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
-import type { PolicyResult } from "../adopt/policy.ts";
+import { isNeverObserved, type PolicyResult } from "../adopt/policy.ts";
 import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { PackRun } from "../controls/run.ts";
@@ -337,7 +338,9 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(a.observed?.os.serial ? { serial: a.observed.os.serial } : {}),
       ...(a.observed ? { seen: a.observed.at } : {}),
       score: { pass, total: a.results.length },
-      failing: a.results.filter((r) => r.status === "fail").map((r) => r.title),
+      failing: a.results
+        .filter((r) => r.status === "fail" && !isNeverObserved(r))
+        .map((r) => r.title),
     });
   }
   const { loadDevices, devicePolicies } = await import("../device/device.ts");
@@ -357,7 +360,9 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(d.observed?.serial ? { serial: d.observed.serial } : {}),
       ...(d.observed ? { seen: d.observed.at } : {}),
       score: { pass: d.results.filter((r) => r.status === "pass").length, total: d.results.length },
-      failing: d.results.filter((r) => r.status === "fail").map((r) => r.title),
+      failing: d.results
+        .filter((r) => r.status === "fail" && !isNeverObserved(r))
+        .map((r) => r.title),
     });
   }
   // Spec 110-network-assets: the devices a router's controller manages that the fleet adopted, and what the router says of the clients.

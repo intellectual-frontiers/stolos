@@ -21,6 +21,7 @@
 // Spec: 052-self-describing
 // Spec: 105-calm-output FR-009, FR-013
 // Spec: 115-compatibility FR-012
+// Spec: 117-adopted-in-status FR-010
 
 import { guideRef, guideUrl } from "./guides.ts";
 
@@ -108,6 +109,13 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "This PC has no record of the engine and the contract versions of a machine, so it cannot say whether the two understand each other.",
     why: "It has not been asked since this check began, or it runs an engine from before the check (it answers, but says nothing of its engine).",
     fix: "bun run stolos fleet status (asks every server); for one that answers and still says nothing: ssh <machine> archon update. For an adopted machine: bun run stolos host observe <machine>.",
+    doc: "fleet-repository",
+  },
+  "P117-NO-EVIDENCE": {
+    title: "Not observed yet",
+    what: "A control or a policy has no evidence: the machine (or the account) it looks at has not been observed, or what it needs cannot be read from it yet. Nothing failed.",
+    why: "A machine was just paired or added, its last observation is older than its service level, or its probe could not read the fact the control needs (a disk's encryption, for example).",
+    fix: "bun run stolos host observe <machine> (an adopted machine), bun run stolos fleet status (a managed server), bun run stolos device observe <device>, or bun run stolos estate observe <connector>; the line says which.",
     doc: "fleet-repository",
   },
   "E105-YOURS": {

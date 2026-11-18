@@ -27,6 +27,7 @@
  * @module
  */
 // Spec: 073-freshness
+// Spec: 117-adopted-in-status FR-006, FR-007
 
 import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/commons/ts/kernel";
 import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -40,6 +41,7 @@ import type { Event } from "../notify/notify.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import { type Cadences, fleetFreshView, type FreshView } from "./freshness.ts";
+import { isNotObserved, NO_EVIDENCE_CODE, notObservedWords } from "./not-observed.ts";
 
 /** The evidence a fleet repository holds, through a reader (now, or at a commit), as of `now`. */
 export async function repoEvidence(
@@ -263,7 +265,8 @@ export interface Drift {
  * hold anything an account returned), and the commands to run next.
  */
 export function driftEvent(d: Drift): Event {
-  const worse = d.changes.filter((c) => c.worse);
+  // Spec 117-adopted-in-status FR-006: a control nothing was observed for is waiting for an observation, not worse.
+  const worse = d.changes.filter((c) => c.worse && !isNotObserved(c));
   const lines = [
     `Compliance drift in fleet ${d.fleet}, from ${d.since.rev.slice(0, 10)} (${d.since.at
       .slice(0, 16)
@@ -271,7 +274,11 @@ export function driftEvent(d: Drift): Event {
     "",
   ];
   for (const c of d.changes) {
-    lines.push(`${c.id} ${c.name}: ${c.from} -> ${c.to}${c.worse ? " (worse)" : ""}`);
+    lines.push(
+      isNotObserved(c)
+        ? notObservedWords(c).text
+        : `${c.id} ${c.name}: ${c.from} -> ${c.to}${c.worse ? " (worse)" : ""}`,
+    );
     for (const e of c.evidence.slice(0, 10)) {
       lines.push(
         `  ${e.subject} (${e.source}): ${e.check}: ${e.from ?? "none"} -> ${e.to ?? "none"}${
@@ -378,7 +385,10 @@ export async function driftCommand(
   } else {
     for (const c of d.changes) {
       const msg = `${c.id} ${c.name}: ${c.from} -> ${c.to}`;
-      if (c.worse) p.warn(msg, "bun run stolos compliance");
+      if (isNotObserved(c)) {
+        const w = notObservedWords(c);
+        p.pending(w.text, w.fix, NO_EVIDENCE_CODE);
+      } else if (c.worse) p.warn(msg, "bun run stolos compliance");
       else p.ok(msg);
       for (const e of c.evidence.slice(0, 10)) {
         p.note(

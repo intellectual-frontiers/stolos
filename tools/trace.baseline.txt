@@ -37,7 +37,6 @@ trace/no-spec-line src/archon/core/log.ts
 trace/no-spec-line src/archon/core/secret-ledger.ts
 trace/no-spec-line src/archon/core/share.ts
 trace/no-spec-line src/archon/core/status.ts
-trace/no-spec-line src/archon/device/commands.ts
 trace/no-spec-line src/archon/doctor/doctor.ts
 trace/no-spec-line src/archon/doctor/mod.ts
 trace/no-spec-line src/archon/dotfiles/report.ts

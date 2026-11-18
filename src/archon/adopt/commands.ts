@@ -10,6 +10,7 @@
 // Spec: 108-tags FR-004, FR-008, FR-013
 // Spec: 112-machine-reported-tags FR-011
 // Spec: 110-network-assets FR-002, FR-006, FR-011
+// Spec: 117-adopted-in-status FR-006, FR-007
 
 import {
   array,
@@ -39,7 +40,13 @@ import {
   runAsYou,
   scanHostKeys,
 } from "./adopt.ts";
-import { policies, type PolicyResult } from "./policy.ts";
+import {
+  isNeverObserved,
+  notObservedItem,
+  policies,
+  type PolicyResult,
+  readResult,
+} from "./policy.ts";
 import type { CheckIn } from "./checkin.ts";
 import { joinedMark } from "./joining.ts";
 import {
@@ -183,11 +190,15 @@ export async function hostAdopt(o: {
   return fail();
 }
 
-/** Print policy results as a phase. */
-/** Print one subject's policy results. */
-export function report(name: string, rs: PolicyResult[]): void {
+/**
+ * Print one subject's policy results (spec 117-adopted-in-status FR-006, FR-007): a failure is a warning with its fix; what was not
+ * observed yet (never observed, or a policy that could not tell) is one waiting item, never a warning; `observe` is the command that
+ * observes the subject.
+ */
+export function report(name: string, rs: PolicyResult[], observe?: string): void {
   const p = ui.phase(`Policies ${name}`);
   for (const r of rs) {
+    if (readResult(r) === "not-observed") continue;
     if (r.status === "fail") {
       p.warn(
         `${r.title}: ${r.detail} [${r.scf.join(", ")}]`,
@@ -198,6 +209,8 @@ export function report(name: string, rs: PolicyResult[]): void {
       p.note(`${r.title}: ${r.status === "accepted" ? "accepted: " : ""}${r.detail}`);
     }
   }
+  const waiting = notObservedItem(rs, observe ?? `bun run stolos host observe ${name}`);
+  if (waiting) p.pending(waiting.message, waiting.fix, waiting.code);
   const pass = rs.filter((r) => r.status === "pass").length;
   p.done(`${pass} of ${rs.length} pass`);
 }
@@ -273,6 +286,9 @@ export async function hostObserve(name?: string): Promise<number> {
   return fail();
 }
 
+/** A result that is a failure (spec 117-adopted-in-status FR-007: a machine not observed yet is waiting, not failing). */
+const failing = (x: PolicyResult): boolean => x.status === "fail" && !isNeverObserved(x);
+
 /** `stolos host check [name]`: the policies, per adopted machine. */
 export async function hostCheck(name?: string, json = false): Promise<number> {
   const all = (await loadAdopted()).filter((a) => !name || a.machine.name === name);
@@ -282,11 +298,11 @@ export async function hostCheck(name?: string, json = false): Promise<number> {
   }));
   if (json) {
     stdio.stdout.writeSync(`${JSON.stringify(results, null, 2)}\n`);
-    return results.some((r) => r.results.some((x) => x.status === "fail")) ? 1 : 0;
+    return results.some((r) => r.results.some(failing)) ? 1 : 0;
   }
   if (!all.length) ui.phase("Check").done("no adopted machines yet");
   for (const r of results) report(r.name, r.results);
-  return results.some((r) => r.results.some((x) => x.status === "fail")) ? 1 : 0;
+  return results.some((r) => r.results.some(failing)) ? 1 : 0;
 }
 
 /** `stolos host release <name>`: remove the probe and its key's line, then the model and the key. */

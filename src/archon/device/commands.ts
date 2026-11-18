@@ -3,11 +3,13 @@
  *
  * @module
  */
+// Spec: 117-adopted-in-status FR-006, FR-007
 
 import { json, object, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import { MACHINE_NAME } from "../adopt/adopt.ts";
+import { isNeverObserved } from "../adopt/policy.ts";
 import {
   DEVICE_KINDS,
   deviceCredPath,
@@ -155,7 +157,7 @@ export async function deviceAdd(o: {
   if (await observeOne(d)) {
     const { report } = await import("../adopt/commands.ts");
     const observed = (await loadDevices()).find((x) => x.device.name === d.name)?.observed;
-    report(d.name, devicePolicies(d, observed));
+    report(d.name, devicePolicies(d, observed), `bun run stolos device observe ${d.name}`);
   }
   ui.next.push(`keep it: bun run stolos apply -m "069-integrate: device ${d.name}"`);
   ui.next.push("back up: bun run stolos vault backup (its passphrases are new)");
@@ -194,9 +196,13 @@ export async function deviceCheck(name?: string, asJson = false): Promise<number
   else {
     const { report } = await import("../adopt/commands.ts");
     if (!all.length) ui.phase("Devices").done("no devices yet");
-    for (const r of results) report(r.name, r.results);
+    for (const r of results) {
+      report(r.name, r.results, `bun run stolos device observe ${r.name}`);
+    }
   }
-  return results.some((r) => r.results.some((x) => x.status === "fail")) ? 1 : 0;
+  return results.some((r) => r.results.some((x) => x.status === "fail" && !isNeverObserved(x)))
+    ? 1
+    : 0;
 }
 
 /** `stolos device remove <name>`: its files and its passphrases go. */

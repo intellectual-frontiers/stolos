@@ -8,6 +8,7 @@
 // Spec: 098-pair FR-001, FR-010
 // Spec: 099-engine-update FR-001
 // Spec: 100-remote-access FR-003, FR-005, FR-008
+// Spec: 117-adopted-in-status FR-001
 // Spec: 103-three-ports FR-008, FR-009
 // Spec: 105-calm-output FR-001, FR-010
 // Spec: 109-integrations-api FR-018
@@ -396,8 +397,9 @@ export const COMMANDS: Command[] = [
   {
     name: "fleet status",
     output: "report",
-    summary: "Every server and workstation: last install, and how to reach and observe it",
-    description: `Lists every host in the model with its last install as it recorded it (the host's own archon.sql (opt-in installed): when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers; the router decides who reaches it), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Read-only.`,
+    summary:
+      "Every machine of the fleet: servers, workstations, adopted machines, devices, network assets",
+    description: `Lists every host in the model with its last install as it recorded it (the host's own archon.sql (opt-in installed): when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers; the router decides who reaches it), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Then every other machine the fleet knows, one line each (spec 117): the adopted machines (paired, integrated), the SNMP devices and the network assets, with how it joined, its operating system, when it was last observed, its policy result, its tags, and what is wrong or not observed yet. Read-only.`,
     tier: "read",
     operation: true,
     args: [],

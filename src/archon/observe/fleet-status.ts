@@ -12,6 +12,7 @@
 // Spec: 112-machine-reported-tags FR-010, FR-013
 // Spec: 115-compatibility FR-006, FR-008, FR-009, FR-012
 // Spec: 110-network-assets FR-006, FR-009
+// Spec: 117-adopted-in-status FR-001, FR-005
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";
@@ -24,6 +25,7 @@ import { joinedMark, wayOfJoining } from "../adopt/joining.ts";
 import { liveToken, loadTokens } from "../core/secrets.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { nextSteps } from "./next.ts";
+import { showOtherMachines } from "./fleet-machines.ts";
 import { describeData, hostData } from "../model/durable.ts";
 import type { RecordedVerify } from "../state/verify.ts";
 import { describeInventory, type Inventory } from "../state/inventory.ts";
@@ -80,6 +82,8 @@ export async function fleetStatus(): Promise<number> {
     // The network group is a courtesy: a fleet whose router cannot be read still shows its hosts.
   }
   if (!hosts.length) {
+    // Spec 117-adopted-in-status FR-001: a fleet with no managed host still lists the machines it knows.
+    await showOtherMachines(tagsOf);
     ui.next.push("no hosts yet: bun run stolos host add <name> (or workstation add, in WSL)");
     return 0;
   }
@@ -252,6 +256,8 @@ export async function fleetStatus(): Promise<number> {
       }).map((l) => `  ${l}`),
     );
   }
+  // Spec 117-adopted-in-status FR-001: then every other machine of the fleet, one line each.
+  await showOtherMachines(tagsOf);
   ui.next.push("(live from each server over SSH; stolos fleet query asks them anything)");
   return 0;
 }

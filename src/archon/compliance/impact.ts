@@ -44,6 +44,7 @@
  */
 // Spec: 074-change-impact
 // Spec: 099-engine-update FR-008
+// Spec: 117-adopted-in-status FR-006, FR-007
 
 import { parseTsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
@@ -54,6 +55,7 @@ import type { Acceptance } from "../adopt/adopt.ts";
 import type { FleetDef, HostDef, HostPlan, McpTier, SignerDef } from "../model/types.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import type { ControlChange } from "./drift.ts";
+import { isNotObserved, NO_EVIDENCE_CODE, notObservedWords } from "./not-observed.ts";
 import { type FrameworkId, FRAMEWORKS, scf, type ScfId } from "./scf.ts";
 import { IMPACT_AFFECTED_MARKER } from "./workflow.ts";
 
@@ -784,7 +786,14 @@ export function impactMarkdown(i: Impact): string {
         );
       }
       if (c.evidence) {
-        lines.push(`  - observed: ${c.evidence.from} -> ${c.evidence.to}`);
+        // Spec 117-adopted-in-status FR-006: nothing observed before is not a failure now.
+        lines.push(
+          `  - observed: ${
+            isNotObserved(c.evidence)
+              ? notObservedWords(c.evidence).text.replace(`${c.id} ${c.name}: `, "")
+              : `${c.evidence.from} -> ${c.evidence.to}`
+          }`,
+        );
         for (const e of c.evidence.evidence.slice(0, 5)) {
           lines.push(
             `    - ${md(e.subject)} (${e.source}): ${md(e.check)}: ${e.from ?? "none"} -> ${
@@ -1197,6 +1206,7 @@ export async function impactCommand(
 export type PhaseLike = {
   ok(m: string): void;
   warn(m: string, fix?: string): void;
+  pending(m: string, next: string, code?: string): void;
   fail(m: string, fix?: string): void;
   note(m: string): void;
   done(m?: string): void;
@@ -1213,6 +1223,12 @@ export function printImpact(i: Impact, p: PhaseLike): void {
     else p.ok(msg);
   }
   for (const e of i.evidence) {
+    // Spec 117-adopted-in-status FR-006, FR-007: a control nothing was observed for is waiting, not warned about.
+    if (isNotObserved(e)) {
+      const w = notObservedWords(e);
+      p.pending(w.text, w.fix, NO_EVIDENCE_CODE);
+      continue;
+    }
     const msg = `${e.id} ${e.name} (observed): ${e.from} -> ${e.to}`;
     if (e.worse) p.warn(msg);
     else p.ok(msg);
@@ -1233,11 +1249,16 @@ export function printImpact(i: Impact, p: PhaseLike): void {
     }
     return;
   }
-  const w = i.controls.filter((c) => c.direction === "weakens").length;
-  const s = i.controls.length - w;
+  // Spec 117-adopted-in-status FR-007: a control only waiting for an observation is neither weakened nor strengthened.
+  const waiting = i.controls.filter(
+    (c) =>
+      c.evidence && isNotObserved(c.evidence) && !c.changes.some((x) => x.direction === "weakens"),
+  ).length;
+  const w = i.controls.filter((c) => c.direction === "weakens").length - waiting;
+  const s = i.controls.length - w - waiting;
   p.done(
     i.controls.length
-      ? `${w} control(s) weakened, ${s} strengthened${
+      ? `${w} control(s) weakened, ${s} strengthened${waiting ? `, ${waiting} not observed yet` : ""}${
           i.gate.block === "never" && w ? " (the gate is off: compliance.gate in fleet.ts)" : ""
         }`
       : "no control affected",

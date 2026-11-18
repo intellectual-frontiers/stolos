@@ -15,6 +15,7 @@
 // Spec: 097-controller FR-004
 // Spec: 100-remote-access FR-012, FR-013
 // Spec: 115-compatibility FR-009, FR-010
+// Spec: 117-adopted-in-status FR-004, FR-006, FR-008
 
 import type { AdoptedDef, Observed } from "./adopt.ts";
 import {
@@ -26,6 +27,7 @@ import {
 import { acceptRisks, runObservations } from "../controls/core.ts";
 import { describeCompat, judgeMachine } from "../core/compat.ts";
 import { contractOfProbeVersion } from "../observe/compat.ts";
+import { DISK_REASON, NO_EVIDENCE_CODE } from "../compliance/not-observed.ts";
 
 /** One policy's result for one machine. */
 export interface PolicyResult {
@@ -410,4 +412,39 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     ];
   }
   return accept(m, runObservations(ADOPTED_CONTROLS, { machine: m, observed: o, now }), now);
+}
+
+/** How a result reads for a person (spec 117-adopted-in-status FR-002, FR-004): a pass, a failure, nothing observed yet, or the rest (a warning, an accepted risk). */
+export type ResultReading = "pass" | "fail" | "not-observed" | "other";
+
+/** The result of a machine that was never observed (the one `policies` gives when there is no observation). */
+export function isNeverObserved(r: PolicyResult): boolean {
+  return r.id === "observed" && r.status === "fail" && r.detail === "never observed";
+}
+
+/** Read one result: the never-observed result and `unknown` are "not observed yet", never a failure. */
+export function readResult(r: PolicyResult): ResultReading {
+  if (isNeverObserved(r) || r.status === "unknown") return "not-observed";
+  return r.status === "pass" ? "pass" : r.status === "fail" ? "fail" : "other";
+}
+
+/**
+ * Spec 117-adopted-in-status FR-004, FR-006, FR-008: what is not observed yet of a machine's results, as ONE waiting item (its words,
+ * its one fix, its code), or undefined where all of it was observed. `observe` is the command that observes the machine.
+ */
+export function notObservedItem(
+  rs: readonly PolicyResult[],
+  observe: string,
+): { message: string; fix: string; code: string } | undefined {
+  const waiting = rs.filter((r) => readResult(r) === "not-observed");
+  if (!waiting.length) return undefined;
+  const never = waiting.some(isNeverObserved);
+  const disk = waiting.some((r) => r.id === "disk-encryption");
+  return {
+    message: never
+      ? "not observed yet"
+      : `${waiting.map((r) => r.title).join("; ")}: not observed yet`,
+    fix: `${disk ? DISK_REASON : ""}${observe}`,
+    code: NO_EVIDENCE_CODE,
+  };
 }
