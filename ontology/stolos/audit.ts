@@ -12,6 +12,7 @@
  */
 // Spec: 104-mizan FR-003
 // Spec: 114-release-record FR-004
+// Spec: 115-compatibility FR-001
 // Spec: 116-kept-unaligned FR-001, FR-002, FR-003, FR-004, FR-005
 import {
   bases,
@@ -122,6 +123,9 @@ const MAPPED: Readonly<Record<string, string>> = {
   TagTrust: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   TagSource: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   TagClaim: "http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement",
+  // Spec 115-compatibility: the seams and the compatibility statuses are code lists, which are concept schemes (W3C SKOS); the version of each seam is a Semantic Version 2.0.0 (commons' ifr:VersionScheme SemVer).
+  Seam: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  CompatStatus: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   // Spec 109-integrations-api: the two code lists are concept schemes (W3C SKOS); an integration is a web API an account offers (schema.org WebAPI); the entities it reads are
   // OCSF 1.9.0 objects (documented at schema.ocsf.io, which publishes no RDF) or MITRE D3FEND classes, each narrower or as close as its relation says.
   ApiKind: "http://www.w3.org/2004/02/skos/core#ConceptScheme",

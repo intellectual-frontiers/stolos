@@ -28,8 +28,9 @@
  * @module
  */
 // Spec: 112-machine-reported-tags FR-004, FR-005, FR-006, FR-007
+// Spec: 115-compatibility FR-004, FR-006
 
-import type { TagSource } from "../ontology.auto.ts";
+import { SEAM_IDS, type Seam, type TagSource } from "../ontology.auto.ts";
 import {
   CUSTOM_TAG,
   DIMENSION_ID,
@@ -76,6 +77,17 @@ export interface Smbios {
   biosVendor?: string;
 }
 
+/**
+ * Spec 115-compatibility FR-006: what a machine says of its engine and its seams, as the PC keeps it: only versions of the form
+ * `major.minor.patch` and only the seams of the ontology survive {@link sanitizeReport}.
+ */
+export interface ReportedCompat {
+  /** The engine version it runs (absent for a probe, which has no engine). */
+  engine?: string;
+  /** Each seam it reports: the version it is at and, where it says, the oldest PC it reads. */
+  seams: Partial<Record<Seam, { current: string; minimum?: string }>>;
+}
+
 /** What the PC read from one machine: bounded raw text, kept in its observation cache. */
 export interface MachineReport {
   /** When it was read (ISO time). */
@@ -86,6 +98,8 @@ export interface MachineReport {
   tags?: TagRow[];
   /** The firmware facts. */
   smbios?: Smbios;
+  /** Spec 115-compatibility FR-006: its engine and its seams' versions. */
+  compat?: ReportedCompat;
 }
 
 /** What `claimsFrom` made of a report. */
@@ -193,6 +207,36 @@ export function parseMachineInfo(text: string): Record<string, string> {
   return out;
 }
 
+const VERSION_TEXT = /^\d{1,5}\.\d{1,5}\.\d{1,5}$/;
+
+/** A version of the form `major.minor.patch` (each at most five digits) from a machine's words, or undefined. */
+function versionOf(raw: unknown): string | undefined {
+  return typeof raw === "string" && VERSION_TEXT.test(raw.trim()) ? raw.trim() : undefined;
+}
+
+/**
+ * Spec 115-compatibility FR-006: what a machine said of its engine and seams, bounded: a version that is not `major.minor.patch` is
+ * dropped, and so is a seam the ontology does not name (a newer machine may have more). Never throws.
+ */
+export function sanitizeCompat(raw: unknown): ReportedCompat | undefined {
+  if (typeof raw !== "object" || raw === null) return undefined;
+  const r = raw as Record<string, unknown>;
+  const engine = versionOf(r["engine"]);
+  const seams: ReportedCompat["seams"] = {};
+  const said = r["seams"];
+  if (typeof said === "object" && said !== null) {
+    for (const id of SEAM_IDS) {
+      const one = (said as Record<string, unknown>)[id];
+      if (typeof one !== "object" || one === null) continue;
+      const current = versionOf((one as Record<string, unknown>)["current"]);
+      if (!current) continue;
+      const minimum = versionOf((one as Record<string, unknown>)["minimum"]);
+      seams[id] = { current, ...(minimum ? { minimum } : {}) };
+    }
+  }
+  return engine || Object.keys(seams).length ? { ...(engine ? { engine } : {}), seams } : undefined;
+}
+
 /**
  * A bounded copy of what a machine sent, safe to keep and to read again: unknown keys left out, strings cleaned and cut, at most
  * {@link REPORT_LIMITS.rows} rows. `undefined` where it is not a report at all.
@@ -239,15 +283,33 @@ export function sanitizeReport(
     };
     if (Object.keys(kept).length) out.smbios = kept;
   }
-  return out.machineInfo || out.tags || out.smbios ? out : { at: out.at };
+  const compat = sanitizeCompat(r["compat"]);
+  if (compat) out.compat = compat;
+  return out.machineInfo || out.tags || out.smbios || out.compat ? out : { at: out.at };
 }
 
-/** The probe's `@reported` section as a report (`machine_info_*` and `smbios_*` keys, as the POSIX and PowerShell probes write them). */
+/**
+ * The probe's `@reported` section as a report (`machine_info_*` and `smbios_*` keys, as the POSIX and PowerShell probes write them), with
+ * what it says of its own facts' version (spec 115-compatibility FR-004): its `@compat` section (`probe_facts`, `probe_minimum`), else
+ * its `version` read as the major (`3` is `3.0.0`, a probe before `@compat`).
+ */
 export function reportFromProbe(
   section: Readonly<Record<string, string>> | undefined,
   at?: string,
+  own: {
+    compat?: Readonly<Record<string, string>> | undefined;
+    version?: string | undefined;
+  } = {},
 ): MachineReport | undefined {
-  if (!section) return undefined;
+  const facts =
+    versionOf(own.compat?.["probe_facts"]) ??
+    (/^\d{1,5}$/.test(own.version ?? "") ? `${own.version}.0.0` : undefined);
+  const minimum = versionOf(own.compat?.["probe_minimum"]);
+  const compat = facts
+    ? { seams: { "probe-facts": { current: facts, ...(minimum ? { minimum } : {}) } } }
+    : undefined;
+  if (!section)
+    return compat ? sanitizeReport({ at: at ?? new Date().toISOString(), compat }, at) : undefined;
   const machineInfo: Record<string, string> = {};
   for (const k of MACHINE_INFO_KEYS) {
     const v = plain(section[`machine_info_${k.toLowerCase()}`]);
@@ -262,6 +324,7 @@ export function reportFromProbe(
         chassis: section["smbios_chassis_type"],
         biosVendor: section["smbios_bios_vendor"],
       },
+      ...(compat ? { compat } : {}),
     },
     at,
   );

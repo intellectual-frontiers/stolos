@@ -145,6 +145,23 @@ export const TAG_SOURCES: readonly TagSource[] = [
   "smbios",
 ];
 
+/** One interface between a PC and its machines, versioned on its own (`stolos:Seam`; 115-compatibility FR-001, 115-compatibility FR-004). */
+export type Seam = "model" | "signed-records" | "probe-facts" | "query" | "mcp";
+
+/** Every {@link Seam}, in the ontology's order. */
+export const SEAM_IDS: readonly Seam[] = ["model", "signed-records", "probe-facts", "query", "mcp"];
+
+/** What a PC says of a machine against its own contract (`stolos:CompatStatus`; 115-compatibility FR-005). */
+export type CompatStatus = "compatible" | "too-old" | "newer" | "unknown";
+
+/** Every {@link CompatStatus}, in the ontology's order. */
+export const COMPAT_STATUSES: readonly CompatStatus[] = [
+  "compatible",
+  "too-old",
+  "newer",
+  "unknown",
+];
+
 /** What an account's API is a kind of (an integration's kind) (`stolos:ApiKind`; 109-integrations-api FR-001). */
 export type ApiKind = "router" | "dns" | "email";
 

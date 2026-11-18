@@ -14,6 +14,7 @@
 // Spec: 107-pairing-and-query FR-008, FR-012
 // Spec: 108-tags FR-013, FR-014, FR-015
 // Spec: 112-machine-reported-tags FR-013, FR-014, FR-015
+// Spec: 115-compatibility FR-009
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
@@ -201,6 +202,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "tag list",
       "tag add",
       "tag remove",
+      "compat",
     ],
     first: "pair",
     diagram: (f) =>
@@ -341,6 +343,81 @@ export function stolosGroupOf(name: string): StolosGroup {
   return STOLOS_GROUPS.find((g) => g.names.includes(name)) ?? FIRST_STOLOS_GROUP;
 }
 
+/** Spec 115-compatibility FR-009: a machine's contract with this PC, as a pill (its words are the title). */
+const contractPill = (x: PcMachine): Html =>
+  !x.compat
+    ? html``
+    : html`<span
+        class="pill ${
+          x.compat.status === "compatible"
+            ? "ok"
+            : x.compat.status === "too-old"
+              ? "bad"
+              : x.compat.status === "newer"
+                ? "warn"
+                : "off"
+        }"
+        title="${x.compat.detail}"
+        >${
+          x.compat.status === "too-old"
+            ? "too old"
+            : x.compat.status === "newer"
+              ? "newer than this PC"
+              : x.compat.status
+        }</span
+      >`;
+
+/**
+ * Spec 115-compatibility FR-009: a machine's page says in plain words whether it and this PC understand each other, with the fix, its
+ * engine, and each seam (what it has, what this PC has, what this PC needs of it). Nothing where it has no contract (a cloud server).
+ */
+function contractCard(x: PcMachine): Html {
+  const c = x.compat;
+  if (!c) return html``;
+  return html`<div class="card" id="contract" style="margin-bottom:14px">
+    <h2>Contract with this PC</h2>
+    <p>${contractPill(x)} ${c.headline === "compatible" ? c.detail : c.headline}</p>
+    ${c.status !== "compatible" ? html`<p class="sub">${c.detail}</p>` : ""}
+    ${
+      c.fix
+        ? html`<p class="sub">
+            Fix:
+            <span class="mono">${c.fix}</span
+            >${c.code ? html` (<span class="mono">stolos explain ${c.code}</span>)` : ""}
+          </p>`
+        : ""
+    }
+    ${c.held ? html`<p class="sub">${c.held}</p>` : ""}
+    <table>
+      <thead>
+        <tr>
+          <th>Seam</th>
+          <th>This machine</th>
+          <th>This PC</th>
+          <th>This PC needs</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${c.seams.map(
+          (s) =>
+            html`<tr>
+              <td class="mono">${s.seam}</td>
+              <td class="mono">${s.machine ?? "not reported"}</td>
+              <td class="mono">${s.pc}</td>
+              <td class="mono">${s.needs}</td>
+              <td>${s.status}</td>
+            </tr>`,
+        )}
+      </tbody>
+    </table>
+    <p class="sub">
+      ${c.engine ? `Engine ${c.engine}; ` : ""}the engine may differ: only these seams decide.
+      <span class="mono">bun run stolos compat</span> lists them.
+    </p>
+  </div>`;
+}
+
 const kindPill = (k: PcMachine["kind"]) =>
   html`<span
     class="pill ${
@@ -440,6 +517,11 @@ export function stolosOverview(
 ): Html {
   const by = (k: PcMachine["kind"]) => f.machines.filter((x) => x.kind === k).length;
   const failing = f.machines.filter((x) => x.failing.length || x.attention?.length);
+  // Spec 115-compatibility FR-009: machines this PC and the machine cannot understand each other with, and how many it knows.
+  const incompatible = f.machines.filter(
+    (x) => x.compat?.status === "too-old" || x.compat?.status === "newer",
+  );
+  const withContract = f.machines.filter((x) => x.compat && x.compat.status !== "unknown");
   const notAsked = f.machines.filter((x) => x.notAsked);
   const stuck = f.machines.filter((x) => x.sync?.blocked);
   const cloudFails = f.clouds.flatMap((c) =>
@@ -484,6 +566,7 @@ export function stolosOverview(
         <h2>Needs attention</h2>
         ${
           failing.length ||
+          incompatible.length ||
           cloudFails.length ||
           f.git.unapproved.length ||
           stuck.length ||
@@ -514,7 +597,20 @@ export function stolosOverview(
                       ><a class="btn ghost" href="/actions/fleet?cmd=fleet%20status">Ask now</a>
                     </div>`
                   : ""
-              }${stuck.map(
+              }${incompatible.map(
+                (x) => html`
+                  <div class="row spread" style="padding:6px 0">
+                    <span
+                      ><b>${x.name}</b> ${x.compat?.headline ?? ""}
+                      <span class="sub"
+                        >${x.compat?.fix ? html`<span class="mono">${x.compat.fix}</span>` : ""}</span
+                      ></span
+                    ><a class="btn ghost" href="/machines/${encodeURIComponent(x.name)}#contract"
+                      >Contract</a
+                    >
+                  </div>
+                `,
+              )}${stuck.map(
                 (x) => html`
                   <div class="row spread" style="padding:6px 0">
                     <span
@@ -590,6 +686,16 @@ export function stolosOverview(
                   Stolos ${engine.running}, the newest release.
                 </div>`
               : ""
+        }
+        ${
+          withContract.length
+            ? html`<div class="sub" style="margin-top:4px">
+                Contract with this PC:
+                ${withContract.filter((x) => x.compat?.status === "compatible").length} of
+                ${withContract.length} machine(s) that reported are compatible (the engine may
+                differ).
+              </div>`
+            : ""
         }
         <div style="margin-top:8px">
           ${
@@ -735,6 +841,7 @@ function machineRow(x: PcMachine, now: number): Html {
       <td>${tagChips(x.tags)}</td>
       <td>${x.kind === "cloud" ? "" : checksCell(x)}</td>
       <td>${applies(x)}</td>
+      <td data-contract="${x.compat?.status ?? ""}">${contractPill(x)}</td>
       <td class="sub">${ago(x.seen, now)}</td>
       <td>
         ${
@@ -753,7 +860,7 @@ function machineRow(x: PcMachine, now: number): Html {
 export function machinesPage(f: PcFacts, now = Date.now(), opts: { group?: string } = {}): Html {
   const mine = f.machines.filter((x) => x.thisPc);
   const rest = f.machines.filter((x) => !x.thisPc);
-  const cols = 11;
+  const cols = 12;
   // Spec 108-tags FR-014: grouped by a dimension (environment, role, site, owner, ...): one block per value.
   const grouped = opts.group ? groupByDimension(f.machines, f.tagging, opts.group) : undefined;
   return html`
@@ -816,6 +923,7 @@ export function machinesPage(f: PcFacts, now = Date.now(), opts: { group?: strin
             <th>Tags</th>
             <th>Checks</th>
             <th>Applies</th>
+            <th>Contract</th>
             <th>Last record</th>
             <th></th>
           </tr>
@@ -1126,7 +1234,7 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
                 : ""
       }
     </div>
-    ${tagsCard(f, x)}
+    ${tagsCard(f, x)} ${contractCard(x)}
     ${
       x.says?.length || x.reportedAt
         ? claimsPanel(x.name, x.says ?? [], x.disagreements ?? [], {
@@ -1613,6 +1721,8 @@ export function machinesCsv(f: PcFacts): string {
     "tags",
     "custom_tags",
     "tag_origins",
+    "engine",
+    "contract",
   ];
   const rows = f.machines.map((x) =>
     [
@@ -1638,11 +1748,30 @@ export function machinesCsv(f: PcFacts): string {
         .map((t) => t.id)
         .join("; "),
       (x.tags ?? []).map((t) => `${t.id}=${originWords(t)}`).join("; "),
+      // Spec 115-compatibility FR-009: the engine it reported and whether it and this PC understand each other.
+      x.compat?.engine,
+      x.compat?.status,
     ]
       .map(cell)
       .join(","),
   );
   return [head.join(","), ...rows].join("\r\n") + "\r\n";
+}
+
+/** Spec 115-compatibility FR-009: a machine's contract with this PC for the evidence JSON. */
+function contractRecord(x: PcMachine | undefined): unknown {
+  const c = x?.compat;
+  return c
+    ? {
+        status: c.status,
+        engine: c.engine,
+        statement: c.headline,
+        fix: c.fix,
+        seams: c.seams,
+        held: c.held,
+        reported: c.reportedAt,
+      }
+    : undefined;
 }
 
 /** Every policy result, with its SCF controls, as one JSON document for an auditor. */
@@ -1660,6 +1789,7 @@ export function evidence(f: PcFacts, now = new Date()): unknown {
         checks: x.score,
         failing: x.failing,
         tags: (x.tags ?? []).map(tagRecord),
+        contract: contractRecord(x),
       })),
     adopted: f.adopted.map((a) => ({
       name: a.machine.name,
@@ -1667,6 +1797,7 @@ export function evidence(f: PcFacts, now = new Date()): unknown {
       observed: a.observed?.at,
       results: a.results,
       tags: (f.machines.find((m) => m.name === a.machine.name)?.tags ?? []).map(tagRecord),
+      contract: contractRecord(f.machines.find((m) => m.name === a.machine.name)),
     })),
     clouds: f.clouds
       .flatMap((c) => (c.observed ? [{ ...c, observed: c.observed }] : []))

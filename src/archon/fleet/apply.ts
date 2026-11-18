@@ -20,6 +20,7 @@
 // Spec: 060-stolos-apply
 // Spec: 105-calm-output FR-006, FR-007, FR-012 to FR-014, FR-017
 // Spec: 106-one-passphrase-speed FR-009
+// Spec: 115-compatibility FR-011, FR-012
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
@@ -204,6 +205,28 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
       ui.live(`  ${sha} ${describeCommit(subject.join(" "))}`);
     }
     if (unseen.length > 10) ui.live(`  and ${unseen.length - 10} more`);
+  }
+
+  // 4a. Spec 115-compatibility FR-011: a machine that cannot read what is about to be sent is said now, before the passphrase; never a block.
+  if (what || ahead || approve.length) {
+    const cw = ui.phase("Compatibility");
+    try {
+      const { applyWarnings } = await import("../observe/compat.ts");
+      const { loadHosts } = await import("../model/load.ts");
+      const hosts = await loadHosts();
+      const warned = await applyWarnings({
+        fleet: await loadFleet().catch(() => undefined),
+        hosts,
+      });
+      for (const w of warned) cw.warn(w.message, w.fix, w.code);
+      cw.done(
+        warned.length
+          ? `${warned.length} machine(s) may not read this: your call`
+          : "every machine that has reported can read this",
+      );
+    } catch {
+      cw.done("not checked");
+    }
   }
 
   // 4b. Spec 074: the controls this change weakens or strengthens, and the fleet's gate.

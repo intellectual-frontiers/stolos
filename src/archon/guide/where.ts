@@ -19,6 +19,7 @@
  * @module
  */
 // Spec: 053-where-am-i
+// Spec: 115-compatibility FR-005
 import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { onHost } from "../core/paths.ts";
 
@@ -271,7 +272,8 @@ export async function whereCommand(json: boolean): Promise<number> {
     fs.statSync(onHost("/etc/archon/host"));
     const { stateCommand } = await import("../state/state-command.ts");
     const host = fs.readTextFileSync(onHost("/etc/archon/host")).trim();
-    const code = await stateCommand(host, json);
+    const { ownReport } = await import("../core/compat.ts");
+    const code = await stateCommand(host, json, { compat: ownReport() });
     if (!json) stdio.stdout.writeSync("\nEvery command: archon help\n");
     return code;
   } catch {

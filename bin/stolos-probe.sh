@@ -13,6 +13,9 @@ os=$(uname -s 2>/dev/null || echo unknown)
 
 facts() {
   echo "@probe"; kv version 3; kv at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  # Spec 115-compatibility FR-004: the version of these facts (the seam probe-facts: its major is the probe's own version, 3),
+  # and the oldest PC it answers. The PC compares them with its own contract.
+  echo "@compat"; kv probe_facts 3.1.0; kv probe_minimum 1.0.0
   echo "@os"
   kv kernel "$os"; kv release "$(uname -r)"; kv arch "$(uname -m)"; kv hostname "$(hostname 2>/dev/null || uname -n)"
   if [ "$os" = Darwin ]; then

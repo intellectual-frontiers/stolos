@@ -9,6 +9,7 @@
 // Spec: 100-remote-access FR-001, FR-004
 // Spec: 101-ladder FR-006
 // Spec: 108-tags FR-004, FR-005
+// Spec: 115-compatibility FR-013
 
 import type { SiteDef } from "./site.ts";
 import type { DataClass as DataClassCode, MachineKind, SignerRole } from "../ontology.auto.ts";
@@ -285,6 +286,12 @@ export interface FleetDef {
    * Default: never block, only show.
    */
   compliance?: { cadence?: CadenceOverrides; gate?: ComplianceGate };
+  /**
+   * Spec 115-compatibility FR-013: hold a group of hosts at an engine tag while the rest of the fleet moves: each hold chooses
+   * machines by tags (spec 108-tags' expression, `env:lab and not role:db`). A host's own `enginePin` wins over these, and the
+   * first hold that chooses a host wins over the later ones.
+   */
+  engineHolds?: EngineHoldBy[];
   /** Local observability limits for every host and workstation (spec 021). */
   observability?: Partial<ObservabilityDef>;
   /**
@@ -563,6 +570,8 @@ export interface GuestDef {
 export interface HostDef {
   /** Its name: a DNS label, unique in the fleet. */
   name: string;
+  /** Spec 115-compatibility FR-013: hold this host at an engine tag while the rest of the fleet moves (time-limited, with a reason). */
+  enginePin?: EngineHold;
   /**
    * "server" (default): an Ubuntu Server host Archon installs and converges.
    * "workstation" (spec 020): Ubuntu on WSL (or a desktop) where Archon applies
@@ -734,6 +743,28 @@ export interface HostRegistration {
   deployKey?: string;
   /** When it was registered (ISO date). */
   added: string;
+}
+
+/** An engine release tag: `stolos-v<major>.<minor>.<patch>` (spec 114-release-record; `TAG_PREFIX` of `src/archon/version.ts` is its prefix). */
+export type EngineTag = `stolos-v${number}.${number}.${number}`;
+
+/**
+ * Spec 115-compatibility FR-013: a hold at an engine tag. It is a decision with a reason and an end: `until` (`YYYY-MM-DD`) is at
+ * most 180 days after the day the model is validated, and a hold past its date is ignored and said.
+ */
+export interface EngineHold {
+  /** The engine tag to hold at, `stolos-v<major>.<minor>.<patch>`. */
+  tag: EngineTag;
+  /** Why, in words an auditor reads. */
+  reason: string;
+  /** Until when (`YYYY-MM-DD`). */
+  until: string;
+}
+
+/** Spec 115-compatibility FR-013: a hold of the hosts a tag expression chooses (spec 108-tags). */
+export interface EngineHoldBy extends EngineHold {
+  /** The machines it holds, by tags: `env:lab`, `env:lab and not role:db`. */
+  select: string;
 }
 
 /**

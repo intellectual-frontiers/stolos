@@ -18,6 +18,8 @@ function Get-Facts {
   $cs = Get-CimInstance Win32_ComputerSystem
   $bios = Get-CimInstance Win32_BIOS
   Write-Output '@probe'; kv version $version; kv at ((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))
+  # Spec 115-compatibility FR-004: the version of these facts (the seam probe-facts: its major is the probe's own version, 3), and the oldest PC it answers.
+  Write-Output '@compat'; kv probe_facts '3.1.0'; kv probe_minimum '1.0.0'
   Write-Output '@os'
   kv kernel 'Windows'; kv release $os.Version; kv arch $env:PROCESSOR_ARCHITECTURE; kv hostname $env:COMPUTERNAME
   kv family 'windows'; kv name $os.Caption; kv version $os.BuildNumber

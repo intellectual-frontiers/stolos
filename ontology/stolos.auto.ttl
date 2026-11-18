@@ -54,6 +54,11 @@ stolos:CommandTier a owl:Class ;
     skos:definition "What a command may do: read, write the repository, change the host, or destroy."@en ;
     stolos:spec "030-agent-layer FR-003" .
 
+stolos:CompatStatus a owl:Class ;
+    rdfs:label "Compatibility status"@en ;
+    skos:definition "What a PC says of one machine against its own contract, seam by seam: compatible (the engine may differ), too old for this PC, newer than this PC, or unknown (not reported yet)."@en ;
+    stolos:spec "115-compatibility FR-005, FR-006" .
+
 stolos:ConsoleDevice a owl:Class ;
     rdfs:label "Console device"@en ;
     skos:definition "A browser registered with a passkey to sign in to the Stolos Console at its own HTTPS name, approved by a signer."@en ;
@@ -253,6 +258,11 @@ stolos:RouterHealth a owl:Class ;
     rdfs:label "Router health"@en ;
     skos:definition "What a controller says of its own health: the version of its application and how many of its devices are online and offline."@en ;
     stolos:spec "109-integrations-api FR-001, FR-013" .
+
+stolos:Seam a owl:Class ;
+    rdfs:label "Seam"@en ;
+    skos:definition "One interface between a PC (`stolos`) and its machines (`archon`), versioned on its own by a Semantic Version with a minimum: the fleet model's schema, the signed record formats, the probe's facts, the machine query views, or the MCP tool surface. The engine is one work with one version; what each side must understand of the other is a seam's."@en ;
+    stolos:spec "115-compatibility FR-001, FR-002" .
 
 stolos:Signer a owl:Class ;
     rdfs:label "Signer"@en ;
@@ -559,6 +569,30 @@ stolos:colour-yellow a stolos:TagColour ;
     skos:definition "A caution accent."@en ;
     skos:notation "yellow" ;
     stolos:spec "108-tags FR-001" .
+
+stolos:compat-compatible a stolos:CompatStatus ;
+    rdfs:label "compatible"@en ;
+    skos:definition "Every seam the machine reports is one this PC reads and the machine reads this PC's; the engine versions may differ."@en ;
+    skos:notation "compatible" ;
+    stolos:spec "115-compatibility FR-005" .
+
+stolos:compat-newer a stolos:CompatStatus ;
+    rdfs:label "newer"@en ;
+    skos:definition "The machine reports a seam this PC is too old to read (a higher major, or a minimum above this PC's version). The fix is on the PC (`stolos update`)."@en ;
+    skos:notation "newer" ;
+    stolos:spec "115-compatibility FR-005" .
+
+stolos:compat-too-old a stolos:CompatStatus ;
+    rdfs:label "too-old"@en ;
+    skos:definition "The machine reports a seam older than this PC's minimum: it cannot be read, or cannot read what this PC sends. The fix is on the machine (`archon update`)."@en ;
+    skos:notation "too-old" ;
+    stolos:spec "115-compatibility FR-005" .
+
+stolos:compat-unknown a stolos:CompatStatus ;
+    rdfs:label "unknown"@en ;
+    skos:definition "The machine has not reported its engine and seams (it has not been asked since it began reporting, or its engine is older than this contract)."@en ;
+    skos:notation "unknown" ;
+    stolos:spec "115-compatibility FR-005" .
 
 stolos:data-durable a stolos:DataClass ;
     rdfs:label "durable"@en ;
@@ -1083,6 +1117,37 @@ stolos:rung-7 a mz:Rung ;
         "bun run docs:lint" ;
     mz:rungNumber 7 ;
     mz:spec "101-ladder FR-001" .
+
+stolos:seam-mcp a stolos:Seam ;
+    rdfs:label "mcp"@en ;
+    skos:definition "The MCP tool surface a machine serves: the tools, their arguments and their tiers."@en ;
+    skos:notation "mcp" ;
+    stolos:spec "115-compatibility FR-001" .
+
+stolos:seam-model a stolos:Seam ;
+    rdfs:label "model"@en ;
+    skos:definition "The fleet model's schema: the types of the fleet, its hosts and its site, which `stolos` renders and `archon` applies."@en ;
+    skos:notation "model" ;
+    stolos:spec "115-compatibility FR-001" .
+
+stolos:seam-probe-facts a stolos:Seam ;
+    rdfs:label "probe-facts"@en ;
+    skos:definition "The facts an adopted machine's read-only probe answers with (its sections and keys), versioned by the probe's own version."@en ;
+    skos:notation "probe-facts" ;
+    stolos:spec "115-compatibility FR-001",
+        "115-compatibility FR-004" .
+
+stolos:seam-query a stolos:Seam ;
+    rdfs:label "query"@en ;
+    skos:definition "The machine query interface: the views of a machine's state database (archon_state, archon_query, osquery's archon_ tables) and their columns."@en ;
+    skos:notation "query" ;
+    stolos:spec "115-compatibility FR-001" .
+
+stolos:seam-signed-records a stolos:Seam ;
+    rdfs:label "signed-records"@en ;
+    skos:definition "The formats of what is signed or recorded across the line: the signed commit and approval conventions, the pairing check-in text, and the observation and verify records."@en ;
+    skos:notation "signed-records" ;
+    stolos:spec "115-compatibility FR-001" .
 
 stolos:signer-daily a stolos:SignerRole ;
     rdfs:label "daily"@en ;
@@ -1637,6 +1702,14 @@ mzid:term-stolos-CommandTier a mz:OntologyTerm ;
     mz:justification "No standard adopted yet. Candidates to examine: none found. Kept unaligned by the owner's decision of 2026-11-17 (stolos issue #37); reviewed again by 2027-02-15." ;
     mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#CommandTier" .
 
+mzid:term-stolos-CompatStatus a mz:OntologyTerm ;
+    rdfs:label "stolos:CompatStatus"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "closeMatch" ;
+    mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#CompatStatus" .
+
 mzid:term-stolos-ConsoleDevice a mz:OntologyTerm ;
     rdfs:label "stolos:ConsoleDevice"@en ;
     mz:addedOn "2026-11-17" ;
@@ -1979,6 +2052,14 @@ mzid:term-stolos-RouterHealth a mz:OntologyTerm ;
     mz:definedBy "101-ladder" ;
     mz:justification "No standard adopted yet. Candidates to examine: none found; OpenTelemetry system and device semantic conventions for metrics, OCSF metric object, RFC 8343 (YANG interfaces state). Kept unaligned by the owner's decision of 2026-11-17 (stolos issue #37); reviewed again by 2027-02-15." ;
     mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#RouterHealth" .
+
+mzid:term-stolos-Seam a mz:OntologyTerm ;
+    rdfs:label "stolos:Seam"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "closeMatch" ;
+    mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#Seam" .
 
 mzid:term-stolos-Signer a mz:OntologyTerm ;
     rdfs:label "stolos:Signer"@en ;

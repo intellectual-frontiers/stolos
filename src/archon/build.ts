@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 115-compatibility FR-013
 
 import { lf } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -54,8 +55,11 @@ export async function loadModel(): Promise<Model> {
     });
   }
   // Spec 108-tags FR-002: tags.ts is sound, and every tag a machine holds is defined in it.
-  const { tagProblems } = await import("./fleet/tags.ts");
+  const { loadTagSet, tagProblems } = await import("./fleet/tags.ts");
   problems.push(...(await tagProblems()));
+  // Spec 115-compatibility FR-013: an engine hold is typed, has a reason and an end, and chooses machines by defined tags.
+  const { engineHoldProblems } = await import("./fleet/engine-holds.ts");
+  problems.push(...engineHoldProblems(fleet, hosts, (await loadTagSet()).set));
   const specs = await knownSpecs();
   const plans: HostPlan[] = [];
   for (const h of hosts) {

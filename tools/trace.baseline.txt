@@ -9,7 +9,6 @@ trace/no-spec-line src/archon/audit/mod.ts
 trace/no-spec-line src/archon/audit/openapi.ts
 trace/no-spec-line src/archon/audit/populations.ts
 trace/no-spec-line src/archon/backup/backup.ts
-trace/no-spec-line src/archon/build.ts
 trace/no-spec-line src/archon/capabilities/mod.ts
 trace/no-spec-line src/archon/clients/commands.ts
 trace/no-spec-line src/archon/clients/launch.ts

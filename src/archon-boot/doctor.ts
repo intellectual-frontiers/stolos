@@ -11,9 +11,11 @@
 // Spec: 100-remote-access FR-012
 // Spec: 103-three-ports FR-001, FR-009, FR-011
 // Spec: 106-one-passphrase-speed FR-008
+// Spec: 115-compatibility FR-009, FR-012
 
 import { fs, path, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
+import type { CompatMachine } from "../archon/observe/compat.ts";
 import { P } from "../archon/core/paths.ts";
 import { ui } from "../archon/core/ui.ts";
 import { liveToken, loadTokens, SECRETS } from "../archon/core/secrets.ts";
@@ -292,14 +294,33 @@ export async function doctor(o: {
   // --------------------------------------------------------------- hosts
   const h = ui.phase("Hosts");
   const tokens = await loadTokens();
+  // Spec 115-compatibility FR-009: each server against this PC's contract, from what it last reported (nobody is asked here).
+  const contract = new Map<string, CompatMachine>();
+  try {
+    const { fleetCompat } = await import("../archon/observe/compat.ts");
+    for (const c of await fleetCompat({
+      ...(model?.fleet ? { fleet: model.fleet } : {}),
+      hosts: model?.hosts ?? [],
+    })) {
+      contract.set(c.name, c);
+    }
+  } catch {
+    // The contract is a courtesy of the doctor: a cache it cannot read leaves it out.
+  }
   const lines = (model?.hosts ?? [])
     .filter((x) => x.kind !== "workstation")
     .map((x) => {
       const t = tokens.find((y) => y.host === x.name);
+      const c = contract.get(x.name);
       return `${x.name}: ${liveToken(tokens, x.name) ? "armed" : "not armed"}${
         (x.mac ?? t?.mac) ? ` · ${x.mac ?? t?.mac}` : ""
-      }`;
+      }${c ? ` · ${c.words.headline.split(":")[0]}` : ""}`;
     });
+  for (const c of contract.values()) {
+    if (c.judgement.status === "too-old" || c.judgement.status === "newer") {
+      h.warn(c.words.detail, c.words.fix, c.words.code);
+    }
+  }
   h.done(lines.join(" · ") || "none");
   // --------------------------------------------------------------- email
   const em = ui.phase("Email");

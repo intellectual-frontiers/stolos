@@ -14,6 +14,7 @@
 // Spec: 078-control-sdk
 // Spec: 097-controller FR-004
 // Spec: 100-remote-access FR-012, FR-013
+// Spec: 115-compatibility FR-009, FR-010
 
 import type { AdoptedDef, Observed } from "./adopt.ts";
 import {
@@ -23,6 +24,8 @@ import {
   type ObservationInputs,
 } from "../controls/define.ts";
 import { acceptRisks, runObservations } from "../controls/core.ts";
+import { describeCompat, judgeMachine } from "../core/compat.ts";
+import { contractOfProbeVersion } from "../observe/compat.ts";
 
 /** One policy's result for one machine. */
 export interface PolicyResult {
@@ -356,6 +359,24 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
       o.controller?.remoteAccess?.unused
         ? "review the devices on the console's Remote Access page; revoke what is not used (bun run stolos devices revoke <id>)"
         : "bun run stolos console --lan (it renews the certificate)",
+  }),
+  // Spec 115-compatibility FR-010: the machine's probe speaks facts this PC reads (the seam probe-facts), from the probe version in its observation.
+  defineControl({
+    id: "speaks-contract",
+    title: "Speaks this PC's contract",
+    scf: ["CHG-03", "CFG-04"],
+    subject: "observation",
+    of: "adopted",
+    assert: ({ machine: m, observed: o }) => {
+      const j = judgeMachine("adopted", contractOfProbeVersion(o.probe));
+      if (j.status === "unknown") return undefined;
+      const w = describeCompat(m.name, "adopted", j);
+      return { status: j.status === "compatible" ? "pass" : "fail", detail: w.detail };
+    },
+    fix: ({ machine: m, observed: o }) => {
+      const j = judgeMachine("adopted", contractOfProbeVersion(o.probe));
+      return describeCompat(m.name, "adopted", j).fix ?? `bun run stolos host adopt ${m.name}`;
+    },
   }),
   defineControl({
     id: "adoption-current",

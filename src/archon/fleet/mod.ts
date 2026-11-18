@@ -141,6 +141,31 @@
  * `git commit -S`. Never commit without `-S` (or `commit.gpgsign=true`): an unsigned tip is refused by
  * every host.
  *
+ * ## Compatibility: does the PC understand each machine? (spec 115-compatibility)
+ *
+ * `archon` (on each machine) and `stolos` (on your PC) are one engine with one version. A machine may still run an older engine than your PC (it
+ * follows the fleet within 15 minutes, an adopted machine's probe was installed once, a machine may be off for a month): what matters is whether
+ * the two still understand each other. That contract is in five **seams**, each with its own version and the oldest version the other side may
+ * have: the fleet model, the signed records, the probe's facts, the machine query views and the MCP tools.
+ *
+ * ```sh
+ * bun run stolos fleet status    # asks each server for its engine and seams (kept on this PC, never committed)
+ * bun run stolos compat          # the seams, and every machine: compatible, too old, newer, or unknown
+ * ```
+ *
+ * - `alpha runs engine 0.148.0, compatible with this PC's 0.152.0`: nothing to do; the engine may differ.
+ * - `too old for this PC: run archon update on alpha` (`ssh alpha archon update`): `E115-TOO-OLD`; the machine cannot be read, or cannot read what
+ *   this PC sends. `stolos apply` warns before it sends a change such a machine cannot read, and never blocks: you decide.
+ * - `newer than this PC: run bun run stolos update`: `E115-NEWER`; the fix is on the PC.
+ * - `unknown (not reported yet)`: `P115-UNKNOWN`; `bun run stolos fleet status` asks. A machine that is not compatible is also a failing
+ *   finding of the compliance evidence (SCF CHG-03 and CFG-04).
+ *
+ * **Holding a host at an engine tag** while the rest of the fleet moves is a decision in the model, with a reason and an end (at most 180 days):
+ * `enginePin: { tag: "stolos-v0.150.0", reason: "...", until: "2026-12-31" }` in a host's `host.ts`, or `engineHolds: [{ select: "env:lab", tag, reason,
+ * until }]` in `fleet.ts` to hold the machines a tag expression chooses. `stolos build` refuses a hold that is not typed right, and `stolos compat`
+ * checks that the tag exists (`git ls-remote`). This release records, validates and shows a hold (`held at stolos-v0.150.0 (fleet pin
+ * stolos-v0.152.0)`); it does not yet make the machine run that engine (the design and the blocker are in `specs/115-compatibility/tasks.md`).
+ *
  * ## The synthetic fleet: test before a real server
  *
  * A fleet repository can hold a **synthetic fleet**: a fleet made for the end-to-end lab, shaped like
@@ -349,5 +374,6 @@
  */
 // Spec: 108-tags FR-006, FR-007
 // Spec: 112-machine-reported-tags FR-018
+// Spec: 115-compatibility FR-019
 
 export {};

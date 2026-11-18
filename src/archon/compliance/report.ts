@@ -12,6 +12,7 @@
  */
 // Spec: 068-compliance
 // Spec: 112-machine-reported-tags FR-013
+// Spec: 115-compatibility FR-010
 
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { PcFacts } from "../console/pc.ts";
@@ -194,6 +195,24 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
             fix: `bun run stolos tag list ${m.name} (the fleet's tags win; change the machine, or accept what it says)`,
           }
         : {}),
+    });
+  }
+  // Spec 115-compatibility FR-010: a managed server that reported says whether it and this PC understand each other (an adopted machine's
+  // is a policy of its pack, below). A machine that has not reported gives no evidence either way.
+  for (const m of f.machines.filter(
+    (x) => x.kind === "server" && x.compat && x.compat.status !== "unknown",
+  )) {
+    const c = m.compat;
+    if (!c) continue;
+    out.push({
+      scf: ["CHG-03", "CFG-04"],
+      subject: m.name,
+      source: "managed",
+      check: "Speaks this PC's contract",
+      status: c.status === "compatible" ? "pass" : "fail",
+      detail: c.detail,
+      ...(c.reportedAt ? { observedAt: c.reportedAt } : {}),
+      ...(c.status !== "compatible" && c.fix ? { fix: c.fix } : {}),
     });
   }
   for (const a of f.adopted) {

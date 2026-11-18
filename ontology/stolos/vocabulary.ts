@@ -113,6 +113,9 @@ export const stolos = vocabulary(STOLOS, {
   TagOrigin: "owl:Class",
   TagTrust: "owl:Class",
   TagSource: "owl:Class",
+  // Spec 115-compatibility: the seams between a PC and its machines, and what the PC says of a machine against them.
+  Seam: "owl:Class",
+  CompatStatus: "owl:Class",
   ApiKind: "owl:Class",
   ApiCapability: "owl:Class",
   // Properties.
@@ -221,6 +224,11 @@ export const TagOriginSchema = classSchema(stolos.TagOrigin, CODE);
 export const TagTrustSchema = classSchema(stolos.TagTrust, CODE);
 /** The schema of a tag source (spec 112-machine-reported-tags): where on a machine a reported tag was read. */
 export const TagSourceSchema = classSchema(stolos.TagSource, CODE);
+
+/** The schema of a seam (spec 115-compatibility): one interface between a PC and its machines, versioned on its own. */
+export const SeamSchema = classSchema(stolos.Seam, CODE);
+/** The schema of a compatibility status (spec 115-compatibility): what a PC says of a machine against its own contract. */
+export const CompatStatusSchema = classSchema(stolos.CompatStatus, CODE);
 
 /** The schema of a kind of API an integration is (spec 109-integrations-api): what an account's API is a kind of, and so which capabilities it can offer. */
 export const ApiKindSchema = classSchema(stolos.ApiKind, CODE);
@@ -583,6 +591,20 @@ export const classes = [
       "Where on a machine a reported tag was read: its `/etc/machine-info`, its own `archon tag` table (local or fleet rows), or its firmware's SMBIOS facts.",
     ),
     spec: ["112-machine-reported-tags FR-005, FR-007, FR-008"],
+  }),
+  StolosClass.make(stolos.Seam, {
+    label: en("Seam"),
+    definition: en(
+      "One interface between a PC (`stolos`) and its machines (`archon`), versioned on its own by a Semantic Version with a minimum: the fleet model's schema, the signed record formats, the probe's facts, the machine query views, or the MCP tool surface. The engine is one work with one version; what each side must understand of the other is a seam's.",
+    ),
+    spec: ["115-compatibility FR-001, FR-002"],
+  }),
+  StolosClass.make(stolos.CompatStatus, {
+    label: en("Compatibility status"),
+    definition: en(
+      "What a PC says of one machine against its own contract, seam by seam: compatible (the engine may differ), too old for this PC, newer than this PC, or unknown (not reported yet).",
+    ),
+    spec: ["115-compatibility FR-005, FR-006"],
   }),
   StolosClass.make(stolos.ApiIntegration, {
     label: en("API integration"),

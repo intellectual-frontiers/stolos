@@ -31,6 +31,8 @@ import {
   TagOriginSchema,
   TagTrustSchema,
   TagSourceSchema,
+  SeamSchema,
+  CompatStatusSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
 } from "./vocabulary.ts";
@@ -635,6 +637,77 @@ export const tagSources = codeList(TagSourceSchema, "source", {
   },
 });
 
+/** The seams between a PC and its machines (spec 115-compatibility FR-001): each is an interface versioned on its own. */
+export const seams = codeList(SeamSchema, "seam", {
+  model: {
+    label: en("model"),
+    definition: en(
+      "The fleet model's schema: the types of the fleet, its hosts and its site, which `stolos` renders and `archon` applies.",
+    ),
+    spec: ["115-compatibility FR-001"],
+  },
+  "signed-records": {
+    label: en("signed-records"),
+    definition: en(
+      "The formats of what is signed or recorded across the line: the signed commit and approval conventions, the pairing check-in text, and the observation and verify records.",
+    ),
+    spec: ["115-compatibility FR-001"],
+  },
+  "probe-facts": {
+    label: en("probe-facts"),
+    definition: en(
+      "The facts an adopted machine's read-only probe answers with (its sections and keys), versioned by the probe's own version.",
+    ),
+    spec: ["115-compatibility FR-001", "115-compatibility FR-004"],
+  },
+  query: {
+    label: en("query"),
+    definition: en(
+      "The machine query interface: the views of a machine's state database (archon_state, archon_query, osquery's archon_ tables) and their columns.",
+    ),
+    spec: ["115-compatibility FR-001"],
+  },
+  mcp: {
+    label: en("mcp"),
+    definition: en(
+      "The MCP tool surface a machine serves: the tools, their arguments and their tiers.",
+    ),
+    spec: ["115-compatibility FR-001"],
+  },
+});
+
+/** What a PC says of a machine against its own contract (spec 115-compatibility FR-005, FR-006). */
+export const compatStatuses = codeList(CompatStatusSchema, "compat", {
+  compatible: {
+    label: en("compatible"),
+    definition: en(
+      "Every seam the machine reports is one this PC reads and the machine reads this PC's; the engine versions may differ.",
+    ),
+    spec: ["115-compatibility FR-005"],
+  },
+  "too-old": {
+    label: en("too-old"),
+    definition: en(
+      "The machine reports a seam older than this PC's minimum: it cannot be read, or cannot read what this PC sends. The fix is on the machine (`archon update`).",
+    ),
+    spec: ["115-compatibility FR-005"],
+  },
+  newer: {
+    label: en("newer"),
+    definition: en(
+      "The machine reports a seam this PC is too old to read (a higher major, or a minimum above this PC's version). The fix is on the PC (`stolos update`).",
+    ),
+    spec: ["115-compatibility FR-005"],
+  },
+  unknown: {
+    label: en("unknown"),
+    definition: en(
+      "The machine has not reported its engine and seams (it has not been asked since it began reporting, or its engine is older than this contract).",
+    ),
+    spec: ["115-compatibility FR-005"],
+  },
+});
+
 /** The kinds of API an integration may be (spec 109-integrations-api FR-001). */
 export const apiKinds = codeList(ApiKindSchema, "api-kind", {
   router: {
@@ -808,6 +881,16 @@ export const CODE_LISTS = {
     array: "TAG_SOURCES",
     list: tagSources,
     what: "Where on a machine a reported tag was read",
+  },
+  Seam: {
+    array: "SEAM_IDS",
+    list: seams,
+    what: "One interface between a PC and its machines, versioned on its own",
+  },
+  CompatStatus: {
+    array: "COMPAT_STATUSES",
+    list: compatStatuses,
+    what: "What a PC says of a machine against its own contract",
   },
   ApiKind: {
     array: "API_KINDS",

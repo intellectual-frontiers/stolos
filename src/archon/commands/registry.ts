@@ -13,6 +13,7 @@
 // Spec: 109-integrations-api FR-018
 // Spec: 108-tags FR-006, FR-007, FR-008, FR-013, FR-016
 // Spec: 112-machine-reported-tags FR-007, FR-011, FR-012
+// Spec: 115-compatibility FR-005, FR-016
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
@@ -553,12 +554,35 @@ export const COMMANDS: Command[] = [
     name: "state",
     output: "report",
     summary: "What this machine recorded about itself: install, latest verify, switches, data",
-    description: `Reads this machine's own archon.sql (spec 048): its install record, its latest verify, the operators' switches (pg, s3, smb), and whether it holds durable data. Fleet status on the boot machine asks each server for this over MCP; nothing is pushed to Git.`,
+    description: `Reads this machine's own archon.sql (spec 048): its install record, its latest verify, the operators' switches (pg, s3, smb), and whether it holds durable data. Spec 115: also the engine it runs and the version of each seam of the contract between a PC and its machines (model, signed-records, query, mcp), which the PC compares with its own. Fleet status on the boot machine asks each server for this over MCP; nothing is pushed to Git.`,
     tier: "read",
     args: [],
     async run(_a: Parsed, ctx: RunContext): Promise<number> {
       const { stateCommand } = await import("../state/state-command.ts");
-      return await stateCommand(ctx.hostName, ctx.json);
+      // Spec 115-compatibility FR-005: the engine and the seams this machine has, for the PC's check.
+      const { ownReport } = await import("../core/compat.ts");
+      return await stateCommand(ctx.hostName, ctx.json, { compat: ownReport() });
+    },
+  },
+  {
+    name: "compat",
+    place: "pc",
+    output: "report",
+    summary:
+      "Whether this PC and each machine understand each other: the seams, their versions, and every machine's status",
+    description: `Spec 115. Archon and Stolos are one engine with one version; what is versioned on its own is the contract between a PC and its machines, in five seams (the fleet model, the signed records, the probe's facts, the machine query views, the MCP tools), each with a version and the oldest version the other side may have. This lists this PC's seams and every machine against them, from what each last reported (stolos fleet status and host observe keep it; nothing is asked here): compatible (the engine may differ), too old for this PC (run archon update on it), newer than this PC (run bun run stolos update), or unknown (not reported yet). A host held at an engine tag (enginePin in its host.ts, engineHolds in fleet.ts) is shown with the tag it is held at, and the tag is checked against the engine's repository (git ls-remote, with a time limit). Exits 1 where a machine is too old or newer, or a hold names a tag that does not exist. --json for scripts.`,
+    tier: "read",
+    args: [],
+    examples: [
+      {
+        cmd: "bun run stolos compat",
+        text: "The seams and every machine's status, with the fix for each.",
+      },
+      { cmd: "bun run stolos compat --json", text: "The same, for a script." },
+    ],
+    async run(_a: Parsed, ctx: RunContext): Promise<number> {
+      const { compatCommand } = await import("../observe/compat-command.ts");
+      return await compatCommand({ json: ctx.json });
     },
   },
   {

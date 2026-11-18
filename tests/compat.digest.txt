@@ -1,0 +1,7 @@
+# The shape of each seam of the contract between a PC and its machines, as a digest (spec 115-compatibility FR-003).
+# Written by bun run compat:digest; checked by it (--check, in bun run ci) and by tests/compat115.test.ts. Never edit by hand.
+# A changed digest is recorded only under a raised version: the major for a change that breaks a reader, the minor for an addition
+# (src/archon/core/compat.ts).
+model 1.0.0 384ff95d7663f8ff1e1012770ad1a907c1654c633d7d369b4e06a184b71239ba
+query 1.0.0 18284de03c3c1fec2dd5b5af0f51676bc90275b1aab9632aca2f40a1323a899e
+mcp 1.0.0 00526ffbbbed07805d63c9d649b14bedcdfaaab9cab4d40b9230ee91f73a81fa

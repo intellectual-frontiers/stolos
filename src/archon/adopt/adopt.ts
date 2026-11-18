@@ -28,6 +28,7 @@
 // Spec: 107-pairing-and-query FR-007
 // Spec: 108-tags FR-004, FR-005, FR-008
 // Spec: 112-machine-reported-tags FR-005, FR-006, FR-010
+// Spec: 115-compatibility FR-004, FR-006
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -414,7 +415,11 @@ export async function observe(
   if (!r.ok) return { why: r.err.split("\n").pop() || "the probe did not answer" };
   const p = parseProbe(r.out);
   if (!p["os"]) return { why: "the probe answered without facts (an old or edited stolos-probe?)" };
-  const reported = reportFromProbe(p["reported"], p["probe"]?.["at"]);
+  // Spec 115-compatibility FR-004, FR-006: the probe's own facts version rides with what it reports about itself.
+  const reported = reportFromProbe(p["reported"], p["probe"]?.["at"], {
+    ...(p["compat"] ? { compat: p["compat"] } : {}),
+    ...(p["probe"]?.["version"] ? { version: p["probe"]["version"] } : {}),
+  });
   const out = reported ? { reported } : {};
   if (m.role === "controller") {
     const { controllerFacts } = await import("./controller.ts");

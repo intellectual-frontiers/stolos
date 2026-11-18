@@ -20,6 +20,7 @@
  */
 // Spec: 052-self-describing
 // Spec: 105-calm-output FR-009, FR-013
+// Spec: 115-compatibility FR-012
 
 import { guideRef, guideUrl } from "./guides.ts";
 
@@ -86,6 +87,27 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "A step finished, with something that is worth a look.",
     why: "See the run log for the raw message (stolos log).",
     fix: "stolos log --last 40",
+    doc: "fleet-repository",
+  },
+  "E115-TOO-OLD": {
+    title: "A machine is too old for this PC",
+    what: "A machine reports a version of one part of the contract between a PC and its machines (the fleet model, the signed records, the query views, the MCP tools, or an adopted machine's probe) that is older than this PC still reads.",
+    why: "It has not updated: a server follows the fleet repository, but its engine is the one the fleet pinned when it last pulled; an adopted machine runs the probe installed once.",
+    fix: "ssh <machine> archon update (for an adopted machine: bun run stolos host adopt <machine>, which installs the current probe); then bun run stolos fleet status. bun run stolos compat lists every part and what each needs.",
+    doc: "fleet-repository",
+  },
+  "E115-NEWER": {
+    title: "A machine is newer than this PC",
+    what: "A machine reports a part of the contract this PC is too old to read (a newer major, or a minimum above this PC's version).",
+    why: "The fleet's engine moved on and this PC did not: another PC of the fleet updated it, or the machine updated by itself.",
+    fix: "bun run stolos update (it pulls the fleet and moves this PC to the engine the fleet pins).",
+    doc: "fleet-repository",
+  },
+  "P115-UNKNOWN": {
+    title: "A machine has not reported its engine yet",
+    what: "This PC has no record of the engine and the contract versions of a machine, so it cannot say whether the two understand each other.",
+    why: "It has not been asked since this check began, or it runs an engine from before the check (it answers, but says nothing of its engine).",
+    fix: "bun run stolos fleet status (asks every server); for one that answers and still says nothing: ssh <machine> archon update. For an adopted machine: bun run stolos host observe <machine>.",
     doc: "fleet-repository",
   },
   "E105-YOURS": {

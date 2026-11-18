@@ -387,7 +387,8 @@ proves(
       };
       const o = pick([true, true, true, false]) ? toObserved(p) : undefined;
       const want = legacyPolicies(m, o, now);
-      const got = policies(m, o, now);
+      // Spec 115-compatibility: the pack gained "speaks-contract" (the probe's facts version), which the legacy list never had.
+      const got = policies(m, o, now).filter((r) => r.id !== "speaks-contract");
       assertEquals(JSON.stringify(got), JSON.stringify(want), `machine ${i}`);
     }
   },

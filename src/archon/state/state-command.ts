@@ -7,6 +7,7 @@
  * @module
  */
 // Spec: 112-machine-reported-tags FR-005, FR-007
+// Spec: 115-compatibility FR-005
 
 import { json } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -39,6 +40,11 @@ export interface HostState {
    * the rows of its own tags table. The PC reads them as untrusted claims (its inventory above carries the firmware facts).
    */
   reported?: { machineInfo?: Record<string, string>; tags: TagBody[] };
+  /**
+   * Spec 115-compatibility FR-005: the engine this machine runs and the version of each seam it has (`current`, and `minimum`, the
+   * oldest PC it reads). The PC compares them with its own contract; the machine reads nothing for it but constants.
+   */
+  compat?: { engine: string; seams: Record<string, { current: string; minimum: string }> };
   /** Spec 066: the commit this host applies now (its checkout's HEAD). */
   applied?: { commit: string; subject: string; at: string };
   /** Spec 066: what its last pull did (and why it could not, when it could not). */
@@ -97,8 +103,12 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
 }
 
 /** archon state: show it. */
-export async function stateCommand(hostName: string, json: boolean): Promise<number> {
-  const s = await hostState(hostName);
+export async function stateCommand(
+  hostName: string,
+  json: boolean,
+  extras: Pick<HostState, "compat"> = {},
+): Promise<number> {
+  const s = { ...(await hostState(hostName)), ...extras };
   if (json) {
     stdio.stdout.writeSync(`${JSON.stringify(s, null, 2)}\n`);
     return 0;
@@ -113,6 +123,13 @@ export async function stateCommand(hostName: string, json: boolean): Promise<num
       : "no install record (installed by hand, or before spec 048)",
   );
   if (s.inventory) p.note(`machine: ${describeInventory(s.inventory)}`);
+  if (s.compat) {
+    p.note(
+      `engine ${s.compat.engine} · seams ${Object.entries(s.compat.seams)
+        .map(([k, v]) => `${k} ${v.current}`)
+        .join(", ")} (minimum of each: stolos compat)`,
+    );
+  }
   if (s.reported?.tags.length) {
     p.note(
       `its own tags: ${s.reported.tags.map((t) => (t.dimension ? `${t.dimension}:${t.value}` : t.value)).join(" ")} (archon tag list)`,

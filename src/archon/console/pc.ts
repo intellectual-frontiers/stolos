@@ -13,6 +13,7 @@
 // Spec: 107-pairing-and-query FR-007, FR-008
 // Spec: 108-tags FR-014
 // Spec: 112-machine-reported-tags FR-011, FR-013, FR-014, FR-015
+// Spec: 115-compatibility FR-009, FR-010
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -24,9 +25,34 @@ import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { PackRun } from "../controls/run.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
-import type { MachineKind, WayOfJoining } from "../ontology.auto.ts";
+import type { CompatStatus, MachineKind, WayOfJoining } from "../ontology.auto.ts";
 import { wayOfJoining } from "../adopt/joining.ts";
 import type { ClaimView, ResolvedTag, TaggingView } from "../fleet/tags.ts";
+
+/**
+ * Spec 115-compatibility FR-009: a machine against this PC's contract, for the pages and the evidence: its status, the statement in
+ * plain words with its fix, the engine it reported, and each seam it was judged on.
+ */
+export interface PcCompat {
+  /** `compatible`, `too-old`, `newer` or `unknown` (`stolos:CompatStatus`). */
+  status: CompatStatus;
+  /** `compatible`, `too old for this PC: run archon update on alpha`, `newer than this PC: ...`, `unknown (not reported yet)`. */
+  headline: string;
+  /** The sentence for a list: `alpha runs engine 0.148.0, compatible with this PC's 0.152.0`. */
+  detail: string;
+  /** The command that fixes it. */
+  fix?: string;
+  /** The code `stolos explain` knows. */
+  code?: string;
+  /** The engine it reported. */
+  engine?: string;
+  /** When it last reported (ISO). */
+  reportedAt?: string;
+  /** Each seam: what the machine has, what this PC has, what it needs, and the result. */
+  seams: Array<{ seam: string; status: CompatStatus; machine?: string; pc: string; needs: string }>;
+  /** Its hold at an engine tag, in plain words (spec 115-compatibility FR-014). */
+  held?: string;
+}
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
@@ -85,6 +111,8 @@ export interface PcMachine {
   reportedAt?: string;
   /** Spec 112-machine-reported-tags FR-004: how many things it said were dropped (not tags, too long, over the cap). */
   claimsDropped?: number;
+  /** Spec 115-compatibility FR-009: it against this PC's contract (a server, an adopted machine, the controller). */
+  compat?: PcCompat;
 }
 
 /** One cloud account, observed. */
@@ -391,6 +419,41 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       if (t?.report) m.reportedAt = t.report.at;
       if (t?.claimsDropped) m.claimsDropped = t.claimsDropped;
     }
+  }
+  // Spec 115-compatibility FR-009: each machine against this PC's contract, from what it last reported (nobody is asked here).
+  try {
+    const { fleetCompat } = await import("../observe/compat.ts");
+    const list = await fleetCompat({
+      ...(fleet ? { fleet } : {}),
+      hosts,
+      adopted: adopted.map((a) => ({
+        machine: a.machine,
+        ...(a.observed ? { observed: a.observed } : {}),
+      })),
+    });
+    for (const c of list) {
+      const m = machines.find((x) => x.name === c.name);
+      if (!m) continue;
+      m.compat = {
+        status: c.judgement.status,
+        headline: c.words.headline,
+        detail: c.words.detail,
+        ...(c.words.fix ? { fix: c.words.fix } : {}),
+        ...(c.words.code ? { code: c.words.code } : {}),
+        ...(c.judgement.engine ? { engine: c.judgement.engine } : {}),
+        ...(c.reportedAt ? { reportedAt: c.reportedAt } : {}),
+        seams: c.judgement.seams.map((x) => ({
+          seam: x.seam,
+          status: x.status,
+          ...(x.machine ? { machine: x.machine } : {}),
+          pc: x.pc,
+          needs: x.needs,
+        })),
+        ...(c.holdWords ? { held: c.holdWords } : {}),
+      };
+    }
+  } catch (e) {
+    warn("compatibility")(e);
   }
   const tagging = ft
     ? {

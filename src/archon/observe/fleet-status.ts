@@ -10,6 +10,7 @@
 // Spec: 107-pairing-and-query FR-009
 // Spec: 108-tags FR-015
 // Spec: 112-machine-reported-tags FR-010, FR-013
+// Spec: 115-compatibility FR-006, FR-008, FR-009, FR-012
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";
@@ -77,6 +78,7 @@ export async function fleetStatus(): Promise<number> {
   // Spec 048: ask every server live (its MCP server, over SSH as ops), all at
   // once; keep each answer in this machine's state as the last one seen.
   const live = new Map<string, { ok: boolean; why?: string }>();
+  const answered = new Set<string>();
   // Spec 047: each server's key is checked against Git (registration.ts).
   const { writeKnownHosts } = await import("../fleet/registration.ts");
   const knownHosts = await writeKnownHosts().catch((e) => {
@@ -121,6 +123,8 @@ export async function fleetStatus(): Promise<number> {
               at: st.at,
               ...(st.reported?.machineInfo ? { machineInfo: st.reported.machineInfo } : {}),
               ...(st.reported?.tags?.length ? { tags: st.reported.tags } : {}),
+              // Spec 115-compatibility FR-006: its engine and seams, kept in the same record (bounded; no commit).
+              ...(st.compat ? { compat: st.compat } : {}),
               ...(inv
                 ? {
                     smbios: {
@@ -138,6 +142,7 @@ export async function fleetStatus(): Promise<number> {
           if (st.applied) await putRecord(h.name, "applied", "latest", st.applied, P.state);
           if (st.sync) await putRecord(h.name, "sync", "latest", st.sync, P.state, st.sync.at);
           live.set(h.name, { ok: true });
+          answered.add(h.name);
         } catch {
           live.set(h.name, { ok: false, why: "unreadable answer" });
         }
@@ -145,6 +150,11 @@ export async function fleetStatus(): Promise<number> {
   );
   // What the servers said just now is in the cache: the tags below are resolved with it.
   ft = await loadFleetTags({ fleet, hosts }).catch(() => ft);
+  // Spec 115-compatibility FR-007: each server against this PC's contract, from what it reported (this cycle's, or its last).
+  const { fleetCompat } = await import("./compat.ts");
+  const compat = new Map(
+    (await fleetCompat({ fleet, hosts, answered }).catch(() => [])).map((c) => [c.name, c]),
+  );
   for (const h of hosts) {
     const p = ui.phase(h.name);
     const inst = await getRecord<Installed>(h.name, "install", "install", P.state);
@@ -177,6 +187,16 @@ export async function fleetStatus(): Promise<number> {
     if (ui.verbose && me?.resolved.ignored) {
       p.note(`${me.resolved.ignored} claim(s) ignored by the fleet's dimensions`);
     }
+    // Spec 115-compatibility FR-008, FR-009, FR-012: the contract, in plain words; a problem says its fix and code, the rest only in a report.
+    const cm = compat.get(h.name);
+    if (cm?.judgement.status === "too-old" || cm?.judgement.status === "newer") {
+      p.warn(cm.words.detail, cm.words.fix, cm.words.code);
+    } else if (cm?.judgement.status === "unknown" && answered.has(h.name)) {
+      p.action(cm.words.detail, cm.words.fix ?? "bun run stolos fleet status", cm.words.code);
+    } else if (cm && ui.verbose) {
+      p.note(`engine: ${cm.words.detail}`);
+    }
+    if (cm?.holdWords) p.note(cm.holdWords);
     if (latest) {
       for (const f of latest.failed) p.warn(`failing at its last verify: ${f}`);
       for (const w of latest.warned) p.note(`warning at its last verify: ${w}`);
