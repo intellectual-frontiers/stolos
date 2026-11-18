@@ -12,7 +12,7 @@
 // Spec: 114-release-record FR-004, FR-005, FR-013, FR-014
 
 /** The engine's version (semver), raised on every push to main. */
-export const VERSION = "0.154.0";
+export const VERSION = "0.155.0";
 
 /**
  * The slug of the work Stolos is (commons 0026-works-versioning FR-008): the one place it is written in code. `release.ts`

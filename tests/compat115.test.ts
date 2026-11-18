@@ -899,7 +899,20 @@ proves(
         "-m",
         "engine",
       );
-      await sh(repo, "git", "tag", "-a", "-m", "release", "stolos-v0.150.0");
+      // CI runners have no global Git identity: an annotated tag names one.
+      await sh(
+        repo,
+        "git",
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@example.invalid",
+        "tag",
+        "-a",
+        "-m",
+        "release",
+        "stolos-v0.150.0",
+      );
       await sh(repo, "git", "tag", "stolos-v0.149.0");
       const url = path.toFileUrl(repo).href;
       const found = await checkEngineTags(
