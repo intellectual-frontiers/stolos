@@ -28,7 +28,7 @@
 // Spec: 103-three-ports FR-006, FR-007
 // Spec: 107-pairing-and-query FR-001, FR-004, FR-005
 
-import { fs, lock, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, lock, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ownerOnly } from "../core/secrets.ts";
 import type { PairingStage } from "../ontology.auto.ts";
 
@@ -255,14 +255,22 @@ export class FilePairStore implements PairStore {
 
   private async write(record: PairRecord): Promise<void> {
     const tmp = `${this.file}-tmp`;
-    await fs.writeTextFile(tmp, `${JSON.stringify(record, null, 2)}\n`, { mode: 0o600 });
-    if (proc.build.os !== "windows") await fs.chmod(tmp, 0o600);
+    try {
+      await fs.writeTextFile(tmp, `${JSON.stringify(record, null, 2)}\n`, { mode: 0o600 });
+      if (proc.build.os !== "windows") await fs.chmod(tmp, 0o600);
+    } catch (e) {
+      // The session was closed (its folder removed) while a late request was being answered: there is
+      // nothing left to write to, and writing nothing is right (spec 107 FR-001: the person stops it).
+      if (e instanceof errors.NotFound) return;
+      throw e;
+    }
     // Windows refuses a rename over a file another process is reading at that moment: it is a moment.
     for (let i = 0; ; i++) {
       try {
         await fs.rename(tmp, this.file);
         return;
       } catch (e) {
+        if (e instanceof errors.NotFound) return; // closed in the meantime, as above
         if (i >= 20) throw e;
         await proc.sleep(25);
       }
@@ -286,14 +294,20 @@ export class FilePairStore implements PairStore {
   }
 
   /** Read, change and write back, under the lock. */
-  update<T>(change: (record: PairRecord) => T): Promise<Changed<T> | undefined> {
-    return this.locked(async () => {
-      const record = await this.read();
-      if (!record) return undefined;
-      const result = change(record);
-      await this.write(record);
-      return { result, record };
-    });
+  async update<T>(change: (record: PairRecord) => T): Promise<Changed<T> | undefined> {
+    try {
+      return await this.locked(async () => {
+        const record = await this.read();
+        if (!record) return undefined;
+        const result = change(record);
+        await this.write(record);
+        return { result, record };
+      });
+    } catch (e) {
+      // The session was closed (its folder is gone) before this late request got its lock.
+      if (e instanceof errors.NotFound) return undefined;
+      throw e;
+    }
   }
 
   /** Write the record, replacing any other. */

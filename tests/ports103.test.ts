@@ -413,6 +413,32 @@ async function inTemp<T>(f: (file: string, dir: string) => Promise<T>): Promise<
   }
 }
 
+// ------------------------------------------------------------------------------ the session is closed under a late request
+
+proves(
+  ["107-pairing-and-query FR-001"],
+  "107: a request answered after the person closed the session (its folder removed) writes nothing and does not fail",
+  async () => {
+    await inTemp(async (file, dir) => {
+      const store = new FilePairStore(file);
+      await store.create(fresh());
+      // The person stops the session while a request is being answered: the folder goes between the
+      // lock and the write (what a late poll of a door met when a test cleaned up, and what Ctrl+C does).
+      const answered = await store.update((record) => {
+        record.tries["10.0.0.9"] = 1;
+        fs.removeSync(path.join(dir, "pair"), { recursive: true });
+        return "answered";
+      });
+      assertEquals(answered?.result, "answered");
+      assertEquals(await fs.exists(path.join(dir, "pair", "pairing")), false);
+      // And a request that arrives after that finds no session: it neither throws nor brings the folder back.
+      assertEquals(await store.update(() => "late"), undefined);
+      assertEquals(await fs.exists(path.join(dir, "pair")), false);
+    });
+  },
+  { timeout: 180_000 },
+);
+
 // ------------------------------------------------------------------------------ FR-006, FR-007: the shared state
 
 proves(
