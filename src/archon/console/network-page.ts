@@ -7,10 +7,12 @@
  * @module
  */
 // Spec: 110-network-assets FR-002, FR-008, FR-009, FR-012
+// Spec: 111-network-posture FR-015
 
 import { CLASS_LABEL, CLASS_PLURAL } from "../connect/network-class.ts";
 import { glyphSvg, layoutTopology, topology, topologySvg } from "../connect/network-topology.ts";
 import { NOT_GIVEN } from "../connect/network-view.ts";
+import { postureCounts, postureWaiting } from "../connect/network-posture.ts";
 import { integrationBadge } from "../adopt/joining.ts";
 import type { DeviceClass } from "../ontology.auto.ts";
 import { type Html, html, raw } from "./html.ts";
@@ -53,6 +55,111 @@ export function openInUnifi(account: string, mac: string): string {
 /** The link to the native console for the account. */
 export function openAccount(account: string): string {
   return `https://${account}/network`;
+}
+
+/** How a status reads on the card. */
+const STATUS_WORD: Record<string, string> = {
+  pass: "pass",
+  fail: "fail",
+  warn: "to look at",
+  unknown: "not observed yet",
+  accepted: "accepted",
+};
+
+/**
+ * Spec 111-network-posture FR-015: the **Network posture** card. Compact (the Overview): the counts and each failing policy with its
+ * first items and its fix. Full (the Network page): every policy with its status, SCF controls, items, fix and explain code, what does
+ * not apply, and the gaps with their reasons. It draws the pack's results (`f.networkPosture`) and holds no logic.
+ */
+export function postureCard(f: Pick<PcFacts, "networkPosture">, o: { full?: boolean } = {}): Html {
+  const np = f.networkPosture;
+  if (!np) return html``;
+  const c = postureCounts(np.results);
+  const failing = np.results.filter((r) => r.status === "fail");
+  const waiting = postureWaiting(np);
+  const counts = html`<div class="v">${c.pass} of ${np.results.length} pass</div>
+    <div class="sub">
+      ${c.fail} failing, ${c.warn} to look at, ${c.accepted} accepted, ${c.unknown} not observed yet
+    </div>`;
+  if (!o.full) {
+    return html`<div class="card" id="network-posture">
+      <div class="k"><a href="/network#network-posture">Network posture</a></div>
+      ${counts}
+      ${failing.map(
+        (r) =>
+          html`<p class="sub">
+            <b>${r.title}</b>: ${r.detail}. <span class="mono">${r.fix ?? ""}</span>
+            <span class="mono">[${r.code}]</span>
+          </p>`,
+      )}
+      ${
+        waiting
+          ? html`<p class="sub">
+              ${waiting.message}: <span class="mono">${waiting.fix}</span>
+              <span class="mono">[${waiting.code}]</span>
+            </p>`
+          : ""
+      }
+    </div>`;
+  }
+  return html`<div class="card" id="network-posture" style="margin-top:14px">
+    <h2>Network posture</h2>
+    <p class="sub">
+      Nine policies over what the official API gives, read from the last observation (<span
+        class="mono"
+        >stolos network check</span
+      >
+      runs them in a terminal and exits 1 on a failure). They are evidence for the SCF controls
+      named, in <span class="mono">stolos compliance</span> and its exports.
+      ${np.scope ? `Scoped to ${np.scope.join(", ")}.` : ""}
+    </p>
+    ${counts}
+    <table>
+      <thead>
+        <tr>
+          <th>Policy</th>
+          <th>Result</th>
+          <th>SCF</th>
+          <th>Found</th>
+          <th>Fix</th>
+          <th>Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${np.results.map(
+          (r) =>
+            html`<tr class="${r.status}">
+              <td>${r.title}</td>
+              <td>${STATUS_WORD[r.status] ?? r.status}</td>
+              <td class="mono">${r.scf.join(", ")}</td>
+              <td>
+                ${r.detail}${
+                  r.items.length
+                    ? html`<ul>
+                        ${r.items.slice(0, 10).map((i) => html`<li>${i.subject}: ${i.detail}</li>`)}
+                      </ul>`
+                    : ""
+                }
+              </td>
+              <td class="mono">${r.status === "pass" ? "" : (r.fix ?? "")}</td>
+              <td class="mono">${r.status === "pass" ? "" : r.code}</td>
+            </tr>`,
+        )}
+      </tbody>
+    </table>
+    ${
+      np.notApplicable.length
+        ? html`<h3>Not applicable</h3>
+            <ul>
+              ${np.notApplicable.map((n) => html`<li>${n.title}: ${n.reason}</li>`)}
+            </ul>`
+        : ""
+    }
+    <h3>Reported gaps (not policies: the API cannot support them)</h3>
+    <ul>
+      ${np.gaps.map((g) => html`<li><b>${g.title}</b>: ${g.reason} (missing: ${g.missing})</li>`)}
+    </ul>
+  </div>`;
 }
 
 const rowsOf = <T extends Record<string, unknown>>(
@@ -182,6 +289,7 @@ export function networkPage(f: PcFacts): Html {
           </div>`,
       )}
     </div>
+    ${postureCard(f, { full: true })}
     <div class="card scroll" id="topology" style="margin-top:14px">
       <h2>Topology</h2>
       ${v.devices.length ? raw(svg) : html`<p class="sub">No device read yet: stolos estate observe unifi.</p>`}

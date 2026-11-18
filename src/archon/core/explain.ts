@@ -22,6 +22,7 @@
 // Spec: 105-calm-output FR-009, FR-013
 // Spec: 115-compatibility FR-012
 // Spec: 117-adopted-in-status FR-010
+// Spec: 111-network-posture FR-001
 
 import { guideRef, guideUrl } from "./guides.ts";
 
@@ -117,6 +118,69 @@ export const EXPLAIN: Record<string, Explanation> = {
     why: "A machine was just paired or added, its last observation is older than its service level, or its probe could not read the fact the control needs (a disk's encryption, for example).",
     fix: "bun run stolos host observe <machine> (an adopted machine), bun run stolos fleet status (a managed server), bun run stolos device observe <device>, or bun run stolos estate observe <connector>; the line says which.",
     doc: "fleet-repository",
+  },
+  "E111-STALE": {
+    title: "The network was not observed lately",
+    what: "The last observation of the router's controller is older than 7 days, so what the network checks say may not be true any more.",
+    why: "Nothing has run `estate observe` for it, or the controller could not be reached.",
+    fix: "bun run stolos estate observe unifi (then bun run stolos update, to keep the observation in Git)",
+    doc: "integrations",
+  },
+  "E111-GONE": {
+    title: "An adopted network asset is gone from the integration",
+    what: "The controller no longer reports a device the fleet adopted. The asset is kept and never deleted for you.",
+    why: "The device was removed or forgotten at the controller, or it was replaced.",
+    fix: "bun run stolos estate observe unifi if the device is back; otherwise release the asset on your own request: bun run stolos host release <name> (nothing at the controller changes).",
+    doc: "integrations",
+  },
+  "E111-OFFLINE": {
+    title: "A network device is offline",
+    what: "The controller says a device is offline, interrupted or isolated.",
+    why: "It lost power or its uplink, or it is being replaced.",
+    fix: "Power or reconnect it (Network application > UniFi Devices), or forget it at the controller if it is gone.",
+    doc: "integrations",
+  },
+  "E111-FIRMWARE": {
+    title: "A network device has a firmware update waiting",
+    what: "The controller flags a device as having a firmware update available (the device's own state; the API gives no release date or vulnerability).",
+    why: "Automatic updates are off, or the update has not run yet (NIST SP 800-53 SI-2, flaw remediation).",
+    fix: "Network application > UniFi Devices > the device > Update, or turn on automatic updates (Settings > Control Plane > Updates). To accept it for a while: controls/accepted.ts, policy network/firmware-current.",
+    doc: "integrations",
+  },
+  "E111-WIFI-OPEN": {
+    title: "A Wi-Fi network is open",
+    what: "An enabled Wi-Fi network has the security type OPEN: no authentication and no encryption (NIST SP 800-53 AC-18). A guest hotspot with a portal is open by design and is not listed.",
+    why: "The network was made for convenience, or a guest network lost its portal.",
+    fix: "Network application > WiFi > the network > Security: WPA3 or WPA2/WPA3, personal or enterprise.",
+    doc: "integrations",
+  },
+  "E111-GUEST-ISOLATION": {
+    title: "A guest Wi-Fi network is not isolated",
+    what: "An enabled guest Wi-Fi network (a hotspot) is on a network that is not isolated from the others (NIST SP 800-53 SC-7). Client isolation of the Wi-Fi network is not a substitute.",
+    why: "Guests share a network with the office, or the default network carries the guest Wi-Fi.",
+    fix: "Network application > Settings > Networks > the guest network: turn on Isolate Network, and put the guest Wi-Fi on it.",
+    doc: "integrations",
+  },
+  "E111-UNKNOWN-CLIENT": {
+    title: "A client on the network is not known to the fleet",
+    what: "A wired or wireless client matches no machine of the fleet and, where the fleet lists its known clients, is not on the list (NIST SP 800-53 CM-8(3)). Without a list this is only information.",
+    why: "A visitor's device, a phone, a TV, or a machine nobody paired.",
+    fix: "bun run stolos pair brings a machine into the fleet; or list the client in fleets/<fleet>/network.ts: knownClients: [{ mac, name, reason }].",
+    doc: "integrations",
+  },
+  "E111-UNOWNED": {
+    title: "A network asset has no owner or criticality tag",
+    what: "An adopted network asset holds no tag of a dimension the fleet requires (owner, criticality), so nobody is accountable for it (NIST SP 800-53 CM-8(4)).",
+    why: "The asset was adopted and never tagged.",
+    fix: "bun run stolos tag add <asset> owner:<value> criticality:<value> (the values tags.ts defines).",
+    doc: "integrations",
+  },
+  "E111-POE-UNUSED": {
+    title: "A port supplies PoE with nothing connected",
+    what: "A port's link is down and its power over Ethernet is enabled (NIST SP 800-53 CM-7, least functionality).",
+    why: "A device was unplugged and the port kept its PoE setting.",
+    fix: "Network application > UniFi Devices > the switch > Ports > the port: set PoE off.",
+    doc: "integrations",
   },
   "E105-YOURS": {
     title: "A step is yours to take",

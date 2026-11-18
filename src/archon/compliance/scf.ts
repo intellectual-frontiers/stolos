@@ -12,6 +12,7 @@
  */
 // Spec: 071-catalogs-oscal
 // Spec: 109-integrations-api FR-016
+// Spec: 111-network-posture FR-001
 
 /** The frameworks, in the order the consoles show them; each maps through SCF's STRM. */
 export const FRAMEWORKS = [
@@ -62,6 +63,41 @@ export const SCF_CONTROLS = [
     id: "NET-24",
     name: "Wireless Networking",
     how: "A router's controller is read: no enabled Wi-Fi network is open (spec 109).",
+  },
+  {
+    id: "AST-05.1",
+    name: "Technology Assets, Applications, Services and/or Data (TAASD) Criticality Ratings",
+    how: "Every network asset holds the criticality tag the fleet defines (spec 111).",
+  },
+  {
+    id: "AST-11",
+    name: "Automated Unauthorized Component Detection",
+    how: "The clients a router sees that match no machine of the fleet are listed; with an allowlist an unknown one fails (spec 111).",
+  },
+  {
+    id: "CFG-03",
+    name: "Least Functionality",
+    how: "A router's controller is read: a switch port with nothing connected does not supply PoE (spec 111).",
+  },
+  {
+    id: "NET-04",
+    name: "Data Flow Enforcement – Access Control Lists (ACLs)",
+    how: "A change to a firewall rule of a router is a recorded event in Git (spec 111).",
+  },
+  {
+    id: "NET-06",
+    name: "Network Segmentation (macrosegmentation)",
+    how: "A router's controller is read: a guest Wi-Fi network is on a network isolated from the others (spec 111).",
+  },
+  {
+    id: "NET-22",
+    name: "Guest Networks",
+    how: "A router's controller is read: every enabled guest Wi-Fi network is isolated (spec 111).",
+  },
+  {
+    id: "NET-24.1",
+    name: "Wireless Networking Authentication & Encryption",
+    how: "A router's controller is read: no enabled Wi-Fi network is open, a change of a network's security is a recorded event (spec 111).",
   },
   {
     id: "NET-39",

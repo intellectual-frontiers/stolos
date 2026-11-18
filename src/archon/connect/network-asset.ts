@@ -30,6 +30,7 @@
  * @module
  */
 // Spec: 110-network-assets FR-001, FR-002, FR-003, FR-004, FR-005, FR-006
+// Spec: 111-network-posture FR-009, FR-010, FR-012, FR-021
 
 import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -44,6 +45,9 @@ import {
   facetsFor,
   parseClass,
 } from "./network-class.ts";
+
+/** Six pairs of hexadecimal digits separated by colons. */
+const MAC = /^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$/;
 
 /** A name that can be a machine's (a DNS label: RFC 1034), the rule of `MACHINE_NAME` in `adopt.ts`. */
 export const ASSET_NAME = /^[a-z][a-z0-9-]{0,62}$/;
@@ -92,10 +96,33 @@ export interface AutoAdoptRule {
   model?: string;
 }
 
+/** A MAC address as six pairs of hexadecimal digits separated by colons (`02:00:00:00:10:10`): a typed shape, validated at build. */
+export type MacAddress = `${string}:${string}:${string}:${string}:${string}:${string}`;
+
+/** One client the fleet knows and allows on its network (spec 111-network-posture FR-009), by MAC. */
+export interface KnownClient {
+  /** Its MAC address. */
+  readonly mac: MacAddress;
+  /** What it is, for people. */
+  readonly name?: string;
+  /** Why it is allowed, in words an auditor reads. */
+  readonly reason?: string;
+}
+
 /** A fleet's network settings (`fleets/<fleet>/network.ts`). */
 export interface NetworkConfig {
   /** The rules that adopt devices by themselves. */
   readonly autoAdopt: readonly AutoAdoptRule[];
+  /**
+   * Spec 111-network-posture FR-009: the clients the fleet allows on its network. Declaring the list makes a client that matches no
+   * machine and is not on it a failure of `network/unknown-clients` (without it the finding is informational).
+   */
+  readonly knownClients?: readonly KnownClient[];
+  /**
+   * Spec 111-network-posture FR-010: the dimensions of the fleet's `tags.ts` every network asset must hold a tag of (an asset with none
+   * fails `network/assets-classified`). Without it the fleet's `owner` and `criticality` dimensions are asked for, as a warning.
+   */
+  readonly requiredTags?: readonly string[];
 }
 
 /** A fleet's network settings, typed: a class that is not one of the ontology's, or a field that is not a rule's, does not compile. */
@@ -209,6 +236,7 @@ export async function loadReleased(): Promise<ReleasedAsset[]> {
 export function networkProblems(
   config: NetworkConfig | undefined,
   known: readonly string[] = [],
+  dimensions?: readonly string[],
 ): Array<{ where: string; message: string; fix: string }> {
   const out: Array<{ where: string; message: string; fix: string }> = [];
   (config?.autoAdopt ?? []).forEach((r, i) => {
@@ -236,6 +264,53 @@ export function networkProblems(
       });
     }
   });
+  const seen = new Set<string>();
+  (config?.knownClients ?? []).forEach((k, i) => {
+    const where = `network.ts knownClients[${i}]`;
+    if (typeof k?.mac !== "string" || !MAC.test(k.mac)) {
+      out.push({
+        where,
+        message: `${String(k?.mac)} is not a MAC address`,
+        fix: "six pairs of hexadecimal digits separated by colons, for example 02:00:00:00:10:10",
+      });
+      return;
+    }
+    const key = macKey(k.mac);
+    if (seen.has(key)) {
+      out.push({
+        where,
+        message: `${k.mac} is listed twice`,
+        fix: "list each client once",
+      });
+    }
+    seen.add(key);
+    const extraKeys = Object.keys(k).filter((x) => !["mac", "name", "reason"].includes(x));
+    if (extraKeys.length) {
+      out.push({
+        where,
+        message: `${extraKeys.join(", ")} is not a field of a known client`,
+        fix: "a known client has mac, and optionally name and reason",
+      });
+    }
+  });
+  (config?.requiredTags ?? []).forEach((d, i) => {
+    const where = `network.ts requiredTags[${i}]`;
+    if (typeof d !== "string" || !/^[a-z][a-z0-9-]{0,19}$/.test(d)) {
+      out.push({
+        where,
+        message: `${String(d)} is not a tag dimension`,
+        fix: "the id of a dimension of tags.ts (owner, criticality, ...)",
+      });
+    } else if (dimensions !== undefined && !dimensions.includes(d)) {
+      out.push({
+        where,
+        message: `${d} is not a dimension of tags.ts`,
+        fix: dimensions.length
+          ? `one of: ${dimensions.join(", ")}`
+          : "define it in tags.ts, or remove it",
+      });
+    }
+  });
   return out;
 }
 
@@ -260,7 +335,15 @@ export async function networkBuildProblems(): Promise<
   } catch {
     // Without the connectors the rule's `via` is not checked; its class still is.
   }
-  out.push(...networkProblems(config, ids));
+  let dimensions: string[] | undefined;
+  try {
+    const { loadTagSet } = await import("../fleet/tags.ts");
+    const { set } = await loadTagSet();
+    if (set) dimensions = Object.keys(set.dimensions);
+  } catch {
+    // Without the tags the dimensions named in requiredTags are not checked; a tags.ts that does not load is reported by its own check.
+  }
+  out.push(...networkProblems(config, ids, dimensions));
   for (const a of await loadNetworkAssets().catch(() => [])) {
     const where = `adopted/${a.name}/network.ts`;
     if (!ASSET_NAME.test(a.name)) {
@@ -384,6 +467,8 @@ export interface ObservedSsid {
   broadcastBy?: string[];
   /** The id of the network it carries (`native`: the default one). */
   network?: string;
+  /** Spec 111-network-posture FR-012: the broadcast's details say its clients are isolated from each other (undefined: not read). */
+  clientIsolation?: boolean;
   /** The site. */
   site?: string;
 }
@@ -404,6 +489,8 @@ export interface ObservedVlan {
   default: boolean;
   /** The site. */
   site?: string;
+  /** Spec 111-network-posture FR-012: the network's details say it is isolated from all other networks (undefined: not read). */
+  isolated?: boolean;
 }
 
 const str = (v: unknown): string | undefined => (typeof v === "string" && v !== "" ? v : undefined);
@@ -487,6 +574,9 @@ export function observedSsids(o: Observation): ObservedSsid[] {
         guest: bool(p["guest"]) ?? false,
         ...(by === undefined || by === "all" ? {} : { broadcastBy: by.split(",") }),
         ...(network === undefined ? {} : { network }),
+        ...(bool(p["client_isolation"]) === undefined
+          ? {}
+          : { clientIsolation: bool(p["client_isolation"]) === true }),
         ...(site === undefined ? {} : { site }),
       };
     });
@@ -504,9 +594,105 @@ export function observedVlans(o: Observation): ObservedVlan[] {
       vlanId: typeof p["vlan_id"] === "number" ? p["vlan_id"] : 0,
       enabled: bool(p["enabled"]) ?? true,
       default: bool(p["is_default"]) ?? false,
+      ...(bool(p["isolated"]) === undefined ? {} : { isolated: bool(p["isolated"]) === true }),
       ...(site === undefined ? {} : { site }),
     };
   });
+}
+
+/** A port of a switch or gateway as the last observation says it is (spec 111-network-posture FR-010). */
+export interface ObservedPort {
+  /** The connector. */
+  via: string;
+  /** The id of the device it is on. */
+  device: string;
+  /** The name of the device it is on. */
+  deviceName: string;
+  /** Its index on the device. */
+  index: number;
+  /** UP, DOWN or UNKNOWN. */
+  state: string;
+  /** RJ45, SFP, ... */
+  connector: string;
+  /** Whether it supplies power now (UP, DOWN, LIMITED), when it can. */
+  poeState?: string;
+  /** PoE is enabled on it (undefined: the port has no PoE, or the observation was written before it was read). */
+  poeEnabled?: boolean;
+}
+
+/** The ports of an observation (the records labelled `network_interface`). */
+export function observedPorts(o: Observation): ObservedPort[] {
+  return recordsOf(o, "network_interface").map((r) => {
+    const p = r.props;
+    const poeState = str(p["poe_state"]);
+    const poeEnabled = bool(p["poe_enabled"]);
+    return {
+      via: o.provider,
+      device: str(p["device"]) ?? "",
+      deviceName: str(p["device_name"]) ?? "",
+      index: typeof p["port"] === "number" ? p["port"] : 0,
+      state: str(p["state"]) ?? "",
+      connector: str(p["connector"]) ?? "",
+      ...(poeState === undefined ? {} : { poeState }),
+      ...(poeEnabled === undefined ? {} : { poeEnabled }),
+    };
+  });
+}
+
+/** A firewall rule of the controller as the last observation says it is (spec 111-network-posture FR-018). */
+export interface ObservedFirewallRule {
+  /** The connector. */
+  via: string;
+  /** Its id. */
+  id: string;
+  /** Its name. */
+  name: string;
+  /** It is on. */
+  enabled: boolean;
+  /** allow, block or reject. */
+  action: string;
+  /** The name of the zone traffic comes from. */
+  sourceZone?: string;
+  /** The name of the zone traffic goes to. */
+  destinationZone?: string;
+  /** Who made it (system, user, derived). */
+  origin: string;
+}
+
+/** The firewall rules of an observation (the records labelled `firewall_rule`). */
+export function observedFirewall(o: Observation): ObservedFirewallRule[] {
+  return recordsOf(o, "firewall_rule").map((r) => {
+    const p = r.props;
+    const from = str(p["source_zone"]);
+    const to = str(p["destination_zone"]);
+    return {
+      via: o.provider,
+      id: r.native_id,
+      name: r.display_name,
+      enabled: bool(p["enabled"]) ?? true,
+      action: str(p["rule_action"]) ?? "",
+      ...(from === undefined ? {} : { sourceZone: from }),
+      ...(to === undefined ? {} : { destinationZone: to }),
+      origin: str(p["origin"]) ?? "",
+    };
+  });
+}
+
+/** What an observation can fail to read: a reading of the router that became a reported gap (spec 111-network-posture FR-002). */
+export type Reading = "devices" | "clients" | "networks" | "wifi" | "ports" | "firewall";
+
+const UNREAD: Record<Reading, RegExp> = {
+  devices: /^devices(\s|:|$)/,
+  clients: /^clients(\s|:|$)/,
+  networks: /^(networks|networks-and-vlans)(\s|:|$)/,
+  wifi: /^(wifi|wifi broadcasts)(\s|:|$)/,
+  ports: /^(ports|[^:]* details)(\s|:|$)/,
+  firewall: /^(firewall|firewall-rules|firewall policies)(\s|:|$)/,
+};
+
+/** Whether an observation could not make a reading (a gap names it): what it says of it is then not a statement of absence. */
+export function readingUnread(o: Observation, what: Reading): boolean {
+  return o.gaps.some((g) => UNREAD[what].test(g));
 }
 
 /** Whether an observation could not read the devices (a gap that starts with `devices`): what it says of them is then not a statement of absence. */

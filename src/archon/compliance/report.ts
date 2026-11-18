@@ -13,6 +13,7 @@
 // Spec: 068-compliance
 // Spec: 112-machine-reported-tags FR-013
 // Spec: 115-compatibility FR-010
+// Spec: 111-network-posture FR-014
 
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { PcFacts } from "../console/pc.ts";
@@ -34,7 +35,9 @@ export interface Evidence {
     | "estate"
     | "repository"
     // Spec 078: a control from one of the fleet's own packs.
-    | "control pack";
+    | "control pack"
+    // Spec 111-network-posture FR-014: the network's posture pack, over a router's observation.
+    | "network";
   /** The check, in words. */
   check: string;
   /** Its result. */
@@ -265,6 +268,23 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         ...(r.fix ? { fix: r.fix } : {}),
       });
     }
+  }
+  // Spec 111-network-posture FR-014: the network's posture, one piece of evidence for each result, with the router it was read through
+  // (its cadence and its refresh command) and when it was observed.
+  for (const r of f.networkPosture?.results ?? []) {
+    const np = f.networkPosture;
+    if (!np) continue;
+    out.push({
+      scf: r.scf,
+      subject: np.subject,
+      source: "network",
+      check: r.title,
+      status: r.status,
+      detail: r.detail,
+      ...(r.fix ? { fix: r.fix } : {}),
+      connector: np.connector,
+      ...(np.at ? { observedAt: np.at } : {}),
+    });
   }
   for (const c of f.clouds.filter((x) => x.observed)) {
     for (const r of c.results) {

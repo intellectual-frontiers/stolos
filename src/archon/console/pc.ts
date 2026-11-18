@@ -15,6 +15,7 @@
 // Spec: 112-machine-reported-tags FR-011, FR-013, FR-014, FR-015
 // Spec: 115-compatibility FR-009, FR-010
 // Spec: 110-network-assets FR-002, FR-006, FR-008, FR-009
+// Spec: 111-network-posture FR-014, FR-015
 // Spec: 117-adopted-in-status FR-006
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
@@ -35,6 +36,7 @@ import type {
   WayOfJoining,
 } from "../ontology.auto.ts";
 import type { NetworkView } from "../connect/network-view.ts";
+import type { PostureRun } from "../connect/network-posture.ts";
 import { wayOfJoining } from "../adopt/joining.ts";
 import type { ClaimView, ResolvedTag, TaggingView } from "../fleet/tags.ts";
 
@@ -209,6 +211,11 @@ export interface PcFacts {
     view: NetworkView;
     connectors: Array<{ id: string; title: string; account: string }>;
   };
+  /**
+   * Spec 111-network-posture FR-014, FR-015: the posture of the network (the pack's results), present where a router is connected: the
+   * Network posture card, `fleet status`'s group and the evidence of `stolos compliance`.
+   */
+  networkPosture?: PostureRun;
   /** The signers. */
   signers: Array<{ name: string; role: string; added: string; key: string }>;
   /** The repository: uncommitted files, commits servers would refuse, recent history. */
@@ -422,6 +429,16 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   } catch (e) {
     warn("the network")(e);
   }
+  // Spec 111-network-posture FR-014: the posture of the network, from the same observations and records.
+  let networkPosture: PostureRun | undefined;
+  if (network) {
+    try {
+      const { loadPosture } = await import("../connect/network-check.ts");
+      networkPosture = (await loadPosture()).run;
+    } catch (e) {
+      warn("the network posture")(e);
+    }
+  }
   const { loadDiscovered } = await import("../adopt/integrate.ts");
   for (const d of (await loadDiscovered().catch(warn("discovered.ts"))) ?? []) {
     machines.push({
@@ -593,6 +610,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     },
     machines,
     ...(network ? { network } : {}),
+    ...(networkPosture ? { networkPosture } : {}),
     ...(tagging ? { tagging } : {}),
     adopted,
     clouds,

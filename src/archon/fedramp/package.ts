@@ -32,6 +32,7 @@
  * @module
  */
 // Spec: 076-fedramp-20x
+// Spec: 111-network-posture FR-014
 
 import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
 import type { PcFacts } from "../console/pc.ts";
@@ -205,6 +206,8 @@ export function evidenceObservedAt(e: Evidence, f: PcFacts): string | undefined 
     }
     case "repository":
       return f.git.log[0]?.at;
+    case "network":
+      return f.networkPosture?.at;
     case "control pack":
       return undefined;
     default:

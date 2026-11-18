@@ -11,6 +11,7 @@
  * @module
  */
 // Spec: 109-integrations-api FR-001, FR-002, FR-003, FR-015
+// Spec: 111-network-posture FR-012
 
 import type { Asset } from "./connector.ts";
 import type { Device } from "./entities.ts";
@@ -119,6 +120,8 @@ export interface Vlan extends Origin {
   management?: string;
   /** The id of its firewall zone. */
   zone?: string;
+  /** Spec 111-network-posture FR-012: the network's details say it is isolated from all other networks (absent: the details were not read). */
+  isolated?: boolean;
 }
 
 /** One port of a switch or gateway (`stolos:SwitchPort`). */
@@ -139,6 +142,8 @@ export interface SwitchPort extends Origin {
   connector: string;
   /** Whether it supplies power now (UP, DOWN, LIMITED), when it can. */
   poeState?: string;
+  /** Spec 111-network-posture FR-012: power over Ethernet is enabled on it. */
+  poeEnabled?: boolean;
 }
 
 /** A rule that sends traffic arriving at the router to an address inside (`stolos:PortForward`). */
@@ -199,6 +204,8 @@ export interface WifiNetwork extends Origin {
   broadcastBy?: string[];
   /** Spec 110-network-assets FR-007: the id of the network it carries, or `native` for the default network, where the document says. */
   network?: string;
+  /** Spec 111-network-posture FR-012: the broadcast's details say its clients are isolated from each other (absent: the details were not read). */
+  clientIsolation?: boolean;
 }
 
 /** An entry of a router's routing table (`stolos:Route`). */
@@ -567,6 +574,7 @@ function vlanParts(items: readonly Vlan[]): Parts {
           management: v.management,
           site: v.site,
           zone: v.zone,
+          isolated: v.isolated,
         }),
       ),
     ),
@@ -599,6 +607,7 @@ function portParts(items: readonly SwitchPort[]): Parts {
           max_speed_mbps: p.maxSpeedMbps,
           connector: p.connector,
           poe_state: p.poeState,
+          poe_enabled: p.poeEnabled,
         }),
       ),
     ),
@@ -661,6 +670,7 @@ function wifiParts(items: readonly WifiNetwork[]): Parts {
           site: w.site,
           broadcast_by: w.broadcastBy === undefined ? "all" : w.broadcastBy.join(","),
           network: w.network,
+          client_isolation: w.clientIsolation,
         }),
       ),
     ),

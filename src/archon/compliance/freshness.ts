@@ -29,6 +29,7 @@
  * @module
  */
 // Spec: 073-freshness
+// Spec: 111-network-posture FR-014
 
 import { absurd, assess, grc } from "@intellectual-frontiers/commons/ts/kernel";
 import type { PcFacts } from "../console/pc.ts";
@@ -230,7 +231,10 @@ export async function loadCadences(o: { connectors?: boolean } = {}): Promise<Ca
 
 /** The cadence a piece of evidence is held to, or undefined (read live: the repository, the estate graph). */
 export function cadenceFor(e: Evidence, c: Cadences): Cadence | undefined {
-  if (e.source === "cloud") return (e.connector && c.connectors[e.connector]) || c.sources.cloud;
+  if (e.source === "cloud" || e.source === "network") {
+    // Spec 111-network-posture FR-014: the network's evidence is a router's observation, held to its account's cadence.
+    return (e.connector && c.connectors[e.connector]) || c.sources.cloud;
+  }
   if (e.source === "managed" || e.source === "adopted" || e.source === "device") {
     return c.sources[e.source];
   }
@@ -247,6 +251,8 @@ export function refreshCommand(e: Evidence): string | undefined {
     case "device":
       return `bun run stolos device observe ${e.subject}`;
     case "cloud":
+      return `bun run stolos estate observe${e.connector ? ` ${e.connector}` : ""}`;
+    case "network":
       return `bun run stolos estate observe${e.connector ? ` ${e.connector}` : ""}`;
     case "estate":
     case "repository":

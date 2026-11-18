@@ -10,6 +10,7 @@
  * @module
  */
 // Spec: 108-tags FR-016
+// Spec: 111-network-posture FR-014
 
 import { errors, fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import type { OscalDocuments } from "./oscal.ts";
@@ -66,6 +67,11 @@ export async function complianceCommand(
       return 1;
     }
     facts = scopeFacts(facts, keep);
+    // Spec 111-network-posture FR-014: the network's policies look at the chosen assets and what is connected through them.
+    if (facts.networkPosture) {
+      const { rescopePosture } = await import("../connect/network-check.ts");
+      facts = { ...facts, networkPosture: rescopePosture(facts.networkPosture, keep) };
+    }
     ui.phase("Scope").done(
       `${keep.size} machine(s) chosen by ${selectionText(sel.selection)}; cloud accounts and the estate are not machine-scoped and stay`,
     );

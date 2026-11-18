@@ -24,6 +24,7 @@
  */
 // Spec: 109-integrations-api FR-009, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-018
 // Spec: 110-network-assets FR-001, FR-007, FR-012
+// Spec: 111-network-posture FR-012
 
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { PolicyResult } from "../adopt/policy.ts";
@@ -58,6 +59,8 @@ export const DEFAULT_BASE_PATH = "/proxy/network/integration";
 /** The most sites, and the most devices whose ports are read, one observation takes. */
 const MAX_SITES = 100;
 const MAX_PORT_DEVICES = 500;
+/** Spec 111-network-posture FR-012: the most network and Wi-Fi broadcast details one observation reads. */
+const MAX_DETAILS = 200;
 const PAGE = 200;
 const MAX_PAGES = 50;
 
@@ -234,9 +237,26 @@ export const unifiRouter = defineIntegration({
         ),
       ),
     "networks-and-vlans": (ctx) =>
-      perSite(ctx, "networks", async (site) =>
-        (await unifiPaged(ctx, "/v1/sites/{siteId}/networks", { siteId: site.id })).map(
-          (n): Vlan => ({
+      perSite(ctx, "networks", async (site) => {
+        const networks = await unifiPaged(ctx, "/v1/sites/{siteId}/networks", { siteId: site.id });
+        const out: Vlan[] = [];
+        for (const [i, n] of networks.entries()) {
+          // Spec 111-network-posture FR-012: the network's details say whether it is isolated from the others (a gateway or switch managed
+          // network has the flag; an unmanaged one has none). A read that fails is a gap and the flag is left out, never guessed.
+          const detail =
+            i < MAX_DETAILS
+              ? await ctx.orGap(`isolation of network ${n.name}`, undefined, () =>
+                  unifiGet(ctx, "/v1/sites/{siteId}/networks/{networkId}", {
+                    siteId: site.id,
+                    networkId: n.id,
+                  }),
+                )
+              : undefined;
+          const isolated =
+            detail !== undefined && "isolationEnabled" in detail
+              ? detail.isolationEnabled
+              : undefined;
+          out.push({
             source: "unifi",
             site: site.name,
             id: n.id,
@@ -246,9 +266,11 @@ export const unifiRouter = defineIntegration({
             default: n.default,
             management: n.management.toLowerCase(),
             ...(n.management === "GATEWAY" && n.zoneId !== undefined ? { zone: n.zoneId } : {}),
-          }),
-        ),
-      ),
+            ...(isolated === undefined ? {} : { isolated }),
+          });
+        }
+        return out;
+      }),
     ports: async (ctx) => {
       const out: SwitchPort[] = [];
       const withPorts = (await devicesOf(ctx)).filter((d) => d.hasPorts).slice(0, MAX_PORT_DEVICES);
@@ -268,7 +290,7 @@ export const unifiRouter = defineIntegration({
             ...(p.speedMbps !== undefined ? { speedMbps: p.speedMbps } : {}),
             maxSpeedMbps: p.maxSpeedMbps,
             connector: p.connector,
-            ...(p.poe !== undefined ? { poeState: p.poe.state } : {}),
+            ...(p.poe !== undefined ? { poeState: p.poe.state, poeEnabled: p.poe.enabled } : {}),
           });
         }
       }
@@ -319,6 +341,17 @@ export const unifiRouter = defineIntegration({
               ).map((t) => [t.id, t.deviceIds]),
             )
           : new Map<string, string[]>();
+        // Spec 111-network-posture FR-012: each broadcast's details say whether its clients are isolated from each other.
+        const isolation = new Map<string, boolean>();
+        for (const b of broadcasts.slice(0, MAX_DETAILS)) {
+          const d = await ctx.orGap(`client isolation of Wi-Fi network ${b.name}`, undefined, () =>
+            unifiGet(ctx, "/v1/sites/{siteId}/wifi/broadcasts/{wifiBroadcastId}", {
+              siteId: site.id,
+              wifiBroadcastId: b.id,
+            }),
+          );
+          if (d !== undefined) isolation.set(b.id, d.clientIsolationEnabled);
+        }
         return broadcasts.map((b): WifiNetwork => {
           const f = b.broadcastingDeviceFilter;
           const broadcastBy =
@@ -339,6 +372,7 @@ export const unifiRouter = defineIntegration({
             guest: b.type === "STANDARD" && b.hotspotConfiguration !== undefined,
             ...(broadcastBy === undefined ? {} : { broadcastBy }),
             ...(n === undefined ? {} : { network: n.type === "NATIVE" ? "native" : n.networkId }),
+            ...(isolation.has(b.id) ? { clientIsolation: isolation.get(b.id) === true } : {}),
           };
         });
       }),

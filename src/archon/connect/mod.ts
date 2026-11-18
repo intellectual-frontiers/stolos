@@ -80,6 +80,36 @@
  * The Stolos Console has a Network page, only where a router is connected. Tag rules have helpers: `ofClass`, `withFacet`, `inVlan`,
  * `onSsid`, `uplinkedTo`.
  *
+ * ## Network posture (spec 111-network-posture)
+ *
+ * The network is an asset class with posture policies, evidence, an inventory and change events, derived only from what the official
+ * 10.3.58 API gives. `stolos network check` runs a pack of nine policies over the last observation (it asks the controller nothing):
+ * the observation is recent, adopted assets are still reported, devices are online, no firmware update waits (the device's own flag),
+ * no enabled Wi-Fi network is open (the broadcast's security type), guest Wi-Fi is on an isolated network (the network details'
+ * isolation flag), every client is a machine of the fleet or a known one, every asset has the owner and criticality tags the fleet
+ * defines, and no unused port supplies PoE. Each result is pass, fail, warn, **not observed yet** (never a failure) or accepted
+ * (`controls/accepted.ts`, as `network/<word>`), with its SCF controls, its fix and its code (`stolos explain E111-FIRMWARE`).
+ * What the API cannot support (a management interface reachable from guests, WEP, disabled ports, how far a firmware is behind, a
+ * firewall rule's effect) is a **gap** with its reason, never a policy.
+ *
+ * ```bash
+ * bun run stolos network check [--tag criticality:high] [--json]
+ * bun run stolos network inventory --out out/network-inventory.md    # CM-8, deterministic
+ * bun run stolos network changes --since 2026-11-01                  # from the history of estate/unifi.ts in Git
+ * ```
+ *
+ * ```mermaid
+ * flowchart LR
+ *   obs["estate/unifi.ts in Git"] --> pack["network pack: 9 policies"]
+ *   net["network.ts: knownClients, requiredTags"] --> pack
+ *   pack --> chk["network check"] & ev["compliance evidence: source network"] & card["fleet status, the console's card"]
+ *   obs --> inv["network inventory"]
+ *   obs -->|"each commit against the one before"| chg["network changes, compliance drift"]
+ * ```
+ *
+ * `fleets/<fleet>/network.ts` may list `knownClients: [{ mac, name, reason }]` (an unknown client then fails) and
+ * `requiredTags: ["owner"]` (a dimension of `tags.ts` every asset must hold).
+ *
  * ## Writing an integration
  *
  * An integration is `defineIntegration` with its kind, a reader for each capability it offers and, for every capability of the kind it
@@ -91,3 +121,4 @@
  */
 // Spec: 109-integrations-api FR-019
 // Spec: 110-network-assets FR-003, FR-004, FR-005, FR-006, FR-007
+// Spec: 111-network-posture FR-013, FR-016, FR-018

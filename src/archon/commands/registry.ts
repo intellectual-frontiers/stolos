@@ -1354,6 +1354,87 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "network check",
+    output: "report",
+    summary:
+      "The posture of the network: nine policies over what the router's controller reports (SCF controls, fixes, gaps)",
+    description: `Spec 111. Runs the network pack over the last observation of the connected router (stolos estate observe unifi), the network assets, the fleet's tags and network.ts, and asks the controller nothing: network/observed, devices-present, devices-online, firmware-current (the device's own update-available flag), wifi-no-open (the broadcast's security type), guest-isolated (the guest network's isolation flag), unknown-clients (informational until network.ts lists knownClients by MAC), assets-classified (the owner and criticality tags the fleet defines) and unused-poe (a port with its link down and PoE on). Each failing policy is a warning with its items, its SCF controls, its fix and its code (stolos explain E111-<WORD>); what was not observed yet is one waiting item; what the official API cannot support (a management interface reachable from guests, WEP, disabled ports, how far a firmware is behind, a firewall rule's effect) is listed as a gap with its reason. Accept a risk in controls/accepted.ts as network/<word>. The results are also evidence for stolos compliance, fleet status and the console. --tag, --any-tag and --select check only the network assets they choose. Exits 1 when a policy fails; --json for auditors.`,
+    tier: "read",
+    args: [...TAG_SELECT_ARGS],
+    examples: [
+      { cmd: "bun run stolos network check", text: "The posture of the whole network." },
+      {
+        cmd: "bun run stolos network check --tag criticality:high",
+        text: "Only the assets tagged high criticality, and what is connected through them.",
+      },
+    ],
+    async run(a: Parsed, ctx: RunContext): Promise<number> {
+      const { networkCheck } = await import("../connect/network-check.ts");
+      return await networkCheck(
+        { tag: a["tag"], "any-tag": a["any-tag"], select: a["select"] },
+        ctx.json,
+      );
+    },
+  },
+  {
+    name: "network inventory",
+    output: "report",
+    summary:
+      "The network inventory (NIST SP 800-53 CM-8): every device, Wi-Fi network and network, as deterministic Markdown or JSON",
+    description: `Spec 111. Lists every network device the integration reports or the fleet adopted (name, class, model, firmware, whether an update waits, address, MAC, state, uplink, tags, how it joined, where it is against the integration, and when it was observed), then the Wi-Fi networks (security, guest, enabled), the networks (VLAN, isolation) and the gaps. It holds no time of its own, so the same observation and records give the same bytes: commit it, or attach it to an audit. Reads the last observation; asks the controller nothing. --format markdown (default) or json; --out writes a file, else it is printed.`,
+    tier: "read",
+    args: [
+      {
+        name: "format",
+        type: "string",
+        description: "markdown (default) or json.",
+        choices: ["markdown", "json"],
+      },
+      { name: "out", type: "string", description: "Write the report to this file." },
+    ],
+    examples: [
+      {
+        cmd: "bun run stolos network inventory --out out/network-inventory.md",
+        text: "The CM-8 inventory of the network, as a file.",
+      },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { networkInventory } = await import("../connect/network-check.ts");
+      return await networkInventory({
+        ...(a["format"] ? { format: a["format"] as string } : {}),
+        ...(a["out"] ? { out: a["out"] as string } : {}),
+      });
+    },
+  },
+  {
+    name: "network changes",
+    output: "report",
+    summary:
+      "What changed in the network since a commit or a date: devices, firmware, Wi-Fi security, networks, firewall rules",
+    description: `Spec 111. The router's observation is a generated file committed in Git (fleets/<fleet>/estate/<id>.ts), so a difference between two of its versions is a recorded change (CM-3, CM-6). Lists, for each commit of the file since --since (a commit, or the last commit before a date; default "7 days ago"), what changed against the version before it: a device added, gone, renamed or with new firmware; a Wi-Fi network added, removed or with another security; a network added, removed or changed; a firewall rule added, removed or changed. The first version of the file is the baseline and gives no event; an observation not committed yet is listed as uncommitted. Each event names its SCF controls. stolos compliance drift includes the same events. Reads Git; asks the controller nothing. --json for scripts.`,
+    tier: "read",
+    args: [
+      {
+        name: "since",
+        type: "string",
+        description: 'A commit, or a date Git understands (default: "7 days ago").',
+      },
+    ],
+    examples: [
+      {
+        cmd: "bun run stolos network changes --since 2026-11-01",
+        text: "Every recorded change of the network since the first of November.",
+      },
+    ],
+    async run(a: Parsed, ctx: RunContext): Promise<number> {
+      const { networkChangesCommand } = await import("../connect/network-check.ts");
+      return await networkChangesCommand({
+        ...(a["since"] ? { since: a["since"] as string } : {}),
+        json: ctx.json,
+      });
+    },
+  },
+  {
     name: "tag list",
     output: "report",
     summary: "The fleet's tags and which machines hold them; one machine's tags with their origins",
@@ -5676,6 +5757,9 @@ const PC_COMMANDS = new Set([
   "network discover",
   "network adopt",
   "network status",
+  "network check",
+  "network inventory",
+  "network changes",
   "fleet query",
   "tag add",
   "tag remove",

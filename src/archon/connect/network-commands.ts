@@ -17,6 +17,7 @@
  * @module
  */
 // Spec: 110-network-assets FR-003, FR-004, FR-005, FR-006, FR-009
+// Spec: 111-network-posture FR-015
 
 import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
@@ -95,11 +96,12 @@ export async function loadNetwork(): Promise<{
   view: NetworkView;
   assets: NetworkAssetDef[];
   connected: string[];
+  observations: Observation[];
 }> {
   const { observations, connected } = await routerObservations();
   const assets = await loadNetworkAssets().catch(() => []);
   const view = buildNetworkView({ observations, assets, machines: await machineKeys() });
-  return { view, assets, connected };
+  return { view, assets, connected, observations };
 }
 
 /** The names a new asset may not take: every host, adopted machine, discovered machine and asset of the fleet. */
@@ -418,6 +420,25 @@ export async function showNetworkGroup(): Promise<void> {
       );
     }
   }
+  // Spec 111-network-posture FR-015: the network's posture: each failing policy a warning with its fix and code, what was not observed
+  // yet one waiting item (spec 117-adopted-in-status).
+  let posture = "";
+  try {
+    const { loadPosture } = await import("./network-check.ts");
+    const { postureCounts, postureWaiting } = await import("./network-posture.ts");
+    const run = (await loadPosture()).run;
+    if (run) {
+      for (const r of run.results.filter((x) => x.status === "fail")) {
+        p.warn(`${r.title}: ${r.detail} [${r.scf.join(", ")}]`, r.fix ?? "", r.code);
+      }
+      const w = postureWaiting(run);
+      if (w) p.pending(w.message, w.fix, w.code);
+      const c = postureCounts(run.results);
+      posture = `posture: ${c.pass} of ${run.results.length} pass${c.fail ? `, ${c.fail} failing` : ""} (stolos network check)`;
+    }
+  } catch {
+    // The posture is a courtesy to the group: a fleet whose posture cannot be worked out still shows its network.
+  }
   const byClass = view.counts
     .filter((c) => c.adopted)
     .map((c) => `${c.adopted} ${CLASS_PLURAL[c.class]}`)
@@ -429,6 +450,7 @@ export async function showNetworkGroup(): Promise<void> {
         ? `${view.discovered.length} discovered via ${view.connectors.map((c) => c.id).join(", ")}, not adopted (stolos network discover)`
         : "",
       view.gone.length ? `${view.gone.length} gone from the integration` : "",
+      posture,
       view.unmanaged.length
         ? `${view.unmanaged.length} unmanaged device${view.unmanaged.length === 1 ? "" : "s"} on the network (stolos pair adopts a machine)`
         : "",

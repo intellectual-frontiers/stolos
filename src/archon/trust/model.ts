@@ -197,6 +197,7 @@ const SOURCES: readonly Evidence["source"][] = [
   "estate",
   "repository",
   "control pack",
+  "network",
 ];
 const RESULTS: readonly Evidence["status"][] = ["pass", "fail", "warn", "unknown", "accepted"];
 

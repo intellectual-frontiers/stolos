@@ -438,6 +438,10 @@ export const LOCAL_AREA_NETWORK: LabelView = defineLabel({
     management: { type: "text", doc: "Who manages it (gateway, switch, or unmanaged)." },
     site: { type: "text", doc: "The site of the controller it is on." },
     zone: { type: "text", doc: "The id of the firewall zone it belongs to." },
+    isolated: {
+      type: "boolean",
+      doc: "Spec 111-network-posture: the network details say it is isolated from all other networks.",
+    },
   },
 });
 
@@ -472,6 +476,10 @@ export const NETWORK_INTERFACE: LabelView = defineLabel({
     max_speed_mbps: { type: "integer", doc: "Its highest speed (Mbps)." },
     connector: { type: "text", doc: "RJ45, SFP, ..." },
     poe_state: { type: "text", doc: "Whether it supplies power (UP, DOWN, LIMITED), when it can." },
+    poe_enabled: {
+      type: "boolean",
+      doc: "Spec 111-network-posture: power over Ethernet is enabled on it (the port's own setting).",
+    },
   },
 });
 
@@ -506,6 +514,10 @@ export const NETWORK: LabelView = defineLabel({
     },
     frequencies_ghz: { type: "text", doc: "The frequencies it uses (GHz), comma separated." },
     guest: { type: "boolean", doc: "It is a guest network (a hotspot)." },
+    client_isolation: {
+      type: "boolean",
+      doc: "Spec 111-network-posture: the broadcast's details say its clients are isolated from each other.",
+    },
     site: { type: "text", doc: "The site of the controller it is on." },
   },
 });

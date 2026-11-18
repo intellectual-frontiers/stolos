@@ -28,6 +28,7 @@
  */
 // Spec: 073-freshness
 // Spec: 117-adopted-in-status FR-006, FR-007
+// Spec: 111-network-posture FR-014, FR-019
 
 import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/commons/ts/kernel";
 import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -37,11 +38,14 @@ import type { PcFacts } from "../console/pc.ts";
 import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
 import type { Connector, Observation } from "../connect/connector.ts";
+import type { NetworkAssetDef, NetworkConfig } from "../connect/network-asset.ts";
+import type { NetworkChange } from "../connect/network-changes.ts";
 import type { Event } from "../notify/notify.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import { type Cadences, fleetFreshView, type FreshView } from "./freshness.ts";
 import { isNotObserved, NO_EVIDENCE_CODE, notObservedWords } from "./not-observed.ts";
+import { changeLine } from "../connect/network-changes.ts";
 
 /** The evidence a fleet repository holds, through a reader (now, or at a commit), as of `now`. */
 export async function repoEvidence(
@@ -108,6 +112,34 @@ export async function repoEvidence(
       results: c.policies(observed, o.now),
     });
   }
+  // Spec 111-network-posture FR-014: the network's posture as the repository records it (the routers' observations, the network
+  // assets and the adopted machines a client may match). Tags are not read from a commit, so ownership is not judged here.
+  let networkPosture: PcFacts["networkPosture"];
+  {
+    const routers = new Set(
+      o.connectors.filter((c) => c.integrationKinds?.includes("router")).map((c) => c.id),
+    );
+    const observations = clouds.flatMap((c) =>
+      c.observed && routers.has(c.id) ? [c.observed] : [],
+    );
+    if (observations.length) {
+      const { evaluateNetworkPosture } = await import("../connect/network-posture.ts");
+      const { buildNetworkView } = await import("../connect/network-view.ts");
+      const assets: NetworkAssetDef[] = [];
+      for (const n of await r.list(`${base}/adopted`)) {
+        const a = await lit<NetworkAssetDef>(`${base}/adopted/${n}/network.ts`, "asset");
+        if (a) assets.push(a);
+      }
+      const machines = adopted.map((a) => ({
+        name: a.machine.name,
+        ...(a.machine.macs?.length ? { macs: a.machine.macs } : {}),
+        address: a.machine.ssh.address,
+      }));
+      const view = buildNetworkView({ observations, assets, machines });
+      const config = await lit<NetworkConfig>(`${base}/network.ts`, "network");
+      networkPosture = evaluateNetworkPosture({ observations, assets, view, config, now: o.now });
+    }
+  }
   const controls = o.packs
     ? await o.packs({
         adopted,
@@ -123,6 +155,7 @@ export async function repoEvidence(
     adopted,
     clouds,
     devices,
+    ...(networkPosture ? { networkPosture } : {}),
     ...(controls ? { controls } : {}),
     signers: [],
     git: { dirty: [], unapproved: [], log: [] },
@@ -136,6 +169,7 @@ export async function repoEvidence(
     e.source === "adopted" ||
     e.source === "device" ||
     e.source === "cloud" ||
+    e.source === "network" ||
     (!!o.packs && e.source === "control pack");
   const { combine } = await import("./report.ts");
   return {
@@ -257,6 +291,12 @@ export interface Drift {
   now: { at: string };
   /** The controls whose status changed. */
   changes: ControlChange[];
+  /**
+   * Spec 111-network-posture FR-019: the network's change events of the same period (a device added, gone, renamed or updated; a
+   * Wi-Fi network, a network or a firewall rule added, removed or changed), from the history of the routers' observation files. Events,
+   * never a status; absent where no router is connected.
+   */
+  network?: NetworkChange[];
 }
 
 /**
@@ -288,16 +328,22 @@ export function driftEvent(d: Drift): Event {
     }
     if (c.evidence.length > 10) lines.push(`  and ${c.evidence.length - 10} more`);
   }
+  // Spec 111-network-posture FR-019: the network's changes by kind and subject only, never what a value was.
+  if (d.network?.length) {
+    lines.push("", `Network changes (${d.network.length}):`);
+    for (const c of d.network.slice(0, 20)) lines.push(`  ${changeLine(c)}`);
+    if (d.network.length > 20) lines.push(`  and ${d.network.length - 20} more`);
+  }
   return {
     event: `compliance drift: ${d.changes.length} control(s) changed${
       worse.length ? `, ${worse.length} worse` : ""
-    }`,
+    }${d.network?.length ? `, ${d.network.length} network change(s)` : ""}`,
     level: worse.some((c) => c.to === "fail") ? "fail" : worse.length ? "warn" : "info",
     what: lines.join("\n"),
     todo: "Run bun run stolos compliance on the PC: each failing check names its fix; stale evidence names the command that observes it again.",
     key: `compliance-drift-${d.fleet}-${d.since.rev.slice(0, 12)}-${d.changes
       .map((c) => `${c.id}:${c.to}`)
-      .join(",")}`,
+      .join(",")}${d.network?.length ? `-net${d.network.length}` : ""}`,
   };
 }
 
@@ -350,11 +396,18 @@ export async function drift(o: {
     now: Date.parse(s.at),
   });
   const after = await repoEvidence(gitReader(o.repo), o.fleet, { ...common, now });
+  // Spec 111-network-posture FR-019: the network's change events of the same period.
+  const { networkChanges } = await import("../connect/network-changes.ts");
+  const routers = connectors.filter((c) => c.integrationKinds?.includes("router")).map((c) => c.id);
+  const history = routers.length
+    ? await networkChanges({ repo: o.repo, fleet: o.fleet, connectors: routers, since: s.rev, now })
+    : undefined;
   return {
     fleet: o.fleet,
     since: s,
     now: { at: new Date(now).toISOString() },
     changes: compareViews(before, after),
+    ...(history && !("error" in history) ? { network: history.changes } : {}),
   };
 }
 
@@ -398,20 +451,27 @@ export async function driftCommand(
         );
       }
     }
+    // Spec 111-network-posture FR-019: the network's recorded changes, as events (CM-3, CM-6).
+    for (const c of d.network ?? []) {
+      ui.say(
+        `network change ${c.at.slice(0, 10)} ${c.commit.slice(0, 10)}: ${c.kind}: ${c.subject}: ${c.detail}${c.uncommitted ? " (uncommitted)" : ""} [${c.scf.join(", ")}]`,
+      );
+    }
   }
-  if (o.notify && d.changes.length) {
+  if (o.notify && (d.changes.length || d.network?.length)) {
     const { notify } = await import("../notify/events.ts");
     const r = await notify(driftEvent(d));
     if (r === "queued") p.ok("queued for the fleet's mailbox (fleet.mail.to)");
     else p.note(`not mailed: ${r}`);
   }
+  const netNote = d.network?.length ? `; ${d.network.length} network change(s)` : "";
   p.done(
     d.changes.length
       ? `${d.changes.length} control(s) changed since ${d.since.rev.slice(0, 10)} (${d.since.at.slice(
           0,
           10,
-        )})`
-      : `no control changed since ${d.since.rev.slice(0, 10)} (${d.since.at.slice(0, 10)})`,
+        )})${netNote}`
+      : `no control changed since ${d.since.rev.slice(0, 10)} (${d.since.at.slice(0, 10)})${netNote}`,
   );
   return 0;
 }

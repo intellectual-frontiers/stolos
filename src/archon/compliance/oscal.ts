@@ -30,6 +30,7 @@
  */
 // Spec: 071-catalogs-oscal
 // Spec: 088-wave3-registry
+// Spec: 111-network-posture FR-017
 
 import { oscal, uuid } from "@intellectual-frontiers/commons/ts/kernel";
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";
@@ -60,7 +61,24 @@ export interface OscalInput {
   /** The fleet. */
   fleet: { id: string; title: string; repo: string };
   /** Its machines. */
-  machines: Array<{ name: string; kind: string; os?: string }>;
+  machines: Array<{
+    name: string;
+    kind: string;
+    os?: string;
+    /** Where it is (an address). */
+    where?: string;
+    /** Spec 111-network-posture FR-017: a network asset (adopted through an integration): what the controller says of it. */
+    network?: {
+      class: string;
+      model: string;
+      mac: string;
+      via: string;
+      firmware?: string;
+      state?: string;
+      presence?: string;
+      auto?: boolean;
+    };
+  }>;
   /** SP 800-53 control titles, by OSCAL id (when NIST's catalog is on this PC). */
   titles?: Record<string, string>;
   /** The Stolos version. */
@@ -190,7 +208,12 @@ const SOURCE_TEXT: Record<Evidence["source"], string> = {
     "The fleet repository: every change is a commit, signed by a fleet signer before servers apply it.",
   "control pack":
     "The fleet's own controls (spec 078): TypeScript in the fleet repository, tested like code, run over the estate graph, osquery, and observations.",
+  network:
+    "The network (spec 111): nine posture policies over a router's observation (firmware, Wi-Fi security, guest isolation, unknown clients, ownership, PoE), read-only from the official API.",
 };
+
+/** The title of the network's component of the component definition. */
+const titlesOfNetwork = "The network (posture policies over a router's observation)";
 
 /** What produced a piece of evidence: a component of its own in the component definition. */
 function evidenceComponent(e: Evidence): { key: string; title: string; description: string } {
@@ -205,6 +228,7 @@ function evidenceComponent(e: Evidence): { key: string; title: string; descripti
     estate: "The estate graph (cross-system policies)",
     repository: "Signed changes (the fleet repository)",
     "control pack": "The fleet's control packs",
+    network: titlesOfNetwork,
   };
   return { key: e.source, title: titles[e.source] ?? e.source, description: SOURCE_TEXT[e.source] };
 }
@@ -267,6 +291,33 @@ export async function componentDefinition(i: OscalInput): Promise<unknown> {
         };
       }),
   );
+  // Spec 111-network-posture FR-017: each network asset (a device a router's controller manages) is a hardware component of its own,
+  // the way an adopted machine is an inventory item; the controls its policies give evidence for are the network component's above.
+  const assets = await Promise.all(
+    i.machines
+      .filter((m) => m.network !== undefined)
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+      .map(async (m) => {
+        const n = m.network;
+        return {
+          uuid: await uuidFor("component", "network-asset", m.name),
+          type: "hardware",
+          title: m.name,
+          description: `A ${n?.class.replace("-", " ") ?? "network"} device that ${n?.via ?? "a router"} manages, adopted through the integration${n?.auto ? " by a rule of the fleet" : ""}; its posture is checked by the component "${titlesOfNetwork}".`,
+          props: [
+            { name: "asset-id", value: m.name },
+            { name: "asset-type", value: "network" },
+            { name: "device-class", value: n?.class ?? "" },
+            { name: "model", value: n?.model ?? "" },
+            ...(n?.firmware ? [{ name: "firmware-version", value: n.firmware }] : []),
+            ...(m.where ? [{ name: "ip-address", value: m.where }] : []),
+            ...(n?.mac ? [{ name: "mac-address", value: n.mac }] : []),
+            ...(n?.state ? [{ name: "state", value: n.state }] : []),
+            { name: "connector", value: n?.via ?? "" },
+          ],
+        };
+      }),
+  );
   return {
     "component-definition": {
       uuid: await uuidFor(i.fleet.id, "component-definition", iso(i.now)),
@@ -284,6 +335,7 @@ export async function componentDefinition(i: OscalInput): Promise<unknown> {
             : {}),
         },
         ...sources,
+        ...assets,
       ],
       "back-matter": await backMatter(i),
     },
@@ -375,6 +427,18 @@ export async function systemSecurityPlan(i: OscalInput): Promise<unknown> {
                       value:
                         m.kind === "device" ? "network" : m.kind === "cloud" ? "cloud" : "server",
                     },
+                    // Spec 111-network-posture FR-017: what the controller says of a network asset.
+                    ...(m.network
+                      ? [
+                          { name: "device-class", value: m.network.class },
+                          { name: "model", value: m.network.model },
+                          ...(m.network.firmware
+                            ? [{ name: "firmware-version", value: m.network.firmware }]
+                            : []),
+                          ...(m.where ? [{ name: "ip-address", value: m.where }] : []),
+                          { name: "mac-address", value: m.network.mac },
+                        ]
+                      : []),
                   ],
                 })),
               ),

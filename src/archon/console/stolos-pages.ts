@@ -16,6 +16,7 @@
 // Spec: 112-machine-reported-tags FR-013, FR-014, FR-015
 // Spec: 115-compatibility FR-009
 // Spec: 110-network-assets FR-002, FR-008, FR-009
+// Spec: 111-network-posture FR-015
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
@@ -33,7 +34,7 @@ import {
   WAYS_OF_JOINING,
 } from "../adopt/joining.ts";
 import { logo, logoFor } from "./logos.ts";
-import { classBadge, integrationPill, openInUnifi } from "./network-page.ts";
+import { classBadge, integrationPill, openInUnifi, postureCard } from "./network-page.ts";
 import { GUIDES } from "../core/guides.ts";
 import { originWords, tagRecord } from "../fleet/tags.ts";
 import type { TaggingView } from "../fleet/tags.ts";
@@ -200,6 +201,9 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "network discover",
       "network adopt",
       "network status",
+      "network check",
+      "network inventory",
+      "network changes",
       "device add",
       "device observe",
       "device check",
@@ -575,27 +579,28 @@ export function stolosOverview(
       ${
         f.network
           ? html`<div class="card" id="network-group">
-              <div class="k"><a href="/network">Network</a></div>
-              <div class="v">
-                ${f.network.view.assets.length}
-                asset(s)${
-                  f.network.view.counts.filter((c) => c.adopted).length
-                    ? ` (${f.network.view.counts
-                        .filter((c) => c.adopted)
-                        .map((c) => `${c.adopted} ${c.class.replace("-", " ")}`)
-                        .join(", ")})`
-                    : ""
-                }
+                <div class="k"><a href="/network">Network</a></div>
+                <div class="v">
+                  ${f.network.view.assets.length}
+                  asset(s)${
+                    f.network.view.counts.filter((c) => c.adopted).length
+                      ? ` (${f.network.view.counts
+                          .filter((c) => c.adopted)
+                          .map((c) => `${c.adopted} ${c.class.replace("-", " ")}`)
+                          .join(", ")})`
+                      : ""
+                  }
+                </div>
+                <div class="sub">
+                  ${f.network.view.discovered.length} discovered, not
+                  adopted${
+                    f.network.view.gone.length
+                      ? `; ${f.network.view.gone.length} gone from the integration`
+                      : ""
+                  }
+                </div>
               </div>
-              <div class="sub">
-                ${f.network.view.discovered.length} discovered, not
-                adopted${
-                  f.network.view.gone.length
-                    ? `; ${f.network.view.gone.length} gone from the integration`
-                    : ""
-                }
-              </div>
-            </div>`
+              ${postureCard(f)}`
           : ""
       }
       <div class="card">

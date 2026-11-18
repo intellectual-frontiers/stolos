@@ -35,6 +35,7 @@
  * @module
  */
 // Spec: 092-exporters
+// Spec: 111-network-posture FR-014
 
 import { SCF_SOURCE } from "../compliance/catalog.ts";
 import { allEvidence, observationUuid, uuidFor } from "../compliance/oscal.ts";
@@ -198,6 +199,8 @@ export function bundleItemsFor(e: Evidence, items: readonly ManifestItem[]): Man
         return i.kind === "observation" && i.name.includes(`/${e.subject}/`);
       case "estate":
       case "cloud":
+      case "network":
+        // Spec 111-network-posture FR-014: the network's evidence is a router's observation file.
         return i.kind === "observation" && i.name.includes("/estate/");
       case "repository":
         return i.kind === "commit" || i.kind === "signers";
