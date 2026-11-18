@@ -23,6 +23,7 @@
  * @module
  */
 // Spec: 109-integrations-api FR-009, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-018
+// Spec: 110-network-assets FR-001, FR-007, FR-012
 
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { PolicyResult } from "../adopt/policy.ts";
@@ -39,6 +40,7 @@ import type {
   WifiNetwork,
 } from "./integration-entities.ts";
 import { defineIntegration, NotAvailable, type ReadContext } from "./integration.ts";
+import { classify } from "./network-class.ts";
 import type { UnifiGet } from "./unifi-api.auto.ts";
 import { UNIFI_API } from "./unifi-api.auto.ts";
 import {
@@ -147,12 +149,36 @@ function kindOf(features: readonly string[]): NetworkDevice["kind"] {
   return "other";
 }
 
-/** The adopted devices of every site, read once (the ports and the health read from them). */
+/** One device's details (its ports, its uplink), read once for an observation: a denied or absent read is a gap and `undefined`. */
+const detailOf = (
+  ctx: ReadContext,
+  site: Site,
+  d: { id: string; name: string },
+): Promise<UnifiGet["/v1/sites/{siteId}/devices/{deviceId}"]["response"] | undefined> =>
+  ctx.memo(`unifi:detail:${d.id}`, () =>
+    ctx.orGap(`${d.name} details`, undefined, () =>
+      unifiGet(ctx, "/v1/sites/{siteId}/devices/{deviceId}", { siteId: site.id, deviceId: d.id }),
+    ),
+  );
+
+/**
+ * The adopted devices of every site, read once (the ports and the health read from them). Spec 110-network-assets FR-001, FR-007: each
+ * has its class and facets (from the document's `features`, then the model) and, from its details, its uplink: the device it connects
+ * through. A device that is not a gateway and has no uplink in the answer is a reported gap (no edge is made for it).
+ */
 const devicesOf = (ctx: ReadContext): Promise<NetworkDevice[]> =>
   ctx.memo("unifi:devices", () =>
-    perSite(ctx, "devices", async (site) =>
-      (await unifiPaged(ctx, "/v1/sites/{siteId}/devices", { siteId: site.id })).map(
-        (d): NetworkDevice => ({
+    perSite(ctx, "devices", async (site) => {
+      const overview = await unifiPaged(ctx, "/v1/sites/{siteId}/devices", { siteId: site.id });
+      const out: NetworkDevice[] = [];
+      for (const d of overview.slice(0, MAX_PORT_DEVICES)) {
+        const c = classify({ model: d.model, features: d.features });
+        const detail = await detailOf(ctx, site, d);
+        const uplink = detail?.uplink?.deviceId;
+        if (detail !== undefined && uplink === undefined && c.class !== "gateway") {
+          ctx.gap(`uplink (${d.name}): the API gave no uplink for this device, so it has no edge`);
+        }
+        out.push({
           source: "unifi",
           site: site.name,
           id: d.id,
@@ -166,9 +192,13 @@ const devicesOf = (ctx: ReadContext): Promise<NetworkDevice[]> =>
           firmwareUpdatable: d.firmwareUpdatable,
           supported: d.supported,
           hasPorts: d.interfaces.includes("ports"),
-        }),
-      ),
-    ),
+          class: c.class,
+          facets: c.facets,
+          ...(uplink === undefined ? {} : { uplink }),
+        });
+      }
+      return out;
+    }),
   );
 
 const OFFLINE = new Set(["OFFLINE", "CONNECTION_INTERRUPTED", "ISOLATED"]);
@@ -226,12 +256,7 @@ export const unifiRouter = defineIntegration({
       for (const d of withPorts) {
         const site = sites.find((s) => s.name === d.site);
         if (site === undefined) continue;
-        const detail = await ctx.orGap(`${d.name} ports`, undefined, () =>
-          unifiGet(ctx, "/v1/sites/{siteId}/devices/{deviceId}", {
-            siteId: site.id,
-            deviceId: d.id,
-          }),
-        );
+        const detail = await detailOf(ctx, site, d);
         for (const p of detail?.interfaces.ports ?? []) {
           out.push({
             source: "unifi",
@@ -280,9 +305,30 @@ export const unifiRouter = defineIntegration({
         }));
       }),
     wifi: (ctx) =>
-      perSite(ctx, "wifi broadcasts", async (site) =>
-        (await unifiPaged(ctx, "/v1/sites/{siteId}/wifi/broadcasts", { siteId: site.id })).map(
-          (b): WifiNetwork => ({
+      perSite(ctx, "wifi broadcasts", async (site) => {
+        const broadcasts = await unifiPaged(ctx, "/v1/sites/{siteId}/wifi/broadcasts", {
+          siteId: site.id,
+        });
+        // A broadcast may name its access points by tag (spec 110-network-assets FR-007): the tags are read once, when one does.
+        const byTag = broadcasts.some((b) => b.broadcastingDeviceFilter?.type === "DEVICE_TAGS")
+          ? new Map(
+              (
+                await ctx.orGap("device tags", [], () =>
+                  unifiPaged(ctx, "/v1/sites/{siteId}/device-tags", { siteId: site.id }),
+                )
+              ).map((t) => [t.id, t.deviceIds]),
+            )
+          : new Map<string, string[]>();
+        return broadcasts.map((b): WifiNetwork => {
+          const f = b.broadcastingDeviceFilter;
+          const broadcastBy =
+            f === undefined
+              ? undefined
+              : f.type === "DEVICES"
+                ? [...f.deviceIds]
+                : [...new Set(f.deviceTagIds.flatMap((t) => byTag.get(t) ?? []))];
+          const n = b.network;
+          return {
             source: "unifi",
             site: site.name,
             id: b.id,
@@ -291,9 +337,11 @@ export const unifiRouter = defineIntegration({
             security: b.securityConfiguration.type,
             frequenciesGHz: b.type === "STANDARD" ? b.broadcastingFrequenciesGHz : [],
             guest: b.type === "STANDARD" && b.hotspotConfiguration !== undefined,
-          }),
-        ),
-      ),
+            ...(broadcastBy === undefined ? {} : { broadcastBy }),
+            ...(n === undefined ? {} : { network: n.type === "NATIVE" ? "native" : n.networkId }),
+          };
+        });
+      }),
     health: async (ctx): Promise<RouterHealth[]> => {
       const version = (await unifiGet(ctx, "/v1/info")).applicationVersion;
       const devices = await devicesOf(ctx);

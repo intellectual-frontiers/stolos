@@ -18,6 +18,7 @@
  */
 // Spec: 108-tags FR-002, FR-004, FR-005, FR-009, FR-010, FR-011, FR-013, FR-014, FR-015, FR-016
 // Spec: 112-machine-reported-tags FR-002, FR-003, FR-004, FR-010, FR-011, FR-013, FR-015
+// Spec: 110-network-assets FR-002, FR-010
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
@@ -26,6 +27,8 @@ import type { loadFleet, loadHosts } from "../model/load.ts";
 export type { ClaimView, ResolvedTag, TagSet } from "../model/tags.ts";
 export { isClaimOrigin, isUsed } from "../model/tags.ts";
 import { claimsFrom, type MachineReport } from "../model/reported.ts";
+import { assetFile, type NetworkAssetDef } from "../connect/network-asset.ts";
+import type { NetworkFacts } from "../model/tags.ts";
 import {
   idSet,
   isClaimOrigin,
@@ -88,8 +91,11 @@ export interface TagMachine {
   facts: TagFacts;
   /** The tags a person gave it. */
   assigned: { tags: string[]; customTags: string[] };
-  /** The file a person's tags are written in: decisions.ts of a managed host, machine.ts of an adopted machine. */
-  home: { kind: "decisions" | "machine"; file: string };
+  /**
+   * The file a person's tags are written in: decisions.ts of a managed host, machine.ts of an adopted machine, network.ts of a network
+   * asset (spec 110-network-assets).
+   */
+  home: { kind: "decisions" | "machine" | "network"; file: string };
   /** Its tags, resolved. */
   resolved: ResolvedTags;
   /** Spec 112-machine-reported-tags FR-010: what it last reported about itself (the PC's observation cache), when it has. */
@@ -140,6 +146,36 @@ async function cachedReports(): Promise<Record<string, MachineReport>> {
   }
 }
 
+/** What the network says for the tags of this fleet's machines: the assets, their addresses, and the facts a rule looks at (none where no router is observed). */
+async function networkOf(): Promise<{
+  assets: NetworkAssetDef[];
+  addressOf: Map<string, string>;
+  facts: Map<string, NetworkFacts>;
+}> {
+  const empty = {
+    assets: [],
+    addressOf: new Map<string, string>(),
+    facts: new Map<string, NetworkFacts>(),
+  };
+  try {
+    const { loadNetwork } = await import("../connect/network-commands.ts");
+    const { networkFactsFor } = await import("../connect/network-view.ts");
+    const { view, assets } = await loadNetwork();
+    return {
+      assets,
+      addressOf: new Map(
+        view.devices.flatMap((r) =>
+          r.asset === undefined ? [] : [[r.asset, r.device.ip] as const],
+        ),
+      ),
+      facts: networkFactsFor(view),
+    };
+  } catch {
+    // The network is a courtesy to tags: a fleet whose router cannot be read still resolves its tags.
+    return empty;
+  }
+}
+
 /** The first word of the operating system family a probe reported, lowercase (`macos`, `windows`, `linux`). */
 const familyOf = (f: string): string => f.toLowerCase().split(" ")[0] ?? "";
 
@@ -157,6 +193,8 @@ export async function loadFleetTags(src: FleetTagsSource = {}): Promise<FleetTag
   for (const n of fleet?.site?.networks ?? []) networks[n.name] = n.cidr;
   const machines: TagMachine[] = [];
   const reports = src.reports ?? (await cachedReports());
+  // Spec 110-network-assets FR-010: what the integration says of the network, for the rules (a network asset's class and uplink, a machine's device).
+  const net = await networkOf();
   const add = (m: Omit<TagMachine, "resolved" | "report" | "claimsDropped" | "gaps">): void => {
     const report = reports[m.name];
     const read = claimsFrom(report, set?.machineInfoMap);
@@ -181,6 +219,7 @@ export async function loadFleetTags(src: FleetTagsSource = {}): Promise<FleetTag
         joined: "managed",
         ...(h.ip ? { address: h.ip } : {}),
         ...(h.network ? { network: h.network } : {}),
+        ...(net.facts.get(h.name) ? { net: net.facts.get(h.name) as NetworkFacts } : {}),
       },
       assigned: { tags: [...(h.tags ?? [])], customTags: [...(h.customTags ?? [])] },
       home: { kind: "decisions", file: decisionsFile(h.name) },
@@ -204,9 +243,28 @@ export async function loadFleetTags(src: FleetTagsSource = {}): Promise<FleetTag
             }
           : {}),
         ...(m.owner ? { owner: m.owner } : {}),
+        ...(net.facts.get(m.name) ? { net: net.facts.get(m.name) as NetworkFacts } : {}),
       },
       assigned: { tags: [...(m.tags ?? [])], customTags: [...(m.customTags ?? [])] },
       home: { kind: "machine", file: path.join(adoptedDir(m.name), "machine.ts") },
+    });
+  }
+  // Spec 110-network-assets FR-002, FR-010: the devices a router's controller manages, adopted through the integration, are machines too.
+  for (const a of net.assets) {
+    const ip = net.addressOf.get(a.name);
+    add({
+      name: a.name,
+      kind: "device",
+      facts: {
+        name: a.name,
+        kind: "device",
+        joined: "integration",
+        ...(ip ? { address: ip } : {}),
+        ...(a.owner ? { owner: a.owner } : {}),
+        ...(net.facts.get(a.name) ? { net: net.facts.get(a.name) as NetworkFacts } : {}),
+      },
+      assigned: { tags: [...(a.tags ?? [])], customTags: [...(a.customTags ?? [])] },
+      home: { kind: "network", file: assetFile(a.name) },
     });
   }
   machines.sort((a, b) => a.name.localeCompare(b.name));
@@ -477,6 +535,21 @@ export async function writeAssignment(m: TagMachine, a: TagAssignment): Promise<
     };
     await fs.mkdir(path.dirname(m.home.file), { recursive: true });
     await fs.writeTextFile(m.home.file, decisionsSource(next));
+    return;
+  }
+  if (m.home.kind === "network") {
+    const { loadNetworkAssets, networkAssetSource } = await import("../connect/network-asset.ts");
+    const had = (await loadNetworkAssets()).find((x) => x.name === m.name);
+    if (!had) throw new Error(`${m.name} is not a network asset of this fleet`);
+    const { tags: _t, customTags: _c, ...rest } = had;
+    await fs.writeTextFile(
+      m.home.file,
+      networkAssetSource({
+        ...rest,
+        ...(tags.length ? { tags } : {}),
+        ...(customTags.length ? { customTags } : {}),
+      }),
+    );
     return;
   }
   const { loadAdopted, machineSource } = await import("../adopt/adopt.ts");

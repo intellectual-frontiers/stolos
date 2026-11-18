@@ -6,6 +6,7 @@
  */
 // Spec: 067-adopt
 // Spec: 109-integrations-api FR-006, FR-012, FR-018
+// Spec: 110-network-assets FR-004, FR-005
 
 import { json, record, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, http, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -291,6 +292,18 @@ export async function estateObserve(id?: string, t: http.Transport = liveHttp())
   if (id && !(await provider(id))) return await unknown(id);
   for (const c of (await allConnectors()).filter((x) => !id || x.id === id)) {
     await observeOne(c, t);
+  }
+  // Spec 110-network-assets FR-004, FR-005: the router's devices are re-read; the fleet's autoAdopt rules write their records (sent by
+  // stolos apply, never silently), and an asset gone from the integration is a warning.
+  try {
+    const { afterObserve } = await import("./network-commands.ts");
+    await afterObserve();
+  } catch (e) {
+    ui.problem(
+      "warn",
+      "Network assets",
+      `not checked: ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
   ui.next.push(`keep the observations: bun run stolos apply -m "067-adopt: clouds observed"`);
   ui.next.push("the estate graph as SQL and SQLite: bun run stolos estate build");

@@ -23,6 +23,7 @@
  * @module
  */
 // Spec: 109-integrations-api FR-001, FR-002, FR-004, FR-005
+// Spec: 110-network-assets FR-007, FR-012
 
 import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
@@ -108,6 +109,8 @@ export interface ReadContext {
   orGap<T>(what: string, fallback: T, f: () => Promise<T>): Promise<T>;
   /** What one observation has read already, by key (the sites of a controller, the zones of an account). */
   memo<T>(key: string, f: () => Promise<T>): Promise<T>;
+  /** Spec 110-network-assets FR-007, FR-012: report a gap the answers show without any call being refused (`<what>: <why>`). */
+  gap(message: string): void;
 }
 
 /** A context for one observation. */
@@ -136,6 +139,9 @@ export function readContext(o: {
         }
         throw e;
       }
+    },
+    gap(message: string): void {
+      o.gaps.push(message);
     },
     memo<T>(key: string, f: () => Promise<T>): Promise<T> {
       let p = seen.get(key);

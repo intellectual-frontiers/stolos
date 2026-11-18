@@ -35,6 +35,8 @@ import {
   CompatStatusSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
+  DeviceClassSchema,
+  DeviceFacetSchema,
 } from "./vocabulary.ts";
 
 const { en } = rdf;
@@ -413,6 +415,13 @@ export const waysOfJoining = codeList(WayOfJoiningSchema, "joined", {
     ),
     spec: ["107-pairing-and-query FR-007", "069-integrate"],
   },
+  integration: {
+    label: en("integration"),
+    definition: en(
+      "Adopted through an integration: a device an account's controller manages (UniFi Network), recorded by `stolos network adopt` with no SSH and no probe. A device a fleet rule adopted is the same way, with the flag `auto`.",
+    ),
+    spec: ["110-network-assets FR-002", "110-network-assets FR-003"],
+  },
   managed: {
     label: en("managed"),
     definition: en("A server or workstation Stolos installs and converges."),
@@ -470,6 +479,13 @@ export const answerStates = codeList(AnswerStateSchema, "answer", {
     label: en("failed"),
     definition: en("The machine could not be asked, or refused, with its reason."),
     spec: ["107-pairing-and-query FR-011"],
+  },
+  skipped: {
+    label: en("skipped"),
+    definition: en(
+      "The machine cannot be asked, and that is no error: a network device read through an integration has no osquery. The row says why.",
+    ),
+    spec: ["110-network-assets FR-011"],
   },
   "timed-out": {
     label: en("timed out"),
@@ -810,6 +826,79 @@ export const apiCapabilities = codeList(ApiCapabilitySchema, "api-capability", {
   },
 });
 
+/** What a network device is (spec 110-network-assets FR-001). */
+export const deviceClasses = codeList(DeviceClassSchema, "device-class", {
+  gateway: {
+    label: en("gateway"),
+    definition: en("A router or security gateway: it routes between networks and the internet."),
+    spec: ["110-network-assets FR-001"],
+  },
+  switch: {
+    label: en("switch"),
+    definition: en("A switch: it forwards frames between wired ports (IEEE 802.1Q)."),
+    spec: ["110-network-assets FR-001"],
+  },
+  "access-point": {
+    label: en("access point"),
+    definition: en("A wireless access point: it advertises Wi-Fi networks (IEEE 802.11)."),
+    spec: ["110-network-assets FR-001"],
+  },
+  camera: {
+    label: en("camera"),
+    definition: en("A video camera."),
+    spec: ["110-network-assets FR-001"],
+  },
+  recorder: {
+    label: en("recorder"),
+    definition: en("A network video recorder: it stores what cameras record."),
+    spec: ["110-network-assets FR-001"],
+  },
+  "door-controller": {
+    label: en("door controller"),
+    definition: en("A door or access controller: it decides who may open a door."),
+    spec: ["110-network-assets FR-001"],
+  },
+  phone: {
+    label: en("phone"),
+    definition: en("A desk or VoIP phone."),
+    spec: ["110-network-assets FR-001"],
+  },
+  other: {
+    label: en("other"),
+    definition: en("A network device whose model nobody classified: never guessed."),
+    spec: ["110-network-assets FR-001"],
+  },
+});
+
+/** One thing a device does (spec 110-network-assets FR-001). */
+export const deviceFacets = codeList(DeviceFacetSchema, "device-facet", {
+  routing: {
+    label: en("routing"),
+    definition: en("It routes between networks."),
+    spec: ["110-network-assets FR-001"],
+  },
+  switching: {
+    label: en("switching"),
+    definition: en("It switches frames between wired ports."),
+    spec: ["110-network-assets FR-001"],
+  },
+  wireless: {
+    label: en("wireless"),
+    definition: en("It broadcasts Wi-Fi networks."),
+    spec: ["110-network-assets FR-001"],
+  },
+  surveillance: {
+    label: en("surveillance"),
+    definition: en("It captures or stores video."),
+    spec: ["110-network-assets FR-001"],
+  },
+  "access-control": {
+    label: en("access control"),
+    definition: en("It controls who may open a door."),
+    spec: ["110-network-assets FR-001"],
+  },
+});
+
 /** Every code list, by the name of the type the generator writes for it, with the name of its array and what it is. */
 export const CODE_LISTS = {
   OutcomeLevel: {
@@ -901,6 +990,16 @@ export const CODE_LISTS = {
     array: "API_CAPABILITIES",
     list: apiCapabilities,
     what: "One thing an integration of a kind may read, written <kind>-<capability>",
+  },
+  DeviceClass: {
+    array: "DEVICE_CLASSES",
+    list: deviceClasses,
+    what: "What a network device is, whatever its vendor",
+  },
+  DeviceFacet: {
+    array: "DEVICE_FACETS",
+    list: deviceFacets,
+    what: "One thing a device does, which a feature asks for",
   },
   SignerRole: { array: "SIGNER_ROLES", list: signerRoles, what: "A signer's role" },
   CommandTier: { array: "COMMAND_TIERS", list: commandTiers, what: "What a command may do" },

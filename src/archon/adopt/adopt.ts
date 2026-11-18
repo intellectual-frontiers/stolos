@@ -29,6 +29,7 @@
 // Spec: 108-tags FR-004, FR-005, FR-008
 // Spec: 112-machine-reported-tags FR-005, FR-006, FR-010
 // Spec: 115-compatibility FR-004, FR-006
+// Spec: 110-network-assets FR-006
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -74,6 +75,11 @@ export type AdoptedDef<T extends string = string> = {
   tags?: readonly T[];
   /** Spec 108-tags FR-005: the free-form tags a person gave it (`pilot`), always shown as custom. */
   customTags?: readonly string[];
+  /**
+   * Spec 110-network-assets FR-006: the MAC addresses it checked in with, so that a client the router's controller reports is matched to
+   * this machine by MAC. Absent in an older declaration: the match falls back to its address.
+   */
+  macs?: readonly string[];
   /**
    * Risks the owner accepted, each for a while: a policy that fails is shown
    * as accepted (not as passing) until the date, with who and why (for an

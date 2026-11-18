@@ -63,14 +63,16 @@ export const MACHINE_KINDS: readonly MachineKind[] = [
   "controller",
 ];
 
-/** How a machine came to be in the fleet (`stolos:WayOfJoining`; 107-pairing-and-query FR-007, 097-controller FR-001, 098-pair FR-006, 069-integrate, 002-model, 066-stolos-console FR-003). */
-export type WayOfJoining = "auto-adopted" | "paired" | "integrated" | "managed" | "cloud";
+/** How a machine came to be in the fleet (`stolos:WayOfJoining`; 107-pairing-and-query FR-007, 097-controller FR-001, 098-pair FR-006, 069-integrate, 110-network-assets FR-002, 110-network-assets FR-003, 002-model, 066-stolos-console FR-003). */
+export type WayOfJoining =
+  "auto-adopted" | "paired" | "integrated" | "integration" | "managed" | "cloud";
 
 /** Every {@link WayOfJoining}, in the ontology's order. */
 export const WAYS_OF_JOINING: readonly WayOfJoining[] = [
   "auto-adopted",
   "paired",
   "integrated",
+  "integration",
   "managed",
   "cloud",
 ];
@@ -87,11 +89,17 @@ export const PAIRING_STAGES: readonly PairingStage[] = [
   "refused",
 ];
 
-/** Where one machine is in a question to every machine (`stolos:AnswerState`; 107-pairing-and-query FR-010, 107-pairing-and-query FR-011). */
-export type AnswerState = "asking" | "answered" | "failed" | "timed-out";
+/** Where one machine is in a question to every machine (`stolos:AnswerState`; 107-pairing-and-query FR-010, 107-pairing-and-query FR-011, 110-network-assets FR-011). */
+export type AnswerState = "asking" | "answered" | "failed" | "skipped" | "timed-out";
 
 /** Every {@link AnswerState}, in the ontology's order. */
-export const ANSWER_STATES: readonly AnswerState[] = ["asking", "answered", "failed", "timed-out"];
+export const ANSWER_STATES: readonly AnswerState[] = [
+  "asking",
+  "answered",
+  "failed",
+  "skipped",
+  "timed-out",
+];
 
 /** The colours a defined tag may be drawn in (`stolos:TagColour`; 108-tags FR-001). */
 export type TagColour =
@@ -203,6 +211,41 @@ export const API_CAPABILITIES: readonly ApiCapability[] = [
   "email-domains",
   "email-sending",
   "email-routing",
+];
+
+/** What a network device is, whatever its vendor (`stolos:DeviceClass`; 110-network-assets FR-001). */
+export type DeviceClass =
+  | "gateway"
+  | "switch"
+  | "access-point"
+  | "camera"
+  | "recorder"
+  | "door-controller"
+  | "phone"
+  | "other";
+
+/** Every {@link DeviceClass}, in the ontology's order. */
+export const DEVICE_CLASSES: readonly DeviceClass[] = [
+  "gateway",
+  "switch",
+  "access-point",
+  "camera",
+  "recorder",
+  "door-controller",
+  "phone",
+  "other",
+];
+
+/** One thing a device does, which a feature asks for (`stolos:DeviceFacet`; 110-network-assets FR-001). */
+export type DeviceFacet = "routing" | "switching" | "wireless" | "surveillance" | "access-control";
+
+/** Every {@link DeviceFacet}, in the ontology's order. */
+export const DEVICE_FACETS: readonly DeviceFacet[] = [
+  "routing",
+  "switching",
+  "wireless",
+  "surveillance",
+  "access-control",
 ];
 
 /** A signer's role (`stolos:SignerRole`; 047-intent-and-identity FR-001, 057-keys). */

@@ -11,6 +11,7 @@
 // Spec: 103-three-ports FR-008, FR-009
 // Spec: 105-calm-output FR-001, FR-010
 // Spec: 109-integrations-api FR-018
+// Spec: 110-network-assets FR-003, FR-005, FR-009
 // Spec: 108-tags FR-006, FR-007, FR-008, FR-013, FR-016
 // Spec: 112-machine-reported-tags FR-007, FR-011, FR-012
 // Spec: 115-compatibility FR-005, FR-016
@@ -1234,7 +1235,7 @@ export const COMMANDS: Command[] = [
     name: "host release",
     output: "action",
     summary: "Stop adopting a machine: remove its probe, its model, and its probe key",
-    description: `Spec 067. Over your own SSH, removes ~/.local/bin/stolos-probe and the probe key's line from authorized_keys; then deletes fleets/<fleet>/adopted/<name>/ and the probe key from the vault. Nothing else on the machine changes. Keep it with bun run stolos apply.`,
+    description: `Spec 067. Over your own SSH, removes ~/.local/bin/stolos-probe and the probe key's line from authorized_keys; then deletes fleets/<fleet>/adopted/<name>/ and the probe key from the vault. Nothing else on the machine changes. Spec 110: a network asset (a device adopted through a router's integration) is released the same way on a person's explicit request: its record goes and nothing at the controller changes (no SSH, no probe), and a rule of network.ts does not adopt it again. A device that is gone from the integration is never released for you. Keep it with bun run stolos apply.`,
     tier: "repo",
     args: [
       {
@@ -1248,6 +1249,106 @@ export const COMMANDS: Command[] = [
     async run(a: Parsed): Promise<number> {
       const { hostRelease } = await import("../adopt/commands.ts");
       return await hostRelease(a["name"] as string);
+    },
+  },
+  {
+    name: "network discover",
+    output: "report",
+    summary:
+      "The devices a connected router's controller manages that are not adopted yet (discovered via UniFi)",
+    description: `Spec 110. Lists, from the last observation of the connected router (stolos estate observe unifi), the devices its controller manages that no network asset of this fleet records yet: each with its class (gateway, switch, access point, camera, recorder, door controller, phone, or other), model, firmware, address and state. It reads the observation only: no SSH, no probe, no request to the controller. Adopt them with stolos network adopt. --class lists one class. --json for scripts.`,
+    tier: "read",
+    args: [
+      {
+        name: "class",
+        type: "string",
+        description:
+          "Only devices of this class: gateway, switch, access-point, camera, recorder, door-controller, phone, other.",
+      },
+    ],
+    examples: [
+      {
+        cmd: "bun run stolos network discover",
+        text: "What the controller manages that is not adopted.",
+      },
+      { cmd: "bun run stolos network discover --class switch", text: "Only the switches." },
+    ],
+    async run(a: Parsed, ctx: RunContext): Promise<number> {
+      const { networkDiscover } = await import("../connect/network-commands.ts");
+      return await networkDiscover({
+        ...(a["class"] ? { class: a["class"] as string } : {}),
+        json: ctx.json,
+      });
+    },
+  },
+  {
+    name: "network adopt",
+    output: "action",
+    summary:
+      "Adopt devices a connected router's controller manages as assets of the fleet (one signed commit)",
+    description: `Spec 110. Adopts devices the controller manages as machines of the fleet, through the integration: no SSH, no probe. A device is named by its name, its MAC address or its id at the controller (stolos network discover lists them); --all adopts every discovered device, and --all --class switch every switch. Each is recorded in fleets/<fleet>/adopted/<name>/network.ts (via, account, device id, MAC, serial where the API gives one, class, model) and sent with stolos apply (one signed commit, your key). The name is the device's name made a DNS label; a name a machine, a host or another asset already has is refused, with what to do, and nothing is written for it. Stolos reads the controller and never changes it; releasing the asset (stolos host release) removes only the record. --no-apply writes it and leaves the sending to stolos apply.`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [
+      {
+        name: "devices",
+        type: "string",
+        positional: true,
+        repeatable: true,
+        description: "Devices by name, MAC or id (stolos network discover lists them).",
+      },
+      { name: "all", type: "boolean", description: "Every discovered device." },
+      {
+        name: "class",
+        type: "string",
+        description:
+          "With --all: only this class (gateway, switch, access-point, camera, recorder, door-controller, phone, other).",
+      },
+      {
+        name: "no-apply",
+        type: "boolean",
+        description: "Write the change but do not send it (stolos apply sends it later).",
+      },
+      {
+        name: "message",
+        short: "m",
+        type: "string",
+        description: "The commit message (default: 110-network-assets: adopt <names>).",
+      },
+    ],
+    examples: [
+      { cmd: "bun run stolos network adopt office-switch", text: "One device, by name." },
+      {
+        cmd: "bun run stolos network adopt --all --class access-point",
+        text: "Every discovered access point.",
+      },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { networkAdopt } = await import("../connect/network-commands.ts");
+      return await networkAdopt({
+        devices: String(a["devices"] ?? "")
+          .split(/[\n,]+/)
+          .map((x) => x.trim())
+          .filter(Boolean),
+        all: !!a["all"],
+        ...(a["class"] ? { class: a["class"] as string } : {}),
+        noApply: !!a["no-apply"],
+        ...(a["message"] ? { message: a["message"] as string } : {}),
+      });
+    },
+  },
+  {
+    name: "network status",
+    output: "report",
+    summary:
+      "The network assets by class, the devices discovered, the ones gone from the integration, and the unmanaged devices",
+    description: `Spec 110. The Network group of stolos fleet status: the assets this fleet adopted through the connected router, by class; the devices discovered and not adopted; each asset gone from the integration (a warning with its fix: never an automatic deletion) or offline; and the clients no machine of the fleet matches (unmanaged devices on the network: observed, never adopted from here; stolos pair brings a machine in). Reads the last observation. --json for scripts.`,
+    tier: "read",
+    args: [],
+    async run(_a: Parsed, ctx: RunContext): Promise<number> {
+      const { networkStatus } = await import("../connect/network-commands.ts");
+      return await networkStatus(ctx.json);
     },
   },
   {
@@ -5570,6 +5671,9 @@ const PC_COMMANDS = new Set([
   "host observe",
   "host check",
   "host release",
+  "network discover",
+  "network adopt",
+  "network status",
   "fleet query",
   "tag add",
   "tag remove",

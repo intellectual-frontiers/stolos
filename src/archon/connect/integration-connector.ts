@@ -20,6 +20,7 @@
  * @module
  */
 // Spec: 109-integrations-api FR-003, FR-004, FR-005, FR-006
+// Spec: 110-network-assets FR-008
 
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { PolicyResult } from "../adopt/policy.ts";
@@ -147,6 +148,7 @@ export function integrationConnector(def: IntegrationConnectorDef): Connector {
     logo: def.logo,
     serviceModels: def.serviceModels,
     ...(def.selfHosted ? { selfHosted: true } : {}),
+    integrationKinds: [...new Set(def.integrations.map((i) => i.kind))],
     markets: def.markets,
     connectHelp: def.connectHelp,
     recipe: def.recipe,
@@ -189,6 +191,7 @@ const keyOf = (r: ObservedRecord): string => `${r.label}\n${r.native_id}`;
 export function withIntegrations(base: Connector, ext: Extension): Connector {
   return {
     ...base,
+    integrationKinds: [...new Set(ext.integrations.map((i) => i.kind))],
     async observe(cred, t, now): Promise<Observation> {
       const shared = memoGets(t);
       const o = await base.observe(cred, shared, now);

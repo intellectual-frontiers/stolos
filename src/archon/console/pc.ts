@@ -14,6 +14,7 @@
 // Spec: 108-tags FR-014
 // Spec: 112-machine-reported-tags FR-011, FR-013, FR-014, FR-015
 // Spec: 115-compatibility FR-009, FR-010
+// Spec: 110-network-assets FR-002, FR-006, FR-008, FR-009
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -25,7 +26,14 @@ import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { PackRun } from "../controls/run.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
-import type { CompatStatus, MachineKind, WayOfJoining } from "../ontology.auto.ts";
+import type {
+  CompatStatus,
+  DeviceClass,
+  DeviceFacet,
+  MachineKind,
+  WayOfJoining,
+} from "../ontology.auto.ts";
+import type { NetworkView } from "../connect/network-view.ts";
 import { wayOfJoining } from "../adopt/joining.ts";
 import type { ClaimView, ResolvedTag, TaggingView } from "../fleet/tags.ts";
 
@@ -113,6 +121,31 @@ export interface PcMachine {
   claimsDropped?: number;
   /** Spec 115-compatibility FR-009: it against this PC's contract (a server, an adopted machine, the controller). */
   compat?: PcCompat;
+  /** Spec 110-network-assets FR-002, FR-009: a network asset (adopted through an integration): its class, where it came through, what the controller says. */
+  network?: {
+    class: DeviceClass;
+    facets: readonly DeviceFacet[];
+    via: string;
+    viaTitle: string;
+    account: string;
+    auto: boolean;
+    model: string;
+    mac: string;
+    presence: "present" | "gone" | "unread";
+    firmware?: string;
+    state?: string;
+    uplink?: string;
+    deviceId: string;
+  };
+  /** Spec 110-network-assets FR-006: the client of the router this machine matches (by MAC, or by address), as the API gives it. */
+  client?: {
+    by: "mac" | "address";
+    ip?: string;
+    uplink?: string;
+    guest?: boolean;
+    connectedAt?: string;
+    kind: string;
+  };
 }
 
 /** One cloud account, observed. */
@@ -167,6 +200,14 @@ export interface PcFacts {
     observed?: DeviceObserved;
     results: PolicyResult[];
   }>;
+  /**
+   * Spec 110-network-assets FR-008: the network, present only where a router-kind integration is connected (the Network page and its
+   * menu entry exist only then).
+   */
+  network?: {
+    view: NetworkView;
+    connectors: Array<{ id: string; title: string; account: string }>;
+  };
   /** The signers. */
   signers: Array<{ name: string; role: string; added: string; key: string }>;
   /** The repository: uncommitted files, commits servers would refuse, recent history. */
@@ -319,6 +360,63 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       failing: d.results.filter((r) => r.status === "fail").map((r) => r.title),
     });
   }
+  // Spec 110-network-assets: the devices a router's controller manages that the fleet adopted, and what the router says of the clients.
+  let network: PcFacts["network"];
+  try {
+    const { loadNetwork } = await import("../connect/network-commands.ts");
+    const { allConnectors } = await import("../connect/commands.ts");
+    const n = await loadNetwork();
+    const all = await allConnectors();
+    if (n.connected.length) {
+      network = {
+        view: n.view,
+        connectors: n.connected.map((id) => ({
+          id,
+          title: all.find((c) => c.id === id)?.title ?? id,
+          account: n.view.connectors.find((c) => c.id === id)?.account ?? "",
+        })),
+      };
+    }
+    for (const st of n.view.assets) {
+      const a = st.asset;
+      const title = all.find((c) => c.id === a.via)?.title ?? a.via;
+      const d = st.device;
+      const results = (await import("../connect/network-asset.ts")).assetPolicies(st);
+      machines.push({
+        name: a.name,
+        kind: "device",
+        joined: "integration",
+        os: d?.model ?? a.model,
+        where: d?.ip ?? "",
+        ...(a.owner ? { owner: a.owner } : {}),
+        ...(a.title ? { title: a.title } : {}),
+        ...(a.serial ? { serial: a.serial } : {}),
+        seen: n.view.connectors.find((c) => c.id === a.via)?.at ?? a.adopted,
+        score: { pass: results.filter((r) => r.status === "pass").length, total: results.length },
+        failing: results
+          .filter((r) => r.status === "fail" || r.status === "warn")
+          .map((r) => r.detail),
+        network: {
+          class: a.class,
+          facets: d?.facets ?? [],
+          via: a.via,
+          viaTitle: title,
+          account: a.account,
+          auto: a.auto === true,
+          model: d?.model ?? a.model,
+          mac: a.mac,
+          presence: st.presence,
+          ...(d ? { firmware: d.firmware, state: d.state } : {}),
+          ...(d?.uplink
+            ? { uplink: n.view.devices.find((r) => r.device.id === d.uplink)?.device.name ?? "" }
+            : {}),
+          deviceId: a.deviceId,
+        },
+      });
+    }
+  } catch (e) {
+    warn("the network")(e);
+  }
   const { loadDiscovered } = await import("../adopt/integrate.ts");
   for (const d of (await loadDiscovered().catch(warn("discovered.ts"))) ?? []) {
     machines.push({
@@ -455,6 +553,20 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   } catch (e) {
     warn("compatibility")(e);
   }
+  // Spec 110-network-assets FR-006: the client of the router that each machine matches, as the API gives it.
+  for (const [name, mt] of network?.view.matches ?? []) {
+    const m = machines.find((x) => x.name === name);
+    if (!m) continue;
+    const c = mt.client;
+    m.client = {
+      by: mt.by,
+      kind: c.kind,
+      ...(c.ip ? { ip: c.ip } : {}),
+      ...(mt.uplinkName ? { uplink: mt.uplinkName } : {}),
+      ...(c.guest !== undefined ? { guest: c.guest } : {}),
+      ...(c.connectedAt ? { connectedAt: c.connectedAt } : {}),
+    };
+  }
   const tagging = ft
     ? {
         ...taggingView(ft.set, ft.error, machines),
@@ -475,6 +587,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(pin ? { engine: pin.tag } : {}),
     },
     machines,
+    ...(network ? { network } : {}),
     ...(tagging ? { tagging } : {}),
     adopted,
     clouds,

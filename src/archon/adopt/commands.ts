@@ -9,6 +9,7 @@
 // Spec: 107-pairing-and-query FR-007, FR-010, FR-011
 // Spec: 108-tags FR-004, FR-008, FR-013
 // Spec: 112-machine-reported-tags FR-011
+// Spec: 110-network-assets FR-002, FR-006, FR-011
 
 import {
   array,
@@ -290,6 +291,13 @@ export async function hostCheck(name?: string, json = false): Promise<number> {
 
 /** `stolos host release <name>`: remove the probe and its key's line, then the model and the key. */
 export async function hostRelease(name: string): Promise<number> {
+  // Spec 110-network-assets FR-002: a network asset (adopted through an integration) is released as a host is: its record goes, on a
+  // person's explicit request, and nothing at the controller changes.
+  {
+    const { releaseNetworkAsset } = await import("../connect/network-commands.ts");
+    const done = await releaseNetworkAsset(name);
+    if (done !== undefined) return done;
+  }
   const a = (await loadAdopted()).find((x) => x.machine.name === name);
   const p = ui.phase("Release");
   if (!a) {
@@ -413,6 +421,20 @@ export async function queryTargets(sql: string): Promise<AskTarget[]> {
       },
     });
   }
+  // Spec 110-network-assets FR-011: a network asset has no osquery: it gets a row that says so, and nothing is sent to it.
+  try {
+    const { loadNetworkAssets } = await import("../connect/network-asset.ts");
+    for (const a of await loadNetworkAssets()) {
+      targets.push({
+        machine: a.name,
+        kind: "network",
+        skip: "no osquery on this device",
+        ask: () => Promise.resolve([]),
+      });
+    }
+  } catch {
+    // A fleet whose network assets do not load is told so by every other command: the machines are still asked.
+  }
   return targets;
 }
 
@@ -515,13 +537,13 @@ export async function fleetQuery(
     (a.rows ?? []).map((r) => ({ machine: a.machine, ...tagCell(a), ...r })),
   );
   if (rows.length) stdio.stdout.writeSync(`${table(rows)}\n`);
-  for (const a of answers.filter((x) => x.state !== "answered")) {
+  for (const a of answers.filter((x) => x.state !== "answered" && x.state !== "skipped")) {
     stdio.stderr.writeSync(
       `${a.machine}: ${a.state === "timed-out" ? "timed out: " : ""}${a.error}\n`,
     );
   }
   stdio.stdout.writeSync(`\n${answeredLine(answers)} · ${rows.length} row(s)\n`);
-  return answers.some((a) => a.state !== "answered") ? 1 : 0;
+  return answers.some((a) => a.state !== "answered" && a.state !== "skipped") ? 1 : 0;
 }
 
 /** `stolos discover`: machines seen on this PC's network or in the clouds, not yet in the fleet. */
@@ -737,6 +759,8 @@ export async function adoptCheckIn(
     ...compact({ until: (o.until ?? existing?.until) || undefined }),
     adopted: existing?.adopted ?? new Date().toISOString(),
     ...((j) => (j ? { joined: j } : {}))(o.joined ?? existing?.joined),
+    // Spec 110-network-assets FR-006: the MACs it checked in with, to match it to a client of the router.
+    ...((m) => (m?.length ? { macs: m } : {}))(ci.macs.length ? ci.macs : existing?.macs),
     ...(existing?.accepted ? { accepted: existing.accepted } : {}),
     ...((t) => (t?.length ? { tags: t } : {}))(o.tags?.length ? o.tags : existing?.tags),
     ...((t) => (t?.length ? { customTags: t } : {}))(

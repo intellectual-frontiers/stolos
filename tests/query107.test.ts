@@ -77,12 +77,12 @@ proves(
   () => {
     assertEquals(
       [...WAYS_OF_JOINING],
-      ["auto-adopted", "paired", "integrated", "managed", "cloud"],
+      ["auto-adopted", "paired", "integrated", "integration", "managed", "cloud"],
       "the ontology's order",
     );
     assertEquals(Object.keys(CODE_LISTS.WayOfJoining.list), [...WAYS_OF_JOINING]);
     assertEquals([...PAIRING_STAGES], ["hello", "installing", "waiting", "adopted", "refused"]);
-    assertEquals([...ANSWER_STATES], ["asking", "answered", "failed", "timed-out"]);
+    assertEquals([...ANSWER_STATES], ["asking", "answered", "failed", "skipped", "timed-out"]);
     for (const k of MACHINE_KINDS) {
       // Every kind is classified (the discovered one has joined nowhere yet).
       const w = wayOfJoining({ kind: k });

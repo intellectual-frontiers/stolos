@@ -6,6 +6,7 @@
  * @module
  */
 // Spec: 115-compatibility FR-013
+// Spec: 110-network-assets FR-004
 
 import { lf } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -57,6 +58,9 @@ export async function loadModel(): Promise<Model> {
   // Spec 108-tags FR-002: tags.ts is sound, and every tag a machine holds is defined in it.
   const { loadTagSet, tagProblems } = await import("./fleet/tags.ts");
   problems.push(...(await tagProblems()));
+  // Spec 110-network-assets FR-004: network.ts (the auto-adopt rules) loads and is sound, and every asset's record is one.
+  const { networkBuildProblems } = await import("./connect/network-asset.ts");
+  problems.push(...(await networkBuildProblems()));
   // Spec 115-compatibility FR-013: an engine hold is typed, has a reason and an end, and chooses machines by defined tags.
   const { engineHoldProblems } = await import("./fleet/engine-holds.ts");
   problems.push(...engineHoldProblems(fleet, hosts, (await loadTagSet()).set));

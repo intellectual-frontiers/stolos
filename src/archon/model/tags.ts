@@ -51,6 +51,7 @@
  */
 // Spec: 108-tags FR-001, FR-002, FR-004, FR-005, FR-009, FR-010, FR-011, FR-012
 // Spec: 112-machine-reported-tags FR-002, FR-003, FR-005, FR-011
+// Spec: 110-network-assets FR-010
 
 import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
 import {
@@ -58,6 +59,8 @@ import {
   TAG_COLOURS,
   type TagCardinality,
   TAG_TRUSTS,
+  type DeviceClass,
+  type DeviceFacet,
   type TagColour,
   type TagOrigin,
   type TagSource,
@@ -118,8 +121,11 @@ export type TagIdOf<D extends TagDimensions> = {
 export interface TagFacts {
   /** Its name in the fleet. */
   name: string;
-  /** What it is: a managed server or workstation, an adopted machine, or the controller PC. */
-  kind: "server" | "workstation" | "adopted" | "controller";
+  /**
+   * What it is: a managed server or workstation, an adopted machine, the controller PC, or (spec 110-network-assets) a device a router's
+   * controller manages and the fleet adopted through the integration.
+   */
+  kind: "server" | "workstation" | "adopted" | "controller" | "device";
   /** Its operating system family, lowercase (`linux`, `macos`, `windows`), when it was observed. */
   os?: string;
   /** Its operating system as the probe names it ("Ubuntu 26.04"), when observed. */
@@ -132,6 +138,27 @@ export interface TagFacts {
   owner?: string;
   /** How it joined the fleet. */
   joined?: WayOfJoining;
+  /** Spec 110-network-assets FR-010: what the integration says of a network asset, or of the machine a client matches. */
+  net?: NetworkFacts;
+}
+
+/**
+ * Spec 110-network-assets FR-010: what a rule may look at on the network. A network asset has all of it the integration gave; a
+ * machine a client matches (by MAC) has its `uplink` only.
+ */
+export interface NetworkFacts {
+  /** A network asset's class (`stolos:DeviceClass`). */
+  class?: DeviceClass;
+  /** Its facets (`stolos:DeviceFacet`). */
+  facets?: readonly DeviceFacet[];
+  /** Its model. */
+  model?: string;
+  /** The name of the device it is connected through (its uplink, or a client's device). */
+  uplink?: string;
+  /** The Wi-Fi networks (SSIDs) it broadcasts. */
+  ssids?: readonly string[];
+  /** The networks (VLANs), by name and by id, that the Wi-Fi networks it broadcasts carry: the API gives no VLAN to a client or a port. */
+  vlans?: readonly string[];
 }
 
 /** A rule: a defined tag a machine gets whenever `when` holds (pure and quick; it runs wherever tags are resolved). */
@@ -375,6 +402,40 @@ export const ownerIs =
   (...owners: string[]): ((m: TagFacts) => boolean) =>
   (m) =>
     m.owner !== undefined && owners.includes(m.owner);
+
+/** Spec 110-network-assets FR-010: a rule's condition: the machine is a network asset of one of these classes (`switch`, `access-point`, ...). */
+export const ofClass =
+  (...classes: DeviceClass[]): ((m: TagFacts) => boolean) =>
+  (m) =>
+    m.net?.class !== undefined && classes.includes(m.net.class);
+
+/** Spec 110-network-assets FR-010: a rule's condition: the machine is a network asset with this facet (`routing`, `wireless`, ...), of any vendor. */
+export const withFacet =
+  (facet: DeviceFacet): ((m: TagFacts) => boolean) =>
+  (m) =>
+    m.net?.facets?.includes(facet) === true;
+
+/**
+ * Spec 110-network-assets FR-010: a rule's condition: the machine is in this VLAN, by its name or its id at the controller. The official
+ * API gives a VLAN to a network and to a Wi-Fi network, and none to a client or a port: so a network asset is "in" the VLANs that the
+ * Wi-Fi networks it broadcasts carry, and nothing else is.
+ */
+export const inVlan =
+  (vlan: string): ((m: TagFacts) => boolean) =>
+  (m) =>
+    m.net?.vlans?.some((v) => v.toLowerCase() === vlan.toLowerCase()) === true;
+
+/** Spec 110-network-assets FR-010: a rule's condition: the machine broadcasts this Wi-Fi network (an SSID). */
+export const onSsid =
+  (ssid: string): ((m: TagFacts) => boolean) =>
+  (m) =>
+    m.net?.ssids?.includes(ssid) === true;
+
+/** Spec 110-network-assets FR-010: a rule's condition: the machine is connected through this network device (a switch or an access point, by name). */
+export const uplinkedTo =
+  (device: string): ((m: TagFacts) => boolean) =>
+  (m) =>
+    m.net?.uplink !== undefined && m.net.uplink.toLowerCase() === device.toLowerCase();
 
 /** A rule's condition: all of these hold. */
 export const allOf =

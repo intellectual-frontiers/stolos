@@ -14,6 +14,7 @@
 // Spec: 114-release-record FR-004
 // Spec: 115-compatibility FR-001
 // Spec: 116-kept-unaligned FR-001, FR-002, FR-003, FR-004, FR-005
+// Spec: 110-network-assets FR-001
 import {
   bases,
   Decision,
@@ -140,6 +141,10 @@ const MAPPED: Readonly<Record<string, string>> = {
   DnsRecord: "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSRecord",
   EmailDomain: "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName",
   EmailRoute: "http://d3fend.mitre.org/ontologies/d3fend.owl#EmailRule",
+  // Spec 110-network-assets: the class of a network device and the facets a feature asks for are code lists, which are concept schemes (W3C SKOS). Their codes follow the OCSF device
+  // object's types (Firewall, Switch, IOT, Other) and IEEE 802.1Q and 802.11, written in the code's own table (`network-class.ts`).
+  DeviceClass: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  DeviceFacet: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   // Spec 114-release-record: an engine release is the release of one work of commons' IFR (0026-works-versioning), the annotated tag `stolos-v<version>`; it is narrower, because it is the release of the one work `stolos`.
   EngineRelease: "https://www.intellectualfrontiers.com/ontology/ifr#Release",
 };

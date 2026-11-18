@@ -15,12 +15,14 @@
 // Spec: 108-tags FR-013, FR-014, FR-015
 // Spec: 112-machine-reported-tags FR-013, FR-014, FR-015
 // Spec: 115-compatibility FR-009
+// Spec: 110-network-assets FR-002, FR-008, FR-009
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
 import type { Command } from "../core/registry-types.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observed } from "../adopt/adopt.ts";
+import { assetPolicies as assetResults } from "../connect/network-asset.ts";
 import { type Html, html, text } from "./html.ts";
 import { diagram, type NavItem } from "./layout.ts";
 import { tableMarkup, tableScript } from "./table.ts";
@@ -31,6 +33,7 @@ import {
   WAYS_OF_JOINING,
 } from "../adopt/joining.ts";
 import { logo, logoFor } from "./logos.ts";
+import { classBadge, integrationPill, openInUnifi } from "./network-page.ts";
 import { GUIDES } from "../core/guides.ts";
 import { originWords, tagRecord } from "../fleet/tags.ts";
 import type { TaggingView } from "../fleet/tags.ts";
@@ -194,6 +197,9 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "host check",
       "host accept",
       "host release",
+      "network discover",
+      "network adopt",
+      "network status",
       "device add",
       "device observe",
       "device check",
@@ -343,6 +349,23 @@ export function stolosGroupOf(name: string): StolosGroup {
   return STOLOS_GROUPS.find((g) => g.names.includes(name)) ?? FIRST_STOLOS_GROUP;
 }
 
+/** Spec 110-network-assets FR-006: what the router's API says of the client this machine is (its address, its device, whether a guest, when it connected). */
+function clientCard(x: PcMachine): Html {
+  const c = x.client;
+  if (!c) return html``;
+  return html`<div class="card" id="on-the-network" style="margin-bottom:14px">
+    <h2>On the network</h2>
+    <p>
+      Seen by the router as a ${c.kind}
+      client${c.ip ? ` at ${c.ip}` : ""}${c.uplink ? `, connected through ${c.uplink}` : ""}${c.guest ? " (a guest)" : ""}${c.connectedAt ? `, since ${c.connectedAt}` : ""}.
+    </p>
+    <p class="sub">
+      Matched ${c.by === "mac" ? "by MAC address" : "by address (it has recorded no MAC)"}. The API
+      gives no port, VLAN or Wi-Fi network for a client.
+    </p>
+  </div>`;
+}
+
 /** Spec 115-compatibility FR-009: a machine's contract with this PC, as a pill (its words are the title). */
 const contractPill = (x: PcMachine): Html =>
   !x.compat
@@ -433,15 +456,17 @@ const kindPill = (k: PcMachine["kind"]) =>
   >`;
 
 /** How a machine joined, as a pill; the controller's says so in full. */
-const joinedPill = (x: Pick<PcMachine, "joined" | "controller">) =>
-  x.joined === undefined
-    ? html`<span class="sub">not joined yet</span>`
-    : x.controller
-      ? html`<span class="pill tier">${CONTROLLER_BADGE}</span>`
-      : html`<span
-          class="pill ${x.joined === "managed" ? "ok" : x.joined === "cloud" ? "off" : "tier"}"
-          >${JOINED_LABEL[x.joined]}</span
-        >`;
+const joinedPill = (x: Pick<PcMachine, "joined" | "controller" | "network">) =>
+  x.joined === "integration" && x.network
+    ? integrationPill(x)
+    : x.joined === undefined
+      ? html`<span class="sub">not joined yet</span>`
+      : x.controller
+        ? html`<span class="pill tier">${CONTROLLER_BADGE}</span>`
+        : html`<span
+            class="pill ${x.joined === "managed" ? "ok" : x.joined === "cloud" ? "off" : "tier"}"
+            >${JOINED_LABEL[x.joined]}</span
+          >`;
 
 const score = (x?: { pass: number; total: number }) =>
   !x
@@ -547,6 +572,32 @@ export function stolosOverview(
         <div class="v">${by("adopted")} machine(s)</div>
         <div class="sub">observed and checked, never changed</div>
       </div>
+      ${
+        f.network
+          ? html`<div class="card" id="network-group">
+              <div class="k"><a href="/network">Network</a></div>
+              <div class="v">
+                ${f.network.view.assets.length}
+                asset(s)${
+                  f.network.view.counts.filter((c) => c.adopted).length
+                    ? ` (${f.network.view.counts
+                        .filter((c) => c.adopted)
+                        .map((c) => `${c.adopted} ${c.class.replace("-", " ")}`)
+                        .join(", ")})`
+                    : ""
+                }
+              </div>
+              <div class="sub">
+                ${f.network.view.discovered.length} discovered, not
+                adopted${
+                  f.network.view.gone.length
+                    ? `; ${f.network.view.gone.length} gone from the integration`
+                    : ""
+                }
+              </div>
+            </div>`
+          : ""
+      }
       <div class="card">
         <div class="k">Clouds</div>
         <div class="v">
@@ -823,7 +874,7 @@ function changeCard(x: PcMachine, f: PcFacts, now: number): Html {
 function machineRow(x: PcMachine, now: number): Html {
   const text = `${x.name} ${x.title ?? ""} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${
     x.where ?? ""
-  } ${x.joined ? JOINED_LABEL[x.joined] : ""} ${x.controller ? "controller" : ""} ${x.failing.join(" ")} ${tagIds(x.tags)}`
+  } ${x.joined ? JOINED_LABEL[x.joined] : ""} ${x.network ? `${x.network.class} ${x.network.viaTitle}` : ""} ${x.controller ? "controller" : ""} ${x.failing.join(" ")} ${tagIds(x.tags)}`
     .toLowerCase()
     .replace(/[^a-z0-9 .:-]/g, " ");
   // Spec 108-tags FR-014: the tag filter (a tag chosen in the facets above the table).
@@ -835,7 +886,15 @@ function machineRow(x: PcMachine, now: number): Html {
       </td>
       <td data-joined="${x.joined ?? "none"}">${joinedPill(x)}</td>
       <td>${kindPill(x.kind)}</td>
-      <td>${x.os ? html`${logo(osLogo(x.os), 14)} ${x.os}` : ""}</td>
+      <td>
+        ${
+          x.network
+            ? html`${classBadge(x.network.class)} <span class="sub">${x.os ?? ""}</span>`
+            : x.os
+              ? html`${logo(osLogo(x.os), 14)} ${x.os}`
+              : ""
+        }
+      </td>
       <td class="mono">${x.where ?? ""}</td>
       <td>${x.owner ?? ""}</td>
       <td>${tagChips(x.tags)}</td>
@@ -979,7 +1038,11 @@ export function machinesPage(f: PcFacts, now = Date.now(), opts: { group?: strin
 function tagsCard(f: PcFacts, x: PcMachine): Html {
   const defined = (x.tags ?? []).filter((t) => t.standing !== "custom");
   const custom = (x.tags ?? []).filter((t) => t.standing === "custom");
-  const can = x.kind === "server" || x.kind === "workstation" || x.kind === "adopted";
+  const can =
+    x.kind === "server" ||
+    x.kind === "workstation" ||
+    x.kind === "adopted" ||
+    x.network !== undefined;
   return html`<div class="card" id="tags" style="margin-bottom:14px">
     <h2>Tags</h2>
     ${
@@ -1161,6 +1224,51 @@ function deviceBlock(f: PcFacts, name: string): Html {
   `;
 }
 
+/** Spec 110-network-assets FR-005, FR-006: a network asset's facts as the controller last said them, its checks, and the warning when it is gone. */
+function networkAssetBlock(f: PcFacts, x: PcMachine): Html {
+  const n = x.network;
+  if (!n) return html``;
+  const st = f.network?.view.assets.find((a) => a.asset.name === x.name);
+  const results = st ? assetResults(st) : [];
+  const row = (k: string, v: string | undefined) =>
+    v === undefined || v === ""
+      ? ""
+      : html`<tr>
+          <td class="sub">${k}</td>
+          <td>${v}</td>
+        </tr>`;
+  return html` ${
+      n.presence === "gone"
+        ? html`<div class="notice bad" id="gone">
+            <b>Gone from the integration:</b> ${n.viaTitle} no longer reports it. It is not removed
+            for you: observe again (<span class="mono">stolos estate observe ${n.via}</span>) or
+            release it.
+          </div>`
+        : ""
+    }
+    <div class="grid cols-2">
+      <div class="card scroll">
+        <h2>Policies</h2>
+        ${policyTable(results)}
+      </div>
+      <div class="card scroll">
+        <h2>What ${n.viaTitle} says</h2>
+        <table>
+          <tbody>
+            ${row("Class", n.class)}${row("Facets", n.facets.join(", "))}${row("Model", n.model)}${row("MAC", n.mac)}
+            ${row("Address", x.where)}${row("State", n.state)}${row("Firmware", n.firmware)}${row("Connected through", n.uplink)}
+            ${row("Account", n.account)}
+          </tbody>
+        </table>
+        <p class="sub">
+          Every observation is a commit:
+          <span class="mono">git log -p fleets/${f.fleet.id}/estate/${n.via}.ts</span>.
+          <a href="/network">The Network page</a>.
+        </p>
+      </div>
+    </div>`;
+}
+
 /** One machine's page. */
 export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | undefined {
   const x = f.machines.find((y) => y.name === name);
@@ -1171,7 +1279,7 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
     <div class="pagehead">
       <div>
         <div class="crumb"><a href="/machines">Machines</a></div>
-        <h1>${x.name} ${kindPill(x.kind)}</h1>
+        <h1>${x.name} ${kindPill(x.kind)} ${x.network ? integrationPill(x) : ""}</h1>
         <p>
           ${
             x.controller
@@ -1182,14 +1290,16 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
                   }: Stolos observes and checks it, and never changes it. Observed ${ago(x.seen, now)}.`
                 : x.kind === "cloud"
                   ? `Seen in ${x.where}; not managed or adopted.`
-                  : x.kind === "device"
-                    ? `A device Stolos reads over encrypted SNMPv3 (read only). Observed ${ago(x.seen, now)}.`
-                    : x.kind === "discovered"
-                      ? `Discovered ${ago(x.seen, now)}: recorded, not yet adopted or managed.`
-                      : `Managed by Stolos: its description is fleets/${f.fleet.id}/hosts/${x.name}.ts. Installed ${ago(
-                          x.seen,
-                          now,
-                        )}.`
+                  : x.kind === "device" && x.network
+                    ? `A ${x.network.class.replace("-", " ")} that ${x.network.viaTitle} manages, adopted through the integration (${x.network.account}): Stolos reads it and never changes it. Last observed ${ago(x.seen, now)}.`
+                    : x.kind === "device"
+                      ? `A device Stolos reads over encrypted SNMPv3 (read only). Observed ${ago(x.seen, now)}.`
+                      : x.kind === "discovered"
+                        ? `Discovered ${ago(x.seen, now)}: recorded, not yet adopted or managed.`
+                        : `Managed by Stolos: its description is fleets/${f.fleet.id}/hosts/${x.name}.ts. Installed ${ago(
+                            x.seen,
+                            now,
+                          )}.`
           }
         </p>
       </div>
@@ -1221,20 +1331,33 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
                     >`
               }
             </div>`
-          : x.kind === "device"
-            ? html`<a class="btn" href="/actions/adopted?cmd=device%20observe&name=${q}"
-                >Observe now</a
-              >`
-            : x.kind === "discovered" || x.kind === "cloud"
-              ? html`<a class="btn" href="/add?name=${q}">Adopt it</a>`
-              : x.console
-                ? html`<a class="btn" href="${x.console}" target="_blank" rel="noopener"
-                    >Open its Archon Console</a
-                  >`
-                : ""
+          : x.kind === "device" && x.network
+            ? html`<div class="row">
+                <a
+                  class="btn"
+                  href="${openInUnifi(x.network.account, x.network.mac)}"
+                  target="_blank"
+                  rel="noopener"
+                  >Open in UniFi</a
+                >
+                <a class="btn ghost" href="/actions/adopted?cmd=host%20release&name=${q}"
+                  >Release</a
+                >
+              </div>`
+            : x.kind === "device"
+              ? html`<a class="btn" href="/actions/adopted?cmd=device%20observe&name=${q}"
+                  >Observe now</a
+                >`
+              : x.kind === "discovered" || x.kind === "cloud"
+                ? html`<a class="btn" href="/add?name=${q}">Adopt it</a>`
+                : x.console
+                  ? html`<a class="btn" href="${x.console}" target="_blank" rel="noopener"
+                      >Open its Archon Console</a
+                    >`
+                  : ""
       }
     </div>
-    ${tagsCard(f, x)} ${contractCard(x)}
+    ${tagsCard(f, x)} ${clientCard(x)} ${contractCard(x)}
     ${
       x.says?.length || x.reportedAt
         ? claimsPanel(x.name, x.says ?? [], x.disagreements ?? [], {
@@ -1277,58 +1400,60 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
               </p>
             </div>
           `
-        : x.kind === "device"
-          ? deviceBlock(f, x.name)
-          : x.kind === "cloud" || x.kind === "discovered"
-            ? html`
-                <div class="card">
-                  <p>
-                    If the fleet is responsible for it, adopt it: Stolos will observe and check it,
-                    and never change it. <a href="/add?name=${q}">Add a machine</a> gives the one
-                    line to run on it.
-                  </p>
-                  ${x.serial ? html`<p class="sub">Serial ${x.serial}</p>` : ""}
-                </div>
-              `
-            : html`
-                ${changeCard(x, f, now)}
-                <div class="grid cols-2" style="margin-top:14px">
+        : x.kind === "device" && x.network
+          ? networkAssetBlock(f, x)
+          : x.kind === "device"
+            ? deviceBlock(f, x.name)
+            : x.kind === "cloud" || x.kind === "discovered"
+              ? html`
                   <div class="card">
-                    <h2>Checks</h2>
-                    <div class="v">${x.notAsked ? checksCell(x) : score(x.score)}</div>
-                    ${
-                      x.attention?.length
-                        ? attentionList(x.attention)
-                        : x.failing.length
-                          ? html`<ul>
-                              ${x.failing.map((y) => html`<li class="mono">${y}</li>`)}
-                            </ul>`
-                          : x.score
-                            ? html`<p class="sub">Nothing failing at its last verify.</p>`
-                            : html`<p class="sub">
-                                Not verified yet: this PC has no record of a verify from it.
-                              </p>`
-                    }
-                    <a class="btn ghost" href="/actions/fleet?cmd=fleet%20status"
-                      >Ask every server now</a
-                    >
-                  </div>
-                  <div class="card">
-                    <h2>Ask every machine</h2>
-                    <p class="sub">
-                      One SQL question, through osquery, to this server and every other (each over
-                      its MCP server):
+                    <p>
+                      If the fleet is responsible for it, adopt it: Stolos will observe and check
+                      it, and never change it. <a href="/add?name=${q}">Add a machine</a> gives the
+                      one line to run on it.
                     </p>
-                    <a
-                      class="btn ghost"
-                      href="/query?sql=${encodeURIComponent(
-                        "select name, version from os_version",
-                      )}"
-                      >What OS is every machine on?</a
-                    >
+                    ${x.serial ? html`<p class="sub">Serial ${x.serial}</p>` : ""}
                   </div>
-                </div>
-              `
+                `
+              : html`
+                  ${changeCard(x, f, now)}
+                  <div class="grid cols-2" style="margin-top:14px">
+                    <div class="card">
+                      <h2>Checks</h2>
+                      <div class="v">${x.notAsked ? checksCell(x) : score(x.score)}</div>
+                      ${
+                        x.attention?.length
+                          ? attentionList(x.attention)
+                          : x.failing.length
+                            ? html`<ul>
+                                ${x.failing.map((y) => html`<li class="mono">${y}</li>`)}
+                              </ul>`
+                            : x.score
+                              ? html`<p class="sub">Nothing failing at its last verify.</p>`
+                              : html`<p class="sub">
+                                  Not verified yet: this PC has no record of a verify from it.
+                                </p>`
+                      }
+                      <a class="btn ghost" href="/actions/fleet?cmd=fleet%20status"
+                        >Ask every server now</a
+                      >
+                    </div>
+                    <div class="card">
+                      <h2>Ask every machine</h2>
+                      <p class="sub">
+                        One SQL question, through osquery, to this server and every other (each over
+                        its MCP server):
+                      </p>
+                      <a
+                        class="btn ghost"
+                        href="/query?sql=${encodeURIComponent(
+                          "select name, version from os_version",
+                        )}"
+                        >What OS is every machine on?</a
+                      >
+                    </div>
+                  </div>
+                `
     }
   `;
 }
@@ -1723,6 +1848,8 @@ export function machinesCsv(f: PcFacts): string {
     "tag_origins",
     "engine",
     "contract",
+    "network_class",
+    "via",
   ];
   const rows = f.machines.map((x) =>
     [
@@ -1751,6 +1878,8 @@ export function machinesCsv(f: PcFacts): string {
       // Spec 115-compatibility FR-009: the engine it reported and whether it and this PC understand each other.
       x.compat?.engine,
       x.compat?.status,
+      x.network?.class,
+      x.network?.via,
     ]
       .map(cell)
       .join(","),

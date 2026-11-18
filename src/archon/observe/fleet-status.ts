@@ -11,6 +11,7 @@
 // Spec: 108-tags FR-015
 // Spec: 112-machine-reported-tags FR-010, FR-013
 // Spec: 115-compatibility FR-006, FR-008, FR-009, FR-012
+// Spec: 110-network-assets FR-006, FR-009
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";
@@ -71,6 +72,13 @@ export async function fleetStatus(): Promise<number> {
     return t.length ? `tags ${tagLine(t)}` : "";
   };
   await showController(tagsOf);
+  // Spec 110-network-assets FR-009: the Network group (assets by class, discovered, gone from the integration).
+  try {
+    const { showNetworkGroup } = await import("../connect/network-commands.ts");
+    await showNetworkGroup();
+  } catch {
+    // The network group is a courtesy: a fleet whose router cannot be read still shows its hosts.
+  }
   if (!hosts.length) {
     ui.next.push("no hosts yet: bun run stolos host add <name> (or workstation add, in WSL)");
     return 0;
@@ -80,6 +88,9 @@ export async function fleetStatus(): Promise<number> {
   const live = new Map<string, { ok: boolean; why?: string }>();
   const answered = new Set<string>();
   // Spec 047: each server's key is checked against Git (registration.ts).
+  const netMatches = await import("../connect/network-commands.ts")
+    .then(async (m) => (await m.loadNetwork()).view.matches)
+    .catch(() => undefined);
   const { writeKnownHosts } = await import("../fleet/registration.ts");
   const knownHosts = await writeKnownHosts().catch((e) => {
     // Without it, ssh checks the servers against your own known_hosts only.
@@ -173,6 +184,13 @@ export async function fleetStatus(): Promise<number> {
     if (inv) p.note(`machine: ${describeInventory(inv)}`);
     // Spec 112-machine-reported-tags FR-013: where the machine says another value than the fleet (the fleet wins; this is the finding).
     const me = ft?.machines.find((m) => m.name === h.name);
+    // Spec 110-network-assets FR-006: what the router's API says of this server as a client (matched by MAC, else by address).
+    const onNet = netMatches?.get(h.name);
+    if (onNet) {
+      p.note(
+        `on the network: ${onNet.client.ip ?? "?"}${onNet.uplinkName ? ` through ${onNet.uplinkName}` : ""}${onNet.client.guest ? " (guest)" : ""}${onNet.client.connectedAt ? `, since ${onNet.client.connectedAt}` : ""}`,
+      );
+    }
     for (const d of me?.resolved.disagreements ?? []) {
       p.warn(
         d.text,

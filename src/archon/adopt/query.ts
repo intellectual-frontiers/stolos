@@ -27,6 +27,7 @@
  */
 // Spec: 107-pairing-and-query FR-010, FR-011
 // Spec: 108-tags FR-013
+// Spec: 110-network-assets FR-011
 
 import type { AnswerState } from "../ontology.auto.ts";
 import type { ResolvedTag, Selection } from "../model/tags.ts";
@@ -51,8 +52,8 @@ export type QueryTag = Pick<ResolvedTag, "id" | "standing" | "origin"> & {
 export interface QueryAnswer {
   /** The machine. */
   machine: string;
-  /** managed or adopted (the controller is an adopted machine). */
-  kind: "managed" | "adopted";
+  /** managed or adopted (the controller is an adopted machine), or a network asset (spec 110-network-assets: read through an integration). */
+  kind: "managed" | "adopted" | "network";
   /** Where it is (`stolos:AnswerState`): answered, failed, or timed out (asking, before its answer comes). */
   state: AnswerState;
   /** Its rows, when it answered. */
@@ -69,8 +70,13 @@ export interface QueryAnswer {
 export interface AskTarget {
   /** The machine. */
   machine: string;
-  /** managed or adopted. */
-  kind: "managed" | "adopted";
+  /** managed or adopted, or a network asset. */
+  kind: "managed" | "adopted" | "network";
+  /**
+   * Spec 110-network-assets FR-011: why it cannot be asked and is not (`no osquery on this device`): its row is `skipped`, nothing is
+   * sent to it, and that is no failure.
+   */
+  skip?: string;
   /** Ask it: its rows, or a thrown error whose message is the reason. `limitMs` is the time it has. */
   ask: (signal: AbortSignal, limitMs: number) => Promise<Array<Record<string, unknown>>>;
 }
@@ -108,6 +114,10 @@ async function askOne(t: AskTarget, limitMs: number): Promise<QueryAnswer> {
     ...o,
     ms: Date.now() - began,
   });
+  if (t.skip !== undefined) {
+    clearTimeout(timer);
+    return done({ state: "skipped", error: t.skip });
+  }
   try {
     const r = await Promise.race([t.ask(ctl.signal, limitMs), late]);
     if (r === "late") {
@@ -158,9 +168,16 @@ export async function askAll(
   return answers.sort((a, b) => a.machine.localeCompare(b.machine));
 }
 
-/** "N of M answered": the count a table's line says (a machine that failed or timed out has not answered). */
-export function answeredLine(answers: readonly QueryAnswer[], total = answers.length): string {
-  return `${answers.filter((a) => a.state === "answered").length} of ${total} answered`;
+/**
+ * "N of M answered": the count a table's line says (a machine that failed or timed out has not answered). A machine that was skipped
+ * (spec 110-network-assets FR-011: a network asset has no osquery) is not asked, so it is in neither count; the line says how many.
+ */
+export function answeredLine(
+  answers: readonly QueryAnswer[],
+  total = answers.filter((a) => a.state !== "skipped").length,
+): string {
+  const skipped = answers.filter((a) => a.state === "skipped").length;
+  return `${answers.filter((a) => a.state === "answered").length} of ${total} answered${skipped ? ` (${skipped} skipped: no osquery on this device)` : ""}`;
 }
 
 /** The rows of a table for answers: a row for each result row, and one for each machine without rows (its state and reason). */

@@ -91,6 +91,16 @@ stolos:Device a owl:Class ;
     skos:definition "A printer, router, switch or other appliance, read over SNMP."@en ;
     stolos:spec "069-integrate FR-005" .
 
+stolos:DeviceClass a owl:Class ;
+    rdfs:label "Device class"@en ;
+    skos:definition "What a network device is, whatever its vendor: a gateway, a switch, an access point, a camera, a recorder, a door controller, a phone, or other (a model nobody classified)."@en ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:DeviceFacet a owl:Class ;
+    rdfs:label "Device facet"@en ;
+    skos:definition "One thing a device does (routing, switching, wireless, surveillance, access control): a feature asks for a facet and gets the devices of any vendor that have it; one device may have several."@en ;
+    stolos:spec "110-network-assets FR-001" .
+
 stolos:DevicePath a owl:Class ;
     rdfs:label "Device path"@en ;
     skos:definition "A URL path prefix under `/device/`, the namespace reserved for device-specific endpoints on the controller's listeners; pairing is the first."@en ;
@@ -357,8 +367,9 @@ stolos:Vlan a owl:Class ;
 
 stolos:WayOfJoining a owl:Class ;
     rdfs:label "Way of joining"@en ;
-    skos:definition "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, managed, or cloud."@en ;
-    stolos:spec "107-pairing-and-query FR-007" .
+    skos:definition "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, adopted through an integration, managed, or cloud."@en ;
+    stolos:spec "107-pairing-and-query FR-007",
+        "110-network-assets FR-002" .
 
 stolos:WifiNetwork a owl:Class ;
     rdfs:label "Wi-Fi network"@en ;
@@ -382,6 +393,12 @@ stolos:answer-failed a stolos:AnswerState ;
     skos:definition "The machine could not be asked, or refused, with its reason."@en ;
     skos:notation "failed" ;
     stolos:spec "107-pairing-and-query FR-011" .
+
+stolos:answer-skipped a stolos:AnswerState ;
+    rdfs:label "skipped"@en ;
+    skos:definition "The machine cannot be asked, and that is no error: a network device read through an integration has no osquery. The row says why."@en ;
+    skos:notation "skipped" ;
+    stolos:spec "110-network-assets FR-011" .
 
 stolos:answer-timed-out a stolos:AnswerState ;
     rdfs:label "timed out"@en ;
@@ -606,6 +623,84 @@ stolos:data-ephemeral a stolos:DataClass ;
     skos:notation "ephemeral" ;
     stolos:spec "044-durable FR-001" .
 
+stolos:device-class-access-point a stolos:DeviceClass ;
+    rdfs:label "access point"@en ;
+    skos:definition "A wireless access point: it advertises Wi-Fi networks (IEEE 802.11)."@en ;
+    skos:notation "access-point" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-camera a stolos:DeviceClass ;
+    rdfs:label "camera"@en ;
+    skos:definition "A video camera."@en ;
+    skos:notation "camera" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-door-controller a stolos:DeviceClass ;
+    rdfs:label "door controller"@en ;
+    skos:definition "A door or access controller: it decides who may open a door."@en ;
+    skos:notation "door-controller" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-gateway a stolos:DeviceClass ;
+    rdfs:label "gateway"@en ;
+    skos:definition "A router or security gateway: it routes between networks and the internet."@en ;
+    skos:notation "gateway" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-other a stolos:DeviceClass ;
+    rdfs:label "other"@en ;
+    skos:definition "A network device whose model nobody classified: never guessed."@en ;
+    skos:notation "other" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-phone a stolos:DeviceClass ;
+    rdfs:label "phone"@en ;
+    skos:definition "A desk or VoIP phone."@en ;
+    skos:notation "phone" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-recorder a stolos:DeviceClass ;
+    rdfs:label "recorder"@en ;
+    skos:definition "A network video recorder: it stores what cameras record."@en ;
+    skos:notation "recorder" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-class-switch a stolos:DeviceClass ;
+    rdfs:label "switch"@en ;
+    skos:definition "A switch: it forwards frames between wired ports (IEEE 802.1Q)."@en ;
+    skos:notation "switch" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-facet-access-control a stolos:DeviceFacet ;
+    rdfs:label "access control"@en ;
+    skos:definition "It controls who may open a door."@en ;
+    skos:notation "access-control" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-facet-routing a stolos:DeviceFacet ;
+    rdfs:label "routing"@en ;
+    skos:definition "It routes between networks."@en ;
+    skos:notation "routing" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-facet-surveillance a stolos:DeviceFacet ;
+    rdfs:label "surveillance"@en ;
+    skos:definition "It captures or stores video."@en ;
+    skos:notation "surveillance" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-facet-switching a stolos:DeviceFacet ;
+    rdfs:label "switching"@en ;
+    skos:definition "It switches frames between wired ports."@en ;
+    skos:notation "switching" ;
+    stolos:spec "110-network-assets FR-001" .
+
+stolos:device-facet-wireless a stolos:DeviceFacet ;
+    rdfs:label "wireless"@en ;
+    skos:definition "It broadcasts Wi-Fi networks."@en ;
+    skos:notation "wireless" ;
+    stolos:spec "110-network-assets FR-001" .
+
 stolos:devicepath-pair a stolos:DevicePath ;
     rdfs:label "pair"@en ;
     skos:definition "Pairing: the scripts, the hello and the check-in of a machine joining the fleet. `/device/` is reserved for device-specific endpoints; pairing is the first."@en ;
@@ -697,6 +792,13 @@ stolos:joined-integrated a stolos:WayOfJoining ;
     skos:notation "integrated" ;
     stolos:spec "069-integrate",
         "107-pairing-and-query FR-007" .
+
+stolos:joined-integration a stolos:WayOfJoining ;
+    rdfs:label "integration"@en ;
+    skos:definition "Adopted through an integration: a device an account's controller manages (UniFi Network), recorded by `stolos network adopt` with no SSH and no probe. A device a fleet rule adopted is the same way, with the flag `auto`."@en ;
+    skos:notation "integration" ;
+    stolos:spec "110-network-assets FR-002",
+        "110-network-assets FR-003" .
 
 stolos:joined-managed a stolos:WayOfJoining ;
     rdfs:label "managed"@en ;
@@ -1763,6 +1865,22 @@ mzid:term-stolos-Device a mz:OntologyTerm ;
     mz:definedBy "101-ladder" ;
     mz:justification "No standard adopted yet. Candidates to examine: OCSF device object, NIST SP 800-53 CM-8. Kept unaligned by the owner's decision of 2026-11-17 (stolos issue #37); reviewed again by 2027-02-15." ;
     mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#Device" .
+
+mzid:term-stolos-DeviceClass a mz:OntologyTerm ;
+    rdfs:label "stolos:DeviceClass"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "closeMatch" ;
+    mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#DeviceClass" .
+
+mzid:term-stolos-DeviceFacet a mz:OntologyTerm ;
+    rdfs:label "stolos:DeviceFacet"@en ;
+    mz:basis mz:Maps ;
+    mz:definedBy "101-ladder" ;
+    mz:mappingRelation "closeMatch" ;
+    mz:standardTerm "http://www.w3.org/2004/02/skos/core#ConceptScheme" ;
+    mz:termIri "https://intellectual-frontiers.github.io/stolos/ontology#DeviceFacet" .
 
 mzid:term-stolos-DevicePath a mz:OntologyTerm ;
     rdfs:label "stolos:DevicePath"@en ;

@@ -31,6 +31,7 @@
 // Spec: 103-three-ports FR-003, FR-004, FR-005
 // Spec: 107-pairing-and-query FR-008, FR-011, FR-012
 // Spec: 108-tags FR-013, FR-014
+// Spec: 110-network-assets FR-008
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { type Askpass, type Question, sameToken } from "./askpass.ts";
@@ -48,6 +49,7 @@ import { formText, type Html, html, raw } from "./html.ts";
 import { ui } from "../core/ui.ts";
 import { DEVICE_PAIR_PATH } from "../ontology.auto.ts";
 import { bare, page } from "./layout.ts";
+import { networkDevicePage, networkPage, withNetworkNav } from "./network-page.ts";
 import {
   actionsView,
   activityBetween,
@@ -403,8 +405,11 @@ export function stolosHandler(
               },
           // Spec 082: a provider's client's pages lead back to the list of clients (also on a phone).
           nav: deps.scope
-            ? [...STOLOS_NAV, { group: "Provider", label: "All clients", href: deps.scope.href }]
-            : STOLOS_NAV,
+            ? [
+                ...withNetworkNav(STOLOS_NAV, facts),
+                { group: "Provider", label: "All clients", href: deps.scope.href },
+              ]
+            : withNetworkNav(STOLOS_NAV, facts),
           current,
           ...(deps.scope ? { scope: deps.scope } : {}),
         },
@@ -572,7 +577,8 @@ export function stolosHandler(
         const answers = await ask(sql, {
           ...(chosen.selection ? { selection: chosen.selection } : {}),
           onStart: (ms) => {
-            total = ms.length;
+            // Spec 110-network-assets FR-011: a network asset is not asked (it has no osquery): it is in no count.
+            total = ms.filter((m) => m.kind !== "network").length;
             feed({
               op: "add",
               rows: ms.map((m) => ({
@@ -601,7 +607,9 @@ export function stolosHandler(
             state(`Asking every machine ... (${got.length} of ${total} came back)`);
           },
         });
-        const failed = answers.filter((a) => a.state !== "answered").length;
+        const failed = answers.filter(
+          (a) => a.state !== "answered" && a.state !== "skipped",
+        ).length;
         summary(
           `${answeredLine(answers)}${failed ? `: ${failed} failed or did not answer in time, each with its reason in its row` : ""}`,
         );
@@ -897,6 +905,21 @@ export function stolosHandler(
         return body
           ? await frame(s, decodeURIComponent(path.slice(10)), "/machines", body, f)
           : new Response("no such machine\n", { status: 404 });
+      }
+      // Spec 110-network-assets FR-008: the Network page exists only where a router-kind integration is connected.
+      if (path === "/network" || path.startsWith("/network/devices/")) {
+        if (!f.network) return new Response("no router is connected\n", { status: 404 });
+        if (path === "/network") return await frame(s, "Network", "/network", networkPage(f), f);
+        let id = "";
+        try {
+          id = decodeURIComponent(path.slice("/network/devices/".length));
+        } catch {
+          return new Response("no such device\n", { status: 404 });
+        }
+        const body = networkDevicePage(f, id);
+        return body
+          ? await frame(s, "Network device", "/network", body, f)
+          : new Response("no such device\n", { status: 404 });
       }
       if (path === "/export/machines.csv") {
         return new Response(machinesCsv(f), {

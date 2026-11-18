@@ -9,7 +9,7 @@ export const release = {
       name: "Intellectual Frontiers",
     },
   ],
-  version: "0.155.0",
+  version: "0.156.0",
   repository: "https://github.com/intellectual-frontiers/stolos",
   exclude: ["out", "test-results"],
 };

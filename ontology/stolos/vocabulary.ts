@@ -118,6 +118,9 @@ export const stolos = vocabulary(STOLOS, {
   CompatStatus: "owl:Class",
   ApiKind: "owl:Class",
   ApiCapability: "owl:Class",
+  // Spec 110-network-assets: the class of a network device and the facets a feature may ask for.
+  DeviceClass: "owl:Class",
+  DeviceFacet: "owl:Class",
   // Properties.
   spec: "owl:DatatypeProperty",
   emoji: "owl:DatatypeProperty",
@@ -234,6 +237,11 @@ export const CompatStatusSchema = classSchema(stolos.CompatStatus, CODE);
 export const ApiKindSchema = classSchema(stolos.ApiKind, CODE);
 /** The schema of a capability of an integration (spec 109-integrations-api): one thing an integration of a kind may read, written `<kind>-<capability>`. */
 export const ApiCapabilitySchema = classSchema(stolos.ApiCapability, CODE);
+
+/** The schema of a device class (spec 110-network-assets): what a network device is (a gateway, a switch, an access point, a camera, ...). */
+export const DeviceClassSchema = classSchema(stolos.DeviceClass, CODE);
+/** The schema of a device facet (spec 110-network-assets): one thing a device does, so that a feature asks for a facet and gets devices of any vendor. */
+export const DeviceFacetSchema = classSchema(stolos.DeviceFacet, CODE);
 
 /** The schema of a rung of the ladder (Article 0): commons' `mz:Rung` (commons 0016-ladder), which Stolos states its eight rungs with. */
 export const RungSchema = MizanRung;
@@ -732,12 +740,26 @@ export const classes = [
     ),
     spec: ["109-integrations-api FR-001, FR-002"],
   }),
+  StolosClass.make(stolos.DeviceClass, {
+    label: en("Device class"),
+    definition: en(
+      "What a network device is, whatever its vendor: a gateway, a switch, an access point, a camera, a recorder, a door controller, a phone, or other (a model nobody classified).",
+    ),
+    spec: ["110-network-assets FR-001"],
+  }),
+  StolosClass.make(stolos.DeviceFacet, {
+    label: en("Device facet"),
+    definition: en(
+      "One thing a device does (routing, switching, wireless, surveillance, access control): a feature asks for a facet and gets the devices of any vendor that have it; one device may have several.",
+    ),
+    spec: ["110-network-assets FR-001"],
+  }),
   StolosClass.make(stolos.WayOfJoining, {
     label: en("Way of joining"),
     definition: en(
-      "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, managed, or cloud.",
+      "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, adopted through an integration, managed, or cloud.",
     ),
-    spec: ["107-pairing-and-query FR-007"],
+    spec: ["107-pairing-and-query FR-007", "110-network-assets FR-002"],
   }),
   StolosClass.make(stolos.PairingStage, {
     label: en("Pairing stage"),

@@ -50,6 +50,36 @@
  * MX, SPF, DKIM and DMARC records, whether Email Routing is on, and its rules, without the addresses they forward to). Outbound
  * sending is not read yet. The policies `cf-email-spf`, `cf-email-dmarc` and `cf-email-dkim` apply to the domains that have email.
  *
+ * ## Network assets (spec 110-network-assets)
+ *
+ * The devices UniFi manages become **assets of the fleet**, adopted through the integration: no SSH, no probe, read-only, with a link to
+ * the native console. Each has a class (gateway, switch, access point, camera, recorder, door controller, phone, other: from the
+ * document's `features`, then the model, never guessed) and facets (routing, switching, wireless, surveillance, access control), so a
+ * feature asks for a facet and gets devices of any vendor.
+ *
+ * ```bash
+ * bun run stolos estate observe unifi          # read the controller; rules in fleets/<fleet>/network.ts adopt by themselves
+ * bun run stolos network discover              # what the controller manages that is not adopted yet
+ * bun run stolos network adopt --all --class switch   # one signed commit; or name devices by name, MAC or id
+ * bun run stolos network status                # assets by class, discovered, gone, unmanaged clients
+ * ```
+ *
+ * ```mermaid
+ * flowchart LR
+ *   obs["observation: devices, clients, Wi-Fi"] --> disc["network discover"]
+ *   disc --> adopt["network adopt"] --> rec["adopted/&lt;name&gt;/network.ts"]
+ *   rules["network.ts: autoAdopt"] -->|"estate observe"| rec
+ *   rec --> m["a machine: tags, page, evidence, estate graph"]
+ *   obs -->|"a device that vanished"| w["a warning, never a deletion"]
+ * ```
+ *
+ * A device that is no longer reported is **gone from the integration**: a warning with its fix, never an automatic deletion;
+ * `stolos host release <name>` removes the record on your request, and changes nothing at the controller. Clients are observed, never
+ * adopted: they are matched to machines by MAC and listed as unmanaged otherwise (`stolos pair` brings a machine in). The estate graph
+ * has the edges the API gives (uplink, connected-to, member-of, advertises) and none it does not (a client's port, VLAN or Wi-Fi network).
+ * The Stolos Console has a Network page, only where a router is connected. Tag rules have helpers: `ofClass`, `withFacet`, `inVlan`,
+ * `onSsid`, `uplinkedTo`.
+ *
  * ## Writing an integration
  *
  * An integration is `defineIntegration` with its kind, a reader for each capability it offers and, for every capability of the kind it
@@ -60,3 +90,4 @@
  * @module
  */
 // Spec: 109-integrations-api FR-019
+// Spec: 110-network-assets FR-003, FR-004, FR-005, FR-006, FR-007

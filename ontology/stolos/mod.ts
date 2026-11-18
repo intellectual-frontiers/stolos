@@ -47,6 +47,8 @@ import {
   CompatStatusSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
+  DeviceClassSchema,
+  DeviceFacetSchema,
 } from "./vocabulary.ts";
 
 export { CODE_LISTS } from "./codes.ts";
@@ -108,6 +110,8 @@ export const citingSchemas = [
   CompatStatusSchema,
   ApiKindSchema,
   ApiCapabilitySchema,
+  DeviceClassSchema,
+  DeviceFacetSchema,
   RungSchema,
 ] as const;
 

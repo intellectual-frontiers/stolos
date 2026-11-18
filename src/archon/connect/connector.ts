@@ -169,6 +169,11 @@ export interface Connector {
   /** Its NIST SP 800-145 service models (what FedRAMP calls the offering's service model). */
   serviceModels: ServiceModel[];
   /**
+   * Spec 110-network-assets FR-008: the kinds of API its integrations are (`router`, `dns`, `email`), for a connector made of
+   * integrations (spec 109); absent for the others. The Network page is shown when a connector with `router` here is connected.
+   */
+  integrationKinds?: readonly string[];
+  /**
    * Spec 109: a product the owner runs on their own network (a router's controller) is not a cloud service, so it has no NIST service
    * model: `serviceModels` is empty only where this is true.
    */

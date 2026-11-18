@@ -27,7 +27,7 @@ import {
   NETWORK_INTERFACE,
 } from "./labels.ts";
 import { type ObservedRecord, ocsfUid } from "./sdk.ts";
-import type { ApiCapability, ApiKind } from "../ontology.auto.ts";
+import type { ApiCapability, ApiKind, DeviceClass, DeviceFacet } from "../ontology.auto.ts";
 
 /** What every entity says of where it was read: the integration (its connector's id) and, for a router, the site. */
 export interface Origin {
@@ -95,6 +95,12 @@ export interface NetworkDevice extends Origin {
   supported?: boolean;
   /** Whether it has ports (a switch or a gateway), for the port reads. */
   hasPorts?: boolean;
+  /** Spec 110-network-assets FR-001: its class (`stolos:DeviceClass`), from what the API gives. */
+  class?: DeviceClass;
+  /** Spec 110-network-assets FR-001: its facets (`stolos:DeviceFacet`). */
+  facets?: DeviceFacet[];
+  /** Spec 110-network-assets FR-007: the id of the device it connects through (its uplink), where the API gives one. */
+  uplink?: string;
 }
 
 /** A network of a router with its VLAN id (`stolos:Vlan`). */
@@ -189,6 +195,10 @@ export interface WifiNetwork extends Origin {
   frequenciesGHz: number[];
   /** It is a guest network: a hotspot with a portal or a voucher. */
   guest: boolean;
+  /** Spec 110-network-assets FR-007: the ids of the access points that broadcast it; absent where every access point does. */
+  broadcastBy?: string[];
+  /** Spec 110-network-assets FR-007: the id of the network it carries, or `native` for the default network, where the document says. */
+  network?: string;
 }
 
 /** An entry of a router's routing table (`stolos:Route`). */
@@ -512,6 +522,9 @@ function deviceParts(items: readonly NetworkDevice[]): Parts {
           firmware: d.firmware,
           firmware_updatable: d.firmwareUpdatable,
           site: d.site,
+          device_class: d.class,
+          facets: d.facets?.join(","),
+          uplink: d.uplink,
         }),
       ),
     ),
@@ -522,6 +535,7 @@ function deviceParts(items: readonly NetworkDevice[]): Parts {
       ...at(d),
       facts: facts({
         type: d.kind,
+        class: d.class,
         model: d.model,
         ip: d.ip,
         state: d.state,
@@ -645,6 +659,8 @@ function wifiParts(items: readonly WifiNetwork[]): Parts {
           frequencies_ghz: w.frequenciesGHz.join(","),
           guest: w.guest,
           site: w.site,
+          broadcast_by: w.broadcastBy === undefined ? "all" : w.broadcastBy.join(","),
+          network: w.network,
         }),
       ),
     ),

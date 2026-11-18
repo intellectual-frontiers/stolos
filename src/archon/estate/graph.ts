@@ -29,6 +29,7 @@
 // Spec: 078-control-sdk
 // Spec: 090-estate-graph
 // Spec: 109-integrations-api FR-003, FR-015
+// Spec: 110-network-assets FR-007
 
 import { DatabaseSync } from "node:sqlite";
 import type { PolicyResult } from "../adopt/policy.ts";
@@ -400,6 +401,56 @@ export function buildGraph(
             src.connector,
             x.at,
           );
+        }
+      }
+      // Spec 110-network-assets FR-007: the edges the integration's answers give, and only those (a gap is not an edge).
+      if (!stale) {
+        const recs = x.records ?? [];
+        const have = new Set(recs.map((r) => r.native_id));
+        const link = (verb: string, from: string, to: string): void => {
+          const seen = seenOf(`${from}>${verb}>${to}`, x.at);
+          put(edge, {
+            src_uid: from,
+            verb,
+            dst_uid: to,
+            source: src.connector,
+            basis: "native",
+            first_seen: seen.first,
+            last_seen: seen.last,
+          });
+        };
+        const text = (v: unknown): string | undefined =>
+          typeof v === "string" && v ? v : undefined;
+        const accessPoints = recs.filter(
+          (r) =>
+            r.label === "computer_network_node" &&
+            (text(r.props["facets"]) ?? "").split(",").includes("wireless"),
+        );
+        for (const r of recs) {
+          const uid = `${t}:${r.native_id}`;
+          const uplink = text(r.props["uplink"]);
+          if (r.label === "computer_network_node" && uplink && have.has(uplink)) {
+            link("uplinked_to", uid, `${t}:${uplink}`);
+          } else if (r.label === "network_endpoint" && uplink && have.has(uplink)) {
+            link("connected_to", uid, `${t}:${uplink}`);
+          } else if (r.label === "network" && r.props["kind"] === "wifi") {
+            const by = text(r.props["broadcast_by"]);
+            const aps =
+              by === "all" || by === undefined
+                ? accessPoints.map((a) => a.native_id)
+                : by.split(",");
+            for (const ap of aps) if (have.has(ap)) link("advertises", `${t}:${ap}`, uid);
+            const net = text(r.props["network"]);
+            const target =
+              net === "native"
+                ? recs.find(
+                    (v) => v.label === "local_area_network" && v.props["is_default"] === true,
+                  )?.native_id
+                : net !== undefined && have.has(net)
+                  ? net
+                  : undefined;
+            if (target !== undefined) link("member_of", uid, `${t}:${target}`);
+          }
         }
       }
     };

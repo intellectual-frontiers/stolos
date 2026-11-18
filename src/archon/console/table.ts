@@ -29,6 +29,7 @@
  * @module
  */
 // Spec: 107-pairing-and-query FR-012, FR-013
+// Spec: 110-network-assets FR-008
 
 import { AG_GRID } from "./assets.ts";
 import { esc, html, type Html, raw } from "./html.ts";
@@ -49,6 +50,8 @@ export interface TableOptions {
   last?: readonly string[];
   /** What the grid says before any row (default: "No rows yet"). */
   empty?: string;
+  /** Spec 110-network-assets FR-008: rows the page already has, drawn when the page loads (the table is then not fed by events). */
+  rows?: ReadonlyArray<Record<string, unknown> & { __id: string }>;
 }
 
 /** One change to a table's rows. */
@@ -89,7 +92,9 @@ export function tableMarkup(o: TableOptions): Html {
         <button class="btn ghost tbl-csv" type="button">Download CSV</button>
       </div>
       <div class="tbl-grid" role="region" aria-label="${o.label}"></div>
-      <div class="tbl-feed" id="${o.id}-feed" hidden></div>
+      <div class="tbl-feed" id="${o.id}-feed" hidden>
+        ${o.rows?.length ? tableItem({ op: "add", rows: o.rows, remove: [] }) : ""}
+      </div>
     </div>
     ${raw(`<script>${TABLE_JS}</script>`)}
   `;
