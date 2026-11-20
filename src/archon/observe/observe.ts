@@ -8,7 +8,7 @@
  */
 // Spec: 021-observability
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { loadFleet } from "../model/load.ts";

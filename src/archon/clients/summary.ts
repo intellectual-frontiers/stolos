@@ -10,7 +10,7 @@
  */
 // Spec: 082-multi-fleet
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import type { FreshView } from "../compliance/freshness.ts";
 import type { Evidence } from "../compliance/report.ts";

@@ -5,7 +5,7 @@
  * @module
  */
 
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { resolvePlan } from "../model/resolve.ts";

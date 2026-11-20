@@ -13,7 +13,7 @@
  */
 // Spec: 032-web
 
-import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 
 /** Traefik's ACME store (spec 032: Traefik's state directory). */

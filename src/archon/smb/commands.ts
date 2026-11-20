@@ -8,7 +8,7 @@
  */
 // Spec: 037-smb
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { getRecord } from "../state/store.ts";
 
 import { P } from "../core/paths.ts";

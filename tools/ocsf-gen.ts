@@ -21,7 +21,7 @@
  * @module
  */
 import { sha256 } from "@intellectual-frontiers/crypto";
-import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/system";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const VERSION = "1.9.0";

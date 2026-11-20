@@ -19,7 +19,7 @@
 // Spec: 110-network-assets FR-003, FR-004, FR-005, FR-006, FR-009
 // Spec: 111-network-posture FR-015
 
-import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

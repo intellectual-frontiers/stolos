@@ -12,7 +12,7 @@
 // Spec: 101-ladder FR-006
 // Spec: 114-release-record FR-005
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { tsLiteral } from "@intellectual-frontiers/formats";
 import { P } from "../core/paths.ts";
 import { TAG } from "../version.ts";

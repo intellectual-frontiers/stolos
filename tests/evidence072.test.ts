@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { unzip, zipDeflated } from "@intellectual-frontiers/formats";
 import {
   assert,

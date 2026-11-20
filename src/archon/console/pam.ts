@@ -16,7 +16,7 @@
  */
 // Spec: 096-bun-runtime
 
-import { errors, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, proc } from "@intellectual-frontiers/system";
 import { Worker } from "node:worker_threads";
 
 const PAM_PROMPT_ECHO_OFF = 1;

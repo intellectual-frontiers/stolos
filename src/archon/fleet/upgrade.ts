@@ -42,7 +42,7 @@
 // Spec: 114-release-record FR-005, FR-007
 
 import { object, record, string } from "@intellectual-frontiers/core";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { listFleets, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";

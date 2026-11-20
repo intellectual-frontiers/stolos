@@ -17,7 +17,7 @@
  */
 
 import { sha256 } from "@intellectual-frontiers/crypto";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { assert } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { runtimeCommand } from "../src/archon/install/bun.ts";
 

@@ -18,7 +18,7 @@
 // Spec: 105-calm-output FR-002 to FR-011
 import * as palette from "@intellectual-frontiers/terminal/palette";
 import type { LineKind, OutcomeLevel, Verbosity } from "../ontology.auto.ts";
-import { fs, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc, stdio, tty } from "@intellectual-frontiers/system";
 import { EXPLAIN, translate } from "./explain.ts";
 import { asRoot, P } from "./paths.ts";
 

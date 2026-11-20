@@ -9,7 +9,7 @@
  */
 // Spec: 106-one-passphrase-speed FR-002
 
-import { proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc, stdio } from "@intellectual-frontiers/system";
 
 /** How long to wait for the command's answer (the person has five minutes, spec 106 FR-004). */
 const WAIT_MS = 5 * 60_000 + 30_000;

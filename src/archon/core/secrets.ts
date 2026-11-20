@@ -11,7 +11,7 @@
 // Spec: 103-three-ports FR-006
 
 import { P } from "./paths.ts";
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { run } from "./exec.ts";
 import { recordChange } from "./secret-ledger.ts";
 

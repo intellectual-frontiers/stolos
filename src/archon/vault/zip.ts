@@ -24,9 +24,15 @@
 // Spec: 061-vault-restore
 
 import { array, type Decoder, integer, json, object, string } from "@intellectual-frontiers/core";
-import { formatArchiveError, unzip, zipDeflated, zipEntries, zipRead } from "@intellectual-frontiers/formats";
+import {
+  formatArchiveError,
+  unzip,
+  zipDeflated,
+  zipEntries,
+  zipRead,
+} from "@intellectual-frontiers/formats";
 import { sha256 } from "@intellectual-frontiers/crypto";
-import { fs, path as ifcPath, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as ifcPath, proc } from "@intellectual-frontiers/system";
 import { bootstrapOneLiner, repoSlug } from "../fleet/bootstrap.ts";
 import { run } from "../core/exec.ts";
 import { listFleets, P } from "../core/paths.ts";

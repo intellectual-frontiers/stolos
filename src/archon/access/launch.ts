@@ -11,7 +11,8 @@
 // Spec: 100-remote-access FR-001, FR-002, FR-003
 // Spec: 103-three-ports FR-004, FR-009, FR-011
 
-import { acme, path, type ServeHandler } from "@intellectual-frontiers/commons/ts/runtime";
+import { path } from "@intellectual-frontiers/system";
+import { acme, type ServeHandler } from "@intellectual-frontiers/commons/ts/runtime";
 import { choosePort } from "../core/listeners.ts";
 import { P } from "../core/paths.ts";
 import { readSecret, SECRETS, writeSecret } from "../core/secrets.ts";

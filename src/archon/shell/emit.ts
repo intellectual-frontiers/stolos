@@ -22,7 +22,7 @@
  */
 // Spec: 036-cli-comforts
 
-import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc, stdio } from "@intellectual-frontiers/system";
 
 /** The shells Archon emits code for. */
 export const SHELLS = ["bash", "zsh", "fish"] as const;

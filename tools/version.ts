@@ -19,8 +19,14 @@
 // Spec: 046-engine-instance
 // Spec: 096-bun-runtime
 // Spec: 114-release-record FR-002, FR-003
-import { bump, compareSemVer, formatSemVer, parseSemVer, type SemVer } from "@intellectual-frontiers/formats";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import {
+  bump,
+  compareSemVer,
+  formatSemVer,
+  parseSemVer,
+  type SemVer,
+} from "@intellectual-frontiers/formats";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { tagOf, WORK_SLUG } from "../src/archon/version.ts";
 
 /** The repository: the folder above `tools/`, or the one `STOLOS_VERSION_ROOT` names (the tool's test makes its own). */

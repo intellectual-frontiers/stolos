@@ -15,7 +15,7 @@ import {
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
 import { parseJson5, tsLiteral } from "@intellectual-frontiers/formats";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import {
   buildGraph,

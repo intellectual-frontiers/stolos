@@ -21,7 +21,7 @@ import {
   string,
 } from "@intellectual-frontiers/core";
 import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/formats";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import type { ProposalDecision, ProposalDecisions } from "./types.ts";
 

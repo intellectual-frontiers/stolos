@@ -9,7 +9,7 @@
  */
 // Spec: 047-intent-and-identity
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { lf } from "@intellectual-frontiers/core";
 import { P, repoRel } from "../core/paths.ts";
 import type { FleetDef, HostDef, HostRegistration } from "../model/types.ts";

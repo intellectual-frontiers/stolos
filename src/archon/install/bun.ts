@@ -30,7 +30,7 @@
  */
 // Spec: 096-bun-runtime
 
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { BUN_SHA256, BUN_VERSION, type BunTarget, bunDownload } from "../core/bun-pin.ts";
 import { run, type RunResult } from "../core/exec.ts";
 

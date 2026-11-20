@@ -33,7 +33,7 @@
 
 import { sha256 as sha256Hex } from "@intellectual-frontiers/crypto";
 import { unzip, zipDeflated } from "@intellectual-frontiers/formats";
-import { toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { toError } from "@intellectual-frontiers/system";
 import {
   assemble,
   type AuditCase,

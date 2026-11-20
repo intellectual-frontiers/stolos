@@ -4,7 +4,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { type Literal, tsLiteral, unzip, zipDeflated } from "@intellectual-frontiers/formats";
 import { sha256 } from "@intellectual-frontiers/crypto";
 import {

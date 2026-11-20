@@ -34,7 +34,7 @@
  */
 // Spec: 093-osquery
 
-import { path } from "@intellectual-frontiers/commons/ts/runtime";
+import { path } from "@intellectual-frontiers/system";
 import type { AnyTable, ViewDef } from "../schema/define.ts";
 import { ESTATE_SCHEMA } from "./schema.ts";
 

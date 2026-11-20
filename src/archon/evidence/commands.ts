@@ -8,7 +8,7 @@
  */
 // Spec: 072-evidence-bundles
 
-import { fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio, toError } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";

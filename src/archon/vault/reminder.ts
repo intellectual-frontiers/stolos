@@ -14,7 +14,7 @@
 
 // Spec: 029-vault
 // Spec: 105-calm-output FR-017
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { readLedger, writeLedger } from "../core/secret-ledger.ts";

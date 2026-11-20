@@ -22,7 +22,7 @@
  * @module
  */
 
-import { fs, path, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio, tty } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { readSecret, SECRETS } from "../core/secrets.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";

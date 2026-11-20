@@ -6,15 +6,8 @@
  * @module
  */
 
-import {
-  errors,
-  fs,
-  path,
-  proc,
-  type Server,
-  serve,
-  stdio,
-} from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path, proc, stdio } from "@intellectual-frontiers/system";
+import { type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import {

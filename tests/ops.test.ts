@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, lock, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, lock, proc } from "@intellectual-frontiers/system";
 import {
   assertExists,
   assert,

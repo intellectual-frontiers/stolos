@@ -9,7 +9,7 @@
  */
 // Spec: 106-one-passphrase-speed FR-009
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run, type RunResult } from "./exec.ts";
 import { ui } from "./ui.ts";
 

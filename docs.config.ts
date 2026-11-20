@@ -23,7 +23,7 @@
 // Spec: 070-docs-in-code
 // Spec: 096-bun-runtime FR-009
 import type { AboutArea, DocsConfig } from "@intellectual-frontiers/commons/docs";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { docsArea, GUIDES } from "./src/archon/core/guides.ts";
 
 const ROOT = path.dirname(path.fromFileUrl(import.meta.url));

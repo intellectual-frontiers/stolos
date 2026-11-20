@@ -10,7 +10,7 @@
  */
 // Spec: 038-pg
 
-import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/system";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, homeOf, run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";

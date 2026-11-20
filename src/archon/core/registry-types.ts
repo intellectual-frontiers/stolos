@@ -8,7 +8,7 @@
 // Spec: 101-ladder FR-006
 // Spec: 105-calm-output FR-001, FR-002
 // Spec: 108-tags FR-006
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import type { CommandTier, OutputClass } from "../ontology.auto.ts";
 
 /**

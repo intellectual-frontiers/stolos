@@ -28,7 +28,7 @@
 // Spec: 103-three-ports FR-006, FR-007
 // Spec: 107-pairing-and-query FR-001, FR-004, FR-005
 
-import { errors, fs, lock, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, lock, path, proc } from "@intellectual-frontiers/system";
 import { ownerOnly } from "../core/secrets.ts";
 import type { PairingStage } from "../ontology.auto.ts";
 

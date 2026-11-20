@@ -11,7 +11,7 @@
  */
 // Spec: 095-proposals
 
-import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/system";
 import { asRoot, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { putRecord } from "../state/store.ts";

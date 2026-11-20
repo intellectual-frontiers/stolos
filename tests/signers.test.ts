@@ -4,7 +4,7 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import {
   assert,

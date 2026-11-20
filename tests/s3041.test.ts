@@ -13,7 +13,7 @@ import {
   proves,
   test,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";
 import { engineFile } from "../src/archon/core/assets.ts";
 import { P } from "../src/archon/core/paths.ts";

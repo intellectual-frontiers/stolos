@@ -44,7 +44,7 @@
 
 import type { Estate } from "../estate/graph.ts";
 import { estateQuery } from "../estate/graph.ts";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 
 /** A row's column as text ("" where it is empty or not a scalar). */

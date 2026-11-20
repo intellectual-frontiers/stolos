@@ -17,7 +17,7 @@
 // Spec: 112-machine-reported-tags FR-007, FR-011, FR-012
 // Spec: 115-compatibility FR-005, FR-016
 
-import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/system";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
 import type { Command, Parsed, RunContext } from "../core/registry-types.ts";
 import type { HostDef } from "../model/types.ts";
@@ -2909,7 +2909,7 @@ export const COMMANDS: Command[] = [
     args: [],
     async run(): Promise<number> {
       const { meshAddresses, meshGuide } = await import("../adopt/mesh.ts");
-      const { stdio } = await import("@intellectual-frontiers/commons/ts/runtime");
+      const { stdio } = await import("@intellectual-frontiers/system");
       stdio.stdout.writeSync(meshGuide(meshAddresses()));
       return 0;
     },

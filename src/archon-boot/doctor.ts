@@ -13,7 +13,8 @@
 // Spec: 106-one-passphrase-speed FR-008
 // Spec: 115-compatibility FR-009, FR-012
 
-import { fs, path, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
 import type { CompatMachine } from "../archon/observe/compat.ts";
 import { P } from "../archon/core/paths.ts";
@@ -266,7 +267,7 @@ export async function doctor(o: {
   try {
     const { accessFacts } = await import("../archon/access/commands.ts");
     const { accessDoctor } = await import("../archon/access/doctor.ts");
-    const { proc } = await import("@intellectual-frontiers/commons/ts/runtime");
+    const { proc } = await import("@intellectual-frontiers/system");
     const facts = await accessFacts();
     const port = facts.listening?.port ?? standardPort("console-https");
     // Spec 103: where the console is not serving, can it have TCP 443? If not, what holds it.

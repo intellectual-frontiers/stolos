@@ -14,7 +14,7 @@
 // Spec: 077-people-controls
 // Spec: 106-one-passphrase-speed FR-001
 
-import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/system";
 import { tsLiteral } from "@intellectual-frontiers/formats";
 import { ui } from "../core/ui.ts";
 import { run } from "../core/exec.ts";

@@ -10,7 +10,7 @@
 // Spec: 004-install
 // Spec: 103-three-ports FR-001
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import type { ArchonEvent } from "../telemetry/events.ts";
 import { standardPort } from "./listeners.ts";
 

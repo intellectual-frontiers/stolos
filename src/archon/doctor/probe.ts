@@ -7,7 +7,7 @@
  */
 // Spec: 026-doctor
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 
 /** The result of one curl probe of a URL. */

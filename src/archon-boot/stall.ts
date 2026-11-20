@@ -10,7 +10,7 @@
  */
 // Spec: 051-machine-identity
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 
 /** How long an installer may go quiet after taking the image. */
 export const STALL_MS = 6 * 60_000;

@@ -15,7 +15,7 @@
 // Spec: 040-opt-in
 // Spec: 044-durable
 
-import { proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc, stdio } from "@intellectual-frontiers/system";
 import { getRecord, putRecord } from "../state/store.ts";
 
 import { P } from "../core/paths.ts";

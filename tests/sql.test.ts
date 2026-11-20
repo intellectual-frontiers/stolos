@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { engineFile } from "../src/archon/core/assets.ts";
 import {
   assertExists,

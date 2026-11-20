@@ -23,7 +23,7 @@
  */
 // Spec: 101-ladder FR-001, FR-004, FR-005
 import * as rdf from "@intellectual-frontiers/rdf";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { CODE_LISTS, definedTerms, files, rungs, STOLOS } from "../ontology/stolos/mod.ts";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");

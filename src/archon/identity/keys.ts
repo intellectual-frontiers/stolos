@@ -25,7 +25,7 @@
 // Spec: 047-intent-and-identity
 // Spec: 057-keys
 
-import { fs, path as ifcPath, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as ifcPath, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import type { SignerDef } from "../model/types.ts";

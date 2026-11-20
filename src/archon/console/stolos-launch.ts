@@ -11,7 +11,8 @@
 // Spec: 100-remote-access FR-003
 // Spec: 103-three-ports FR-004, FR-009
 
-import { fs, path, proc, type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";

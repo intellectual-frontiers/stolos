@@ -19,7 +19,7 @@
  */
 // Spec: 115-compatibility FR-006, FR-007, FR-008, FR-009, FR-014
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import {
   type CompatWords,
   type ContractKind,

@@ -30,9 +30,19 @@ import {
   record,
   string,
 } from "@intellectual-frontiers/core";
-import { attribute, child, children, descendants, formatXmlError, readXml, textOf, unzip, type XmlElement } from "@intellectual-frontiers/formats";
+import {
+  attribute,
+  child,
+  children,
+  descendants,
+  formatXmlError,
+  readXml,
+  textOf,
+  unzip,
+  type XmlElement,
+} from "@intellectual-frontiers/formats";
 import { sha256 } from "@intellectual-frontiers/crypto";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import { type FrameworkId, FRAMEWORKS } from "./scf.ts";
 

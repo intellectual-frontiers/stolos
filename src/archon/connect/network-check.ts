@@ -17,7 +17,7 @@
  */
 // Spec: 111-network-posture FR-003, FR-010, FR-013, FR-015, FR-016, FR-018, FR-020
 
-import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import type { FleetTags } from "../fleet/tags.ts";

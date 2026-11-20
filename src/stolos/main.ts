@@ -17,7 +17,7 @@
 // Spec: 059-stolos-and-archon
 // Spec: 106-one-passphrase-speed FR-002, FR-006
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { main, runCommandNested } from "../archon/main.ts";
 import { setNestedRunner } from "../archon/core/nested.ts";
 import { setLogProgram, ui } from "../archon/core/ui.ts";

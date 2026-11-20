@@ -6,7 +6,7 @@
  */
 // Spec: 117-adopted-in-status FR-006
 
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { pcFacts } from "../src/archon/console/pc.ts";
 
 const facts = await pcFacts();

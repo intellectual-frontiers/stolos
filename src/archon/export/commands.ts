@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio, toError } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import { VERSION } from "../version.ts";

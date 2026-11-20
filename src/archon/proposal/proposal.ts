@@ -43,7 +43,7 @@ import {
   unknownValue,
 } from "@intellectual-frontiers/core";
 import { otel } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import {
   type Action,
   type DriftItem,

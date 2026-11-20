@@ -16,7 +16,7 @@
 // Spec: 103-three-ports FR-003
 // Spec: 107-pairing-and-query FR-001, FR-002, FR-014
 
-import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc, stdio } from "@intellectual-frontiers/system";
 import { listen } from "../../src/archon-boot/http.ts";
 import { PairSession } from "../../src/archon/adopt/pair.ts";
 import { MemoryPairStore, newPairRecord } from "../../src/archon/adopt/pair-store.ts";

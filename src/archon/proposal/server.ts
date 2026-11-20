@@ -9,7 +9,7 @@
  */
 // Spec: 095-proposals
 
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { asRoot, P } from "../core/paths.ts";
 import { getRecord, listRecords } from "../state/store.ts";
 import type { HostDef } from "../model/types.ts";

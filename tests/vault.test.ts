@@ -7,7 +7,7 @@
 import { zipManifest } from "../src/archon/vault/zip.ts";
 import { compact, json } from "@intellectual-frontiers/core";
 import { unzip, zip as zipFiles } from "@intellectual-frontiers/formats";
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { assert, assertEquals, proves, the } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { panelLines, width } from "../src/archon/vault/panel.ts";
 import type { Assessment } from "../src/archon/vault/state.ts";

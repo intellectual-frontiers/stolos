@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 
 const print = (text: string): void => {

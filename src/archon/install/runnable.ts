@@ -21,7 +21,7 @@
  */
 // Spec: 004-install
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 

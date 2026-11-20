@@ -30,7 +30,7 @@ import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
 import type { Estate } from "../estate/graph.ts";
-import { fs, path, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, toError } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import type { Control, ControlPack, OsqueryControl } from "./define.ts";
 import { acceptRisks, type MachineAnswer, runEstate, runObservation, runOsquery } from "./core.ts";

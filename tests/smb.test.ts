@@ -10,7 +10,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { engineFile } from "../src/archon/core/assets.ts";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

@@ -5,12 +5,13 @@
     "": {
       "name": "@intellectual-frontiers/stolos",
       "dependencies": {
-        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#cbcf2863a78fe32bc501bc87d13e6b4210365709",
-        "@intellectual-frontiers/core": "0.1.0",
-        "@intellectual-frontiers/crypto": "0.1.0",
-        "@intellectual-frontiers/formats": "0.1.0",
-        "@intellectual-frontiers/rdf": "0.1.0",
-        "@intellectual-frontiers/terminal": "0.1.0",
+        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#c9b57ccd8609cb6fcffc1f59608a1b96a0f79a03",
+        "@intellectual-frontiers/core": "0.1.1",
+        "@intellectual-frontiers/crypto": "0.1.1",
+        "@intellectual-frontiers/formats": "0.1.1",
+        "@intellectual-frontiers/rdf": "0.1.1",
+        "@intellectual-frontiers/system": "0.1.0",
+        "@intellectual-frontiers/terminal": "0.1.1",
         "ajv": "8.17.1",
       },
       "devDependencies": {
@@ -30,17 +31,19 @@
 
     "@iconify/utils": ["@iconify/utils@3.1.7", "", { "dependencies": { "@antfu/install-pkg": "^2.0.1", "@iconify/types": "^2.0.0", "import-meta-resolve": "^4.2.0" } }, "sha512-JZHlwdID+dy+lTgbYC8NEC4zeugqeYsc6jewvzb4c58kHauJn+X7rNwQjxz5p2qSjqaEeQoLkCIQ9v/H4PK0/w=="],
 
-    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#cbcf286", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/crypto": "0.1.0", "@intellectual-frontiers/formats": "0.1.0", "@intellectual-frontiers/rdf": "0.1.0", "@intellectual-frontiers/terminal": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-cbcf286", "sha512-Z2KbbFDMNoFHxp5LeUWuei96Go13+6wWHxiqGTFF6F7ONxHemziSyTiLmCHuYz1FjRpT9C31ezIWu6fmC77d8w=="],
+    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#c9b57cc", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/crypto": "0.1.0", "@intellectual-frontiers/formats": "0.1.0", "@intellectual-frontiers/rdf": "0.1.0", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/terminal": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-c9b57cc", "sha512-Ziw0EmmKZP+UviG5Kmd6MkUXbzQlVQtIAKvR9qo+7uGjPZJ8A63NQu4oeFQQafF8pGGh1ER3PcZ9Oyfr4EAuOQ=="],
 
-    "@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.0", "", {}, "sha512-tOdJKL/vsHJYxUuizWLnaI58mOXojBll1zgaKXw6QIoMK7dHhA+jsfBdherG3jK+EijipzRYBNXqNvWhNIoGHA=="],
+    "@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.1", "", {}, "sha512-2CRWnO8kSVnsNemWJJUfbILnFuUzMKNAVdra8J4ZXS1O7pDubZw/OM4egq2iWo9+VP45cblxNVjIvV43c7fwSQ=="],
 
-    "@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/formats": "0.1.0" } }, "sha512-JVT43ISlUP5rfq+SXKy1oCe9TYjsjFE9FhC0pOUhwW/ewoXi0meNjgT2Ginb8oMg1XfWLnYQ/Nzj5FXcJ2xtcg=="],
+    "@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" } }, "sha512-dIVy8N0ttrjDNq/P3MLmb50dRTGNKJ+xdlKw4rDBTerYSScqDoQar8DS3GfIBQwNx7uqCkRNNBS/xl2Nn+PVnw=="],
 
-    "@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-22YoAXzh8T6zNpYov+9xQLfmVgYxUOkWMv+TqnT4Bm2WzbEjm1nMNA0WINzjVq+hDGiuPQU/SkJ/F6v3THr9uA=="],
+    "@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-1vucbLz1Lpv69wLN/RAezPpI6YwANY+twPSSjknnJ72+D2ixsUyICTABv3v6+DYZAUiYyXiNPMGdAVu80eizmQ=="],
 
-    "@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-D/dpkvn5N+vdvEXg7dB6Pqe2MCTxgo5ejtQuRDPzZziXhFSFn/HJxUig1ELRFS/byx67kpbS6K2E39TE5iDKRg=="],
+    "@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-Xs2B/0YDKwimn4AglHnj5lq3DQ83y4f7qkI9p+qtQvpQ6WOctVhVQLegQ4RcexIGrJR1kt6gY3VuyIyojuCxjQ=="],
 
-    "@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-YbAhZorkoWCqRFoy3biJorx9hbxryWClqXYOcNAN0rMNxKcTK9A7o6QM5UoKCeLRIkE+kyHvqEltbZEpMMHNDA=="],
+    "@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/crypto": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-YoD6seQNw07sz4haAOC82iNHlPXO6bGfqG7yEZDv4CHhAd9XZozn1BP46AovQLPHrEju9+2PwagKHx9y/FR/nA=="],
+
+    "@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-AyfjvpsWzVkeAHQGwkDgJlCjpORgrocahJ1Q0iGbnkP6OP5VXpqyPv2fFJtaWCbYS1F956vj39UNV3Omp60HaA=="],
 
     "@mermaid-js/parser": ["@mermaid-js/parser@1.2.1", "", { "dependencies": { "@chevrotain/types": "~11.1.2" } }, "sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw=="],
 
@@ -301,6 +304,16 @@
     "undici-types": ["undici-types@8.9.0", "", {}, "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="],
 
     "uuid": ["uuid@14.0.3", "", { "bin": { "uuid": "dist-node/bin/uuid" } }, "sha512-Sc5u1VVln93y1Xnz4R+CunOZc7R9LUcTmhj7Rc7Eg3HVcf7rVn2FOoa812fe0W8p3jD7xeoGSYbfqCGGH2B6xw=="],
+
+    "@intellectual-frontiers/commons/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.0", "", {}, "sha512-tOdJKL/vsHJYxUuizWLnaI58mOXojBll1zgaKXw6QIoMK7dHhA+jsfBdherG3jK+EijipzRYBNXqNvWhNIoGHA=="],
+
+    "@intellectual-frontiers/commons/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/formats": "0.1.0" } }, "sha512-JVT43ISlUP5rfq+SXKy1oCe9TYjsjFE9FhC0pOUhwW/ewoXi0meNjgT2Ginb8oMg1XfWLnYQ/Nzj5FXcJ2xtcg=="],
+
+    "@intellectual-frontiers/commons/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-22YoAXzh8T6zNpYov+9xQLfmVgYxUOkWMv+TqnT4Bm2WzbEjm1nMNA0WINzjVq+hDGiuPQU/SkJ/F6v3THr9uA=="],
+
+    "@intellectual-frontiers/commons/@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-D/dpkvn5N+vdvEXg7dB6Pqe2MCTxgo5ejtQuRDPzZziXhFSFn/HJxUig1ELRFS/byx67kpbS6K2E39TE5iDKRg=="],
+
+    "@intellectual-frontiers/commons/@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-YbAhZorkoWCqRFoy3biJorx9hbxryWClqXYOcNAN0rMNxKcTK9A7o6QM5UoKCeLRIkE+kyHvqEltbZEpMMHNDA=="],
 
     "@intellectual-frontiers/commons/typescript": ["typescript@7.1.0-beta", "", { "optionalDependencies": { "@typescript/typescript-aix-ppc64": "7.1.0-beta", "@typescript/typescript-android-arm64": "7.1.0-beta", "@typescript/typescript-darwin-arm64": "7.1.0-beta", "@typescript/typescript-darwin-x64": "7.1.0-beta", "@typescript/typescript-freebsd-arm64": "7.1.0-beta", "@typescript/typescript-freebsd-x64": "7.1.0-beta", "@typescript/typescript-linux-arm": "7.1.0-beta", "@typescript/typescript-linux-arm64": "7.1.0-beta", "@typescript/typescript-linux-loong64": "7.1.0-beta", "@typescript/typescript-linux-mips64el": "7.1.0-beta", "@typescript/typescript-linux-ppc64": "7.1.0-beta", "@typescript/typescript-linux-riscv64": "7.1.0-beta", "@typescript/typescript-linux-s390x": "7.1.0-beta", "@typescript/typescript-linux-x64": "7.1.0-beta", "@typescript/typescript-netbsd-arm64": "7.1.0-beta", "@typescript/typescript-netbsd-x64": "7.1.0-beta", "@typescript/typescript-openbsd-arm64": "7.1.0-beta", "@typescript/typescript-openbsd-x64": "7.1.0-beta", "@typescript/typescript-sunos-x64": "7.1.0-beta", "@typescript/typescript-win32-arm64": "7.1.0-beta", "@typescript/typescript-win32-x64": "7.1.0-beta" }, "bin": { "tsc": "bin/tsc" } }, "sha512-cjWjZAJDsmZzsNC5GwHNlW0YPM65jZa5oR0KyQcYX3KSVIfTvtBq//vewISyatKk4OLi5grZjHhIVE9fdrw1UQ=="],
 

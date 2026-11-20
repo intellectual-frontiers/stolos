@@ -12,7 +12,7 @@
 // Spec: 090-estate-graph
 
 import { exportedLiteral } from "@intellectual-frontiers/formats";
-import { errors, fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs } from "@intellectual-frontiers/system";
 import { run, type RunResult } from "../core/exec.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { Device } from "../connect/entities.ts";

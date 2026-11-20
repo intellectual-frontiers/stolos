@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import type { FleetInputs, PackRun } from "./run.ts";

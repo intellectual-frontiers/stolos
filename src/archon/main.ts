@@ -10,7 +10,7 @@
 // Spec: 106-one-passphrase-speed FR-002, FR-006, FR-008
 // Spec: 114-release-record FR-014
 
-import { fs, lock, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, lock, proc, stdio } from "@intellectual-frontiers/system";
 import { asRoot, onHost, P, resetRoots } from "./core/paths.ts";
 import { COMMANDS, findCommand, offeredOn } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";

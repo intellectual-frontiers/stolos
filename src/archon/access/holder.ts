@@ -16,7 +16,8 @@
 // Spec: 100-remote-access FR-003
 // Spec: 103-three-ports FR-009
 
-import { proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
+import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** What holds a TCP port, read from `ss -ltnp` output (Linux); undefined where it does not show. */

@@ -9,7 +9,7 @@
  */
 // Spec: 004-install
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 

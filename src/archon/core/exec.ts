@@ -23,7 +23,7 @@
  */
 // Spec: 096-bun-runtime
 // Spec: 107-pairing-and-query FR-010
-import { errors, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, proc } from "@intellectual-frontiers/system";
 
 /** What a program did. */
 export type RunResult = {

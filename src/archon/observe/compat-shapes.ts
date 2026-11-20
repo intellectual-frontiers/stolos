@@ -28,7 +28,7 @@
 // Spec: 115-compatibility FR-001, FR-003
 
 import { createHash } from "node:crypto";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { compareSemVer, parseSemVer, SEAMS } from "../core/compat.ts";
 import type { Seam } from "../ontology.auto.ts";
 import { VIEWS } from "../state/store.ts";

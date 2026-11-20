@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
 import { asRoot, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";

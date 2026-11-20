@@ -15,7 +15,7 @@
 // Spec: 103-three-ports FR-009
 
 import type { AccessFacts } from "./doctor.ts";
-import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc, stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { SECRETS } from "../core/secrets.ts";

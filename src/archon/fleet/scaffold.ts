@@ -8,7 +8,7 @@
 // Spec: 046-engine-instance
 // Spec: 114-release-record FR-005
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import type { RunResult } from "../core/exec.ts";
 import { bootstrapFiles, repoSlug } from "./bootstrap.ts";
 import { ENGINE_PACKAGE, ENGINE_SOURCE, engineDependency } from "./upgrade.ts";

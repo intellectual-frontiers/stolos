@@ -13,7 +13,8 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { fs, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
+import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   CODE_ALPHABET,
   clientKey,

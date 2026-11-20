@@ -8,7 +8,8 @@
  */
 
 import { otel as kotel } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,

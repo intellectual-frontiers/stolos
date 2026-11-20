@@ -20,7 +20,7 @@
  */
 // Spec: 055-documentation
 // Spec: 096-bun-runtime
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 

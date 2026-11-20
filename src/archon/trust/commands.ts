@@ -17,7 +17,7 @@
  */
 // Spec: 081-trust-center
 
-import { errors, fs, path, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path, toError } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { type Signer, sshSigner, verifyBundle } from "../evidence/bundle.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";

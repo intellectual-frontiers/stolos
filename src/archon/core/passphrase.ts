@@ -25,7 +25,7 @@
 
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { fs, path, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio, tty } from "@intellectual-frontiers/system";
 import { runtimeCommand } from "../install/bun.ts";
 import { SIGNING_OUTCOMES, type SigningOutcome } from "../ontology.auto.ts";
 import { ui } from "./ui.ts";

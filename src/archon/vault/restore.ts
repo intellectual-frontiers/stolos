@@ -35,7 +35,7 @@
 import { formatDecodeError, json } from "@intellectual-frontiers/core";
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { unzip } from "@intellectual-frontiers/formats";
-import { errors, fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { listFleets, P } from "../core/paths.ts";
 import { ownerOnly } from "../core/secrets.ts";

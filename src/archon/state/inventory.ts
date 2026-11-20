@@ -10,7 +10,7 @@
 // Spec: 051-machine-identity
 // Spec: 112-machine-reported-tags FR-006
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { getRecord, putRecord } from "./store.ts";

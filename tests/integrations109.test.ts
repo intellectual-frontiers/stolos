@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Result } from "@intellectual-frontiers/core";
 import {
@@ -718,9 +718,8 @@ proves(
     const catalog = await loadScf().catch(() => undefined);
     if (catalog === undefined) {
       assert(
-        (await import("@intellectual-frontiers/commons/ts/runtime")).proc.env.get(
-          "STOLOS_REQUIRE_SCF",
-        ) === undefined,
+        (await import("@intellectual-frontiers/system")).proc.env.get("STOLOS_REQUIRE_SCF") ===
+          undefined,
         "STOLOS_REQUIRE_SCF is set (CI) but the SCF catalog is not cached",
       );
       return;

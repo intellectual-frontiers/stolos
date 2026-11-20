@@ -14,7 +14,7 @@
  * @module
  */
 import { sha256 } from "@intellectual-frontiers/crypto";
-import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const say = (line: string): void => {

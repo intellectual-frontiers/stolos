@@ -61,7 +61,7 @@
 // Spec: 103-three-ports FR-003, FR-004, FR-005, FR-006, FR-007
 // Spec: 107-pairing-and-query FR-001, FR-002, FR-003, FR-004, FR-006
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "./probe.ts";
 import { engineFile } from "../core/assets.ts";
 import { DEVICE_PAIR_PATH } from "../ontology.auto.ts";

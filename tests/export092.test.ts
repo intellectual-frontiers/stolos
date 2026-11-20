@@ -7,7 +7,8 @@
 import { dsse, sha256 } from "@intellectual-frontiers/crypto";
 import { unzip } from "@intellectual-frontiers/formats";
 import { otlp } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, grc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
+import { grc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,

@@ -12,7 +12,7 @@ import {
   proves,
   test,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import type { AnySchema } from "ajv";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { FACTS } from "./console/serve-stolos.ts";

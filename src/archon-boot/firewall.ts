@@ -9,7 +9,7 @@
 // Spec: 004-install
 // Spec: 106-one-passphrase-speed FR-008
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { run } from "../archon/core/exec.ts";
 import { probed } from "../archon/core/probe-cache.ts";
 

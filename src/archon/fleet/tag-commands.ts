@@ -16,7 +16,7 @@
 // Spec: 108-tags FR-006, FR-007, FR-015
 // Spec: 112-machine-reported-tags FR-004, FR-011, FR-012, FR-013
 
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

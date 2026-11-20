@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import {
   assert,
   assertEquals,

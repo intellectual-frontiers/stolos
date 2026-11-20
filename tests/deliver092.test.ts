@@ -10,7 +10,8 @@
  * @module
  */
 
-import { fs, path, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
@@ -20,7 +21,7 @@ import {
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fleet } from "./fixtures.ts";
 import { cms } from "@intellectual-frontiers/crypto";
-import { type jobs } from "@intellectual-frontiers/commons/ts/kernel";
+import { type jobPlan as jobs } from "@intellectual-frontiers/system";
 import {
   describeCertificateProblem,
   parseCertificate,

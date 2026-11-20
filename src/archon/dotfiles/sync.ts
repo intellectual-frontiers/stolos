@@ -8,7 +8,7 @@
  */
 // Spec: 031-dotfile-layers
 
-import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths } from "@intellectual-frontiers/system";
 import { onHost, P } from "../core/paths.ts";
 import { engineFile, engineFiles } from "../core/assets.ts";
 import { run } from "../core/exec.ts";

@@ -21,7 +21,7 @@
  */
 // Spec: 095-proposals
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { onHost, P } from "../core/paths.ts";
 import { getRecord, listRecords, putRecord, putRecords } from "../state/store.ts";

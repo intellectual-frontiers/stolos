@@ -21,7 +21,7 @@
  */
 // Spec: 005-first-boot
 
-import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths } from "@intellectual-frontiers/system";
 import { putRecord } from "../state/store.ts";
 import { onHost, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";

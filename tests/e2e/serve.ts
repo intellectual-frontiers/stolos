@@ -7,7 +7,8 @@
  *
  * @module
  */
-import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { serve } from "@intellectual-frontiers/commons/ts/runtime";
 
 const [root = ".", hostname = "127.0.0.1", port = "8000"] = proc.args;
 const TYPES: Readonly<Record<string, string>> = {

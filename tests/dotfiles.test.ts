@@ -4,7 +4,7 @@
  * @module
  */
 import * as width from "@intellectual-frontiers/terminal/width";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import {
   assertExists,
   assert,

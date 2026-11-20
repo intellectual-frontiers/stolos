@@ -45,7 +45,7 @@
 // Spec: 080-risks-vendors
 
 import { assess } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import type { ScfId } from "../compliance/scf.ts";
 import { isScfId } from "../compliance/scf.ts";
 import { P } from "../core/paths.ts";

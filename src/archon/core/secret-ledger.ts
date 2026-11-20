@@ -8,7 +8,7 @@
  */
 
 import { P } from "./paths.ts";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 
 /** The vault's local folder on the boot machine (holds the ledger; no secret). */
 export const VAULT_LOCAL: string = path.join(P.bootCache, "..", "vault");

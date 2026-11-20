@@ -11,7 +11,7 @@
  */
 // Spec: 082-multi-fleet
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { resetRoots } from "../core/paths.ts";
 import type { Client } from "./registry.ts";
 

@@ -8,7 +8,7 @@
  */
 // Spec: 010-tools
 
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { onHost } from "../core/paths.ts";
 

@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { planFor } from "../build.ts";
 import type { HostDef } from "../model/types.ts";

@@ -4,7 +4,7 @@
  * @module
  */
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { guideUrl } from "../src/archon/core/guides.ts";
 import {
   assert,

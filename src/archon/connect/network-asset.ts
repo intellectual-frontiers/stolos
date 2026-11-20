@@ -33,7 +33,7 @@
 // Spec: 111-network-posture FR-009, FR-010, FR-012, FR-021
 
 import { tsLiteral } from "@intellectual-frontiers/formats";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observation } from "./connector.ts";

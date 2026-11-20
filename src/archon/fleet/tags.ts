@@ -20,7 +20,7 @@
 // Spec: 112-machine-reported-tags FR-002, FR-003, FR-004, FR-010, FR-011, FR-013, FR-015
 // Spec: 110-network-assets FR-002, FR-010
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import type { AdoptedDef } from "../adopt/adopt.ts";
 import type { loadFleet, loadHosts } from "../model/load.ts";

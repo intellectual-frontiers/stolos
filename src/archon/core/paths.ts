@@ -40,7 +40,7 @@
 // Spec: 046-engine-instance
 // Spec: 082-multi-fleet
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 
 const { dirname, join, resolve, sep } = path;
 

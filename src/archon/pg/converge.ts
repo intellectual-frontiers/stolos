@@ -8,7 +8,7 @@
 // Spec: 038-pg
 // Spec: 039-pg-identity
 
-import { errors, fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path as paths } from "@intellectual-frontiers/system";
 import { getRecord, putRecord } from "../state/store.ts";
 import { onHost, P } from "../core/paths.ts";
 import { run, type RunResult } from "../core/exec.ts";

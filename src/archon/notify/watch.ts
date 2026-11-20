@@ -28,7 +28,7 @@
 // Spec: 027-mail
 
 import { absurd } from "@intellectual-frontiers/core";
-import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { loadFleet } from "../model/load.ts";
 import { localNetworks } from "../capabilities/ssh.ts";

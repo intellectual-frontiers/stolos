@@ -14,7 +14,7 @@
  */
 // Spec: 106-one-passphrase-speed FR-008
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { stateFolder, ui } from "./ui.ts";
 
 /** How long an answer is kept: five minutes (spec 106-one-passphrase-speed FR-008). */

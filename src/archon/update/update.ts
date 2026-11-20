@@ -10,7 +10,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { checkClock, describeSkew } from "../core/clock.ts";

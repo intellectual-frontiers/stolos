@@ -10,7 +10,7 @@
 // Spec: 115-compatibility FR-005
 
 import { json } from "@intellectual-frontiers/core";
-import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import type { SyncStatus } from "../reconcile/reconcile.ts";
 import { loadHosts } from "../model/load.ts";

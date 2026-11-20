@@ -17,7 +17,7 @@
  */
 // Spec: 112-machine-reported-tags FR-004, FR-007, FR-008
 
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { journal } from "../core/log.ts";
 import { asRoot, P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

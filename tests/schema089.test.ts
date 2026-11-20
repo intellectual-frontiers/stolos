@@ -3,7 +3,8 @@
  *
  * @module
  */
-import { fs, http } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,

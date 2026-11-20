@@ -10,7 +10,7 @@
  */
 // Spec: 004-install
 
-import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { SECRETS, writeSecret } from "../core/secrets.ts";
 

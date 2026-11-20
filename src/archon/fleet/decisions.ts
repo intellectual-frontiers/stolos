@@ -11,7 +11,7 @@
 // Spec: 047-intent-and-identity
 // Spec: 108-tags FR-004, FR-006
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { lf } from "@intellectual-frontiers/core";
 import { tsKey } from "@intellectual-frontiers/formats";
 import { P, repoRel } from "../core/paths.ts";

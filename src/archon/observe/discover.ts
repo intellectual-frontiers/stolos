@@ -14,7 +14,7 @@
 
 import { LOCAL_UI_ENDPOINT } from "../otelui/otelui.ts";
 import { OTEL_UI } from "../containers/catalog.ts";
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { onHost } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

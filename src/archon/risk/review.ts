@@ -31,7 +31,7 @@
 
 import { run } from "../core/exec.ts";
 import { type Literal, tsLiteral } from "@intellectual-frontiers/formats";
-import { fs, path as paths, proc, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, toError } from "@intellectual-frontiers/system";
 import { log } from "../core/log.ts";
 import { isDay } from "./register.ts";
 import { commitSigned } from "../fleet/signing.ts";

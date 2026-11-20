@@ -9,7 +9,7 @@
 // Spec: 099-engine-update FR-001, FR-002, FR-003
 // Spec: 114-release-record FR-006
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { TAG, TAG_PREFIX } from "../version.ts";
 import { compare, parseTag } from "./upgrade.ts";

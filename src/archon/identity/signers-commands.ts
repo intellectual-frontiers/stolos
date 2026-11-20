@@ -7,7 +7,7 @@
  */
 // Spec: 047-intent-and-identity
 
-import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio } from "@intellectual-frontiers/system";
 import { count } from "../core/telemetry.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

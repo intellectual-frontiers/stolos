@@ -6,7 +6,7 @@
 // Spec: 012-cli-mcp
 // Spec: 114-release-record FR-005
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { ALLOWED_SIGNERS, ALLOWED_SIGNERS_LOCAL, allowedSignersText } from "../identity/signers.ts";
 import type { Capability, FileDef } from "../model/types.ts";
 import { docsFiles } from "../render/man.ts";

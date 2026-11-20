@@ -6,7 +6,7 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { assert, assertEquals } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { VERSION } from "../src/archon/version.ts";
 import { askpassHelper, ENGINE_ROOT, linkEngine, sandbox, type Sandbox } from "./sandbox.ts";

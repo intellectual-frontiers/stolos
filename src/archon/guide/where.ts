@@ -20,7 +20,7 @@
  */
 // Spec: 053-where-am-i
 // Spec: 115-compatibility FR-005
-import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio } from "@intellectual-frontiers/system";
 import { onHost } from "../core/paths.ts";
 
 /** What `stolos` (no arguments) found about where you are: the facts its next step is chosen from. */

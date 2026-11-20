@@ -1,6 +1,6 @@
 {
   "name": "@intellectual-frontiers/stolos",
-  "version": "0.164.0",
+  "version": "0.165.0",
   "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
   "license": "BUSL-1.1",
   "type": "module",
@@ -38,12 +38,13 @@
     "versions:check": "bun node_modules/@intellectual-frontiers/commons/commons/ts/mizan/versions.ts check --base origin/main"
   },
   "dependencies": {
-    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#cbcf2863a78fe32bc501bc87d13e6b4210365709",
-    "@intellectual-frontiers/core": "0.1.0",
-    "@intellectual-frontiers/crypto": "0.1.0",
-    "@intellectual-frontiers/formats": "0.1.0",
-    "@intellectual-frontiers/rdf": "0.1.0",
-    "@intellectual-frontiers/terminal": "0.1.0",
+    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#c9b57ccd8609cb6fcffc1f59608a1b96a0f79a03",
+    "@intellectual-frontiers/core": "0.1.1",
+    "@intellectual-frontiers/crypto": "0.1.1",
+    "@intellectual-frontiers/formats": "0.1.1",
+    "@intellectual-frontiers/rdf": "0.1.1",
+    "@intellectual-frontiers/system": "0.1.0",
+    "@intellectual-frontiers/terminal": "0.1.1",
     "ajv": "8.17.1"
   },
   "devDependencies": {

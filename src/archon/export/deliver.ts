@@ -45,7 +45,7 @@ import type { ExportInput, ExportKind as ExportFormat } from "./exports.ts";
 import { type cms, sha256 as kernelSha256 } from "@intellectual-frontiers/crypto";
 import { type JsonObject } from "@intellectual-frontiers/formats";
 import { otel, otlp } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { type Attachment, escapeHtml, headerValue, mimeEntity } from "../notify/mime.ts";
 import {
   type Credential,

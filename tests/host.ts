@@ -11,7 +11,7 @@
  */
 
 import { fromBase64 } from "@intellectual-frontiers/formats";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { resetRoots } from "../src/archon/core/paths.ts";
 import type { Queued } from "../src/archon/notify/notify.ts";
 

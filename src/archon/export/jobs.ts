@@ -18,8 +18,8 @@ import type { ExportJobDef, ExportKind, ExportScheduleDef, FleetDef } from "../m
 import { EMAIL } from "../notify/transport.ts";
 import { absurd, ok, type Result } from "@intellectual-frontiers/core";
 import { cms } from "@intellectual-frontiers/crypto";
-import { jobs } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { jobPlan as jobs } from "@intellectual-frontiers/system";
+import { fs } from "@intellectual-frontiers/system";
 import { describeCertificateProblem, parseCertificate } from "./smime.ts";
 
 /** Every kind of export document, in the order a job lists them. */

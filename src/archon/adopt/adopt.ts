@@ -31,7 +31,7 @@
 // Spec: 115-compatibility FR-004, FR-006
 // Spec: 110-network-assets FR-006
 
-import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/system";
 import { compact } from "@intellectual-frontiers/core";
 import { tsLiteral } from "@intellectual-frontiers/formats";
 import { run } from "../core/exec.ts";

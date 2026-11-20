@@ -44,7 +44,7 @@
  */
 // Spec: 096-bun-runtime
 
-import type { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import type { proc } from "@intellectual-frontiers/system";
 
 /** The Bun every machine runs (commons `pmid:pin-bun`). */
 export const BUN_VERSION = "1.4.4";

@@ -18,7 +18,7 @@
  */
 // Spec: 045-retire
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { ui } from "../archon/core/ui.ts";
 import { P, repoRel } from "../archon/core/paths.ts";
 import { loadTokens, readSecret, saveTokens, SECRETS } from "../archon/core/secrets.ts";

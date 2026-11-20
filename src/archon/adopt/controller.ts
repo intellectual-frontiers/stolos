@@ -20,7 +20,7 @@
 // Spec: 107-pairing-and-query FR-010
 // Spec: 100-remote-access FR-012
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import type { AdoptedDef, Observed } from "./adopt.ts";

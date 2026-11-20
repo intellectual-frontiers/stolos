@@ -12,7 +12,8 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { fs, path, proc, serve, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { serve, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import {
   DEVICE_PAIR_PATH,

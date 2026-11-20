@@ -27,7 +27,7 @@
 
 import { fromBase64, toBase64 } from "@intellectual-frontiers/formats";
 import { otel } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { SECRETS } from "../core/secrets.ts";

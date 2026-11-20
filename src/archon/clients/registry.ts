@@ -13,7 +13,7 @@
  */
 // Spec: 082-multi-fleet
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { CLIENT_ID, listFleets, P } from "../core/paths.ts";
 
 /** The registry file's format. */

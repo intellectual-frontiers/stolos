@@ -18,7 +18,7 @@
  */
 // Spec: 115-compatibility FR-014, FR-016
 
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { SEAMS } from "../core/compat.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
@@ -119,7 +119,7 @@ export async function compatReport(
 
 /** The engine repository's tags, asked of the fleet's own pin (GitHub, or a `git+` URL), with a time limit. */
 async function defaultCheck(tags: string[]): Promise<Map<string, TagExists>> {
-  const { fs, path } = await import("@intellectual-frontiers/commons/ts/runtime");
+  const { fs, path } = await import("@intellectual-frontiers/system");
   const pin = readPin((await fs.readTextOr(path.join(P.repo, PIN_FILE))) ?? "");
   const url = pin ? engineUrl(pin) : undefined;
   return url

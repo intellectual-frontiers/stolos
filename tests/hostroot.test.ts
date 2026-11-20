@@ -7,7 +7,8 @@
  *
  * @module
  */
-import { fs, path, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
+import { serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,

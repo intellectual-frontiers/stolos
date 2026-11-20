@@ -32,7 +32,7 @@
 
 import { exportedLiteral, type Json } from "@intellectual-frontiers/formats";
 import { assess } from "@intellectual-frontiers/commons/ts/kernel";
-import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import type { RepoReader } from "../estate/snapshot.ts";
 import type { PcFacts } from "../console/pc.ts";

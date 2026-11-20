@@ -4,7 +4,7 @@
  * @module
  */
 import { json, number, object, record, string } from "@intellectual-frontiers/core";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import {
   assert,
   assertEquals,

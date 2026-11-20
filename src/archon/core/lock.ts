@@ -16,7 +16,7 @@
  *
  * @module
  */
-import { lock, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { lock, proc } from "@intellectual-frontiers/system";
 import { onHost } from "./paths.ts";
 
 /** The host lock file. */

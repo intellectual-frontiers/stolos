@@ -7,7 +7,7 @@
  */
 // Spec: 112-machine-reported-tags FR-008
 
-import { errors, fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path as paths, proc } from "@intellectual-frontiers/system";
 import { splitArgs } from "@intellectual-frontiers/core";
 import { getRecord, putRecord } from "../state/store.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";

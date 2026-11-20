@@ -11,7 +11,7 @@
 // Spec: 069-integrate
 
 import { tsLiteral } from "@intellectual-frontiers/formats";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import { defineControl, type ObservationControl } from "../controls/define.ts";

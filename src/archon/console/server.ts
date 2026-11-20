@@ -15,7 +15,8 @@
 // Spec: 099-engine-update FR-002
 
 import type { EngineVersions } from "../fleet/releases.ts";
-import { errors, type ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors } from "@intellectual-frontiers/system";
+import { type ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
 import {

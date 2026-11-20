@@ -7,7 +7,7 @@
  * @module
  */
 
-import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import { engineFile, engineSpecs } from "../core/assets.ts";
 import { loadFleet, loadHosts } from "./load.ts";

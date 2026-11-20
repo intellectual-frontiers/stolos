@@ -5,7 +5,7 @@
  * @module
  */
 import { Rung } from "@intellectual-frontiers/commons/ontology/mizan";
-import { path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { path, proc } from "@intellectual-frontiers/system";
 import {
   assert,
   assertEquals,

@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { planFor } from "../build.ts";

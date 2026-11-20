@@ -14,7 +14,7 @@
  * @module
  */
 
-import { path, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { path, toError } from "@intellectual-frontiers/system";
 import type { AdoptedDef } from "../adopt/adopt.ts";
 import type { Estate } from "../estate/graph.ts";
 import type { PackRun } from "../controls/run.ts";

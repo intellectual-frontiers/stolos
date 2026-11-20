@@ -8,7 +8,7 @@
  */
 // Spec: 044-durable
 
-import { errors, fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, stdio } from "@intellectual-frontiers/system";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { journal } from "../core/log.ts";

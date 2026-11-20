@@ -13,7 +13,7 @@
  */
 // Spec: 115-compatibility FR-003
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { mcpShape } from "../src/archon/mcp/compat-shape.ts";
 import {
   type DigestedSeam,

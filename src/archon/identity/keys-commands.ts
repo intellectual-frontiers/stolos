@@ -38,7 +38,7 @@
 // Spec: 057-keys
 // Spec: 097-controller FR-001
 
-import { fs, path as ifcPath, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as ifcPath, proc, stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

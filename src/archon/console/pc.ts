@@ -19,7 +19,7 @@
 // Spec: 117-adopted-in-status FR-006
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";

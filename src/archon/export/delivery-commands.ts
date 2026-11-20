@@ -46,8 +46,8 @@ import {
   object,
   string,
 } from "@intellectual-frontiers/core";
-import { jobs as kernelJobs, otel } from "@intellectual-frontiers/commons/ts/kernel";
-import { fs, jobs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, jobPlan, jobs, path, proc, stdio } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import type { ExportJobDef, FleetDef } from "../model/types.ts";
 import type { Credential } from "../notify/transport.ts";
@@ -193,17 +193,17 @@ export async function exportSchedule(
     log: path.join(P.state, "exports", job.id, "scheduled.log"),
   });
   if (spec.kind === "err") {
-    p.fail(kernelJobs.formatScheduleError(spec.error));
+    p.fail(jobPlan.formatScheduleError(spec.error));
     return 1;
   }
   const uid = proc.uid();
-  const plan = kernelJobs.planJob(spec.value, {
+  const plan = jobPlan.planJob(spec.value, {
     os,
     home: proc.homeDir(),
     ...(uid === undefined ? {} : { uid }),
   });
   if (plan.kind === "err") {
-    p.fail(kernelJobs.formatScheduleError(plan.error));
+    p.fail(jobPlan.formatScheduleError(plan.error));
     return 1;
   }
   if (o.dryRun) {

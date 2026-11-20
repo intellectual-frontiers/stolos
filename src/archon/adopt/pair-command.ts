@@ -15,7 +15,8 @@
 // Spec: 107-pairing-and-query FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007
 // Spec: 108-tags FR-008
 
-import { dns, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc, stdio } from "@intellectual-frontiers/system";
+import { dns } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact } from "@intellectual-frontiers/core";
 import { toBase64 } from "@intellectual-frontiers/formats";
 import { P } from "../core/paths.ts";

@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { fs, proc, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc, toError } from "@intellectual-frontiers/system";
 import { Ajv, type AnySchema } from "ajv";
 import {
   catalogCache,

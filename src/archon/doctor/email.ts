@@ -14,7 +14,8 @@
 // Spec: 026-doctor
 // Spec: 027-mail
 
-import { dns, fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
+import { dns } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Phase } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { enqueue, flush, loadCredential, queued, readStatus, type Site } from "../notify/notify.ts";

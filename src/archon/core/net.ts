@@ -11,7 +11,7 @@
  * @module
  */
 // Spec: 103-three-ports FR-001
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { standardPort } from "./listeners.ts";
 
 /** The boot server's default HTTP port: the ontology's `boot-http` listener (spec 103-three-ports FR-001). */

@@ -15,7 +15,7 @@
  */
 // Spec: 044-durable
 
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { ui } from "../archon/core/ui.ts";
 import { armHost, loadTokens, readSecret, SECRETS, writeSecret } from "../archon/core/secrets.ts";
 import { type AcmeCarry, deliverable, describeCarry } from "../archon/web/acme.ts";

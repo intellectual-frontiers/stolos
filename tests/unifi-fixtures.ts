@@ -11,7 +11,7 @@
  * @module
  */
 
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { assert, assertEquals } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { serveTls, type TlsServer } from "../src/archon/access/https.ts";

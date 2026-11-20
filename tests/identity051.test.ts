@@ -4,7 +4,8 @@
  * @module
  */
 import { array, json, object, string } from "@intellectual-frontiers/core";
-import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
+import { serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { at, list } from "./fixtures.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import {

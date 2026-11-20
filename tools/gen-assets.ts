@@ -16,7 +16,7 @@
  */
 // Spec: 046-engine-instance; 096-bun-runtime; 101-ladder FR-005
 import { lf } from "@intellectual-frontiers/core";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { guideMarkdown, GUIDES } from "../src/archon/core/guides.ts";
 import { generate } from "./ontology.ts";
 

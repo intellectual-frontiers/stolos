@@ -15,7 +15,7 @@
  */
 // Spec: 043-pg-connections
 
-import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/system";
 import { currentUser, homeOf, run } from "../core/exec.ts";
 import { loadFleet, loadHosts, usersFor } from "../model/load.ts";
 import { defaultDatabase, instancesOf, parseClusters, PG, publishedName } from "./config.ts";

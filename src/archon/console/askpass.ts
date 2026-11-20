@@ -25,7 +25,7 @@
  */
 // Spec: 099-engine-update FR-005
 
-import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
 
 /** How long a question waits for the browser before OpenSSH is told no. */
 export const ASK_TIMEOUT_MS = 5 * 60_000;

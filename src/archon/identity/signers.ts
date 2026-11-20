@@ -29,7 +29,7 @@
  */
 // Spec: 047-intent-and-identity
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { onHost, P } from "../core/paths.ts";
 import { run, type RunResult } from "../core/exec.ts";
 import type { SignerDef } from "../model/types.ts";

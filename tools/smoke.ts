@@ -24,7 +24,7 @@
  */
 // Spec: 096-bun-runtime
 // Spec: 114-release-record FR-014
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { versionLine } from "../src/archon/version.ts";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");

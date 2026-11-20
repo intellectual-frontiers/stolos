@@ -8,7 +8,7 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 
 /** A span, as far as this check reads it. */
 export type Span = { readonly traceId: string; readonly name: string; readonly host: string };

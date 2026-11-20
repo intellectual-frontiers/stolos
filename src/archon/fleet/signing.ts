@@ -11,7 +11,7 @@
 // Spec: 106-one-passphrase-speed FR-001 to FR-004
 // Spec: 114-release-record FR-007
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { passphrases } from "../core/passphrase.ts";
 import { ui } from "../core/ui.ts";

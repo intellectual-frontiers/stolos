@@ -7,7 +7,7 @@
  */
 // Spec: 004-install
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { onHost } from "../core/paths.ts";
 
 /** The file holding the boot server's event URL, left by the install. */

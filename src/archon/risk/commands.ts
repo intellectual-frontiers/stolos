@@ -9,7 +9,7 @@
  * @module
  */
 
-import { stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { stdio, toError } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import type { FleetRisk } from "./fleet.ts";

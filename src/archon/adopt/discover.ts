@@ -9,7 +9,7 @@
  */
 // Spec: 067-adopt
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 
 /** One machine seen but not in the fleet. */

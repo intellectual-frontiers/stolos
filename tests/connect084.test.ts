@@ -434,7 +434,7 @@ proves(
   ["084-connectors FR-002"],
   "084: stolos connect, disconnect, estate observe | check | assets; the console's page is Connected accounts",
   async () => {
-    const { fs, path } = await import("@intellectual-frontiers/commons/ts/runtime");
+    const { fs, path } = await import("@intellectual-frontiers/system");
     const { sandbox, linkEngine } = await import("./sandbox.ts");
     const { COMMANDS } = await import("../src/archon/commands/registry.ts");
     for (const n of ["connect", "disconnect", "estate observe", "estate check", "estate assets"]) {

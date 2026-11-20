@@ -27,7 +27,7 @@
 // Spec: 096-bun-runtime
 import { err, ok, type Result } from "@intellectual-frontiers/core";
 import * as cli from "@intellectual-frontiers/terminal/args";
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import {
   REPORT_FORMATS,
   type ReportFormat,

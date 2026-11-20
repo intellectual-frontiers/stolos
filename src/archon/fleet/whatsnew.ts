@@ -8,7 +8,7 @@
  */
 // Spec: 105-calm-output FR-016
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 
 /** The engine's public repository, whose commits the compare lists whatever mirror the fleet installs it from. */
 export const ENGINE_REPOSITORY = "intellectual-frontiers/stolos";

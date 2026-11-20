@@ -22,7 +22,7 @@
 // Spec: 106-one-passphrase-speed FR-009
 // Spec: 115-compatibility FR-011, FR-012
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { fetchOnce } from "../core/run-memo.ts";

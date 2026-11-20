@@ -20,7 +20,7 @@
  */
 
 import { boolean, type Decoder, object, string } from "@intellectual-frontiers/core";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import { count } from "../core/telemetry.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";

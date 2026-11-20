@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/system";
 import { assert, assertEquals, test } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { askpassHelper } from "./sandbox.ts";
 

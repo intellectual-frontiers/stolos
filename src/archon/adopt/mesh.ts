@@ -13,7 +13,7 @@
  */
 // Spec: 098-pair FR-010
 
-import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { proc } from "@intellectual-frontiers/system";
 
 /** One mesh network a fleet may use. Stolos recommends none in particular. */
 export interface MeshOption {

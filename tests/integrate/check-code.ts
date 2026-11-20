@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc, stdio } from "@intellectual-frontiers/system";
 import { parseCheckIn } from "../../src/archon/adopt/checkin.ts";
 
 const [file, family = "", ...kinds] = proc.args;

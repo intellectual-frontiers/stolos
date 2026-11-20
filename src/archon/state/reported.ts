@@ -7,7 +7,7 @@
  */
 // Spec: 112-machine-reported-tags FR-005, FR-010
 
-import { fs } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
 import { type MachineReport, parseMachineInfo, sanitizeReport } from "../model/reported.ts";
 import { getRecord, putRecord, recordsNamed, stateDir } from "./store.ts";
 

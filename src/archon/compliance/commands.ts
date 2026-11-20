@@ -12,7 +12,7 @@
 // Spec: 108-tags FR-016
 // Spec: 111-network-posture FR-014
 
-import { errors, fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { errors, fs, path, stdio, toError } from "@intellectual-frontiers/system";
 import type { OscalDocuments } from "./oscal.ts";
 import { ui } from "../core/ui.ts";
 import { catalogCache, loadNist, loadScf, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";

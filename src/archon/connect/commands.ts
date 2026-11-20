@@ -9,7 +9,8 @@
 // Spec: 110-network-assets FR-004, FR-005
 
 import { json, record, string } from "@intellectual-frontiers/core";
-import { fs, http, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, stdio } from "@intellectual-frontiers/system";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { aws } from "./aws.ts";

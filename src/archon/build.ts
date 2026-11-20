@@ -9,7 +9,7 @@
 // Spec: 110-network-assets FR-004
 
 import { lf } from "@intellectual-frontiers/core";
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";
 import { ui } from "./core/ui.ts";

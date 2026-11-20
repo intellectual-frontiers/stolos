@@ -4,7 +4,7 @@
  * @module
  */
 import type { Check } from "../src/archon/state/verify.ts";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 import {
   assertExists,
   assert,
@@ -34,7 +34,7 @@ import { parseArgs } from "../src/archon/core/registry-types.ts";
 import { handle, toolFor } from "../src/archon/mcp/server.ts";
 import { renderWelcome } from "../src/archon/web/welcome.ts";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";
-import { path } from "@intellectual-frontiers/commons/ts/runtime";
+import { path } from "@intellectual-frontiers/system";
 import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 const rec = (enabled: boolean, data?: DataClass): OptInRecord => ({

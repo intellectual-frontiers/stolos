@@ -18,7 +18,8 @@
 // Spec: 004-install
 // Spec: 103-three-ports FR-003, FR-004, FR-005
 
-import { fs, type tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/system";
+import { type tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { explainHint } from "../archon/core/ui.ts";
 import { DEVICE_PAIR_PATH } from "../archon/ontology.auto.ts";
 import type { ArchonEvent } from "../archon/telemetry/events.ts";

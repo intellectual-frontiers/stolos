@@ -35,7 +35,7 @@
 // Spec: 105-calm-output FR-005, FR-007, FR-012 to FR-016
 // Spec: 106-one-passphrase-speed FR-001, FR-006, FR-009
 
-import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { runNested } from "../core/nested.ts";
 import { passphrases } from "../core/passphrase.ts";

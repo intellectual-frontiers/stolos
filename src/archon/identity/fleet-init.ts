@@ -12,7 +12,7 @@
 // Spec: 108-tags FR-003
 // Spec: 114-release-record FR-005
 
-import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/system";
 import { cryptSalt, sha512Crypt } from "@intellectual-frontiers/crypto";
 import { tsLiteral } from "@intellectual-frontiers/formats";
 import { P, resetRoots } from "../core/paths.ts";

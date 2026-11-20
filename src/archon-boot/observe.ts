@@ -7,7 +7,7 @@
  */
 // Spec: 023-boot-telemetry
 
-import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path } from "@intellectual-frontiers/system";
 import { ui } from "../archon/core/ui.ts";
 import { TELEMETRY_DIR } from "./telemetry.ts";
 

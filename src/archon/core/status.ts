@@ -10,7 +10,7 @@
 
 import { P } from "./paths.ts";
 import { run } from "./exec.ts";
-import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/system";
 
 /** Where the status files live: `prompt`, `prompt-plain`, `last.json` and `verify.json`. */
 export const STATUS_DIR = "/var/lib/archon/status";

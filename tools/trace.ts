@@ -14,7 +14,8 @@
  */
 // Spec: 101-ladder FR-007, FR-008
 import { trace } from "@intellectual-frontiers/commons/ts/kernel";
-import { path, proc, trace as files } from "@intellectual-frontiers/commons/ts/runtime";
+import { path, proc } from "@intellectual-frontiers/system";
+import { trace as files } from "@intellectual-frontiers/commons/ts/runtime";
 import { citingSchemas, curieOf, files as ontologyFiles } from "../ontology/stolos/mod.ts";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");

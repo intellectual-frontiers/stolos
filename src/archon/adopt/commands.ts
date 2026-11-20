@@ -13,7 +13,7 @@
 // Spec: 117-adopted-in-status FR-006, FR-007
 
 import { array, compact, json, record, unknownValue } from "@intellectual-frontiers/core";
-import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
 import type { Discovered } from "./discover.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

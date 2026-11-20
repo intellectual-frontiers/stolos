@@ -43,7 +43,7 @@ proves(
     const { toEntities } = await import("../src/archon/connect/sdk.ts");
     const { readSnapshot, gitReader } = await import("../src/archon/estate/snapshot.ts");
     const { buildGraph, estateQuery } = await import("../src/archon/estate/graph.ts");
-    const { fs } = await import("@intellectual-frontiers/commons/ts/runtime");
+    const { fs } = await import("@intellectual-frontiers/system");
     const rec = (label: string, native_id: string, props: Record<string, unknown>) => ({
       label,
       ocsf_class_uid: 0,
@@ -144,7 +144,7 @@ proves(
   ["085-estate-graph FR-002"],
   "085: stolos estate query runs one SELECT over the last observations, in memory, and writes nothing",
   async () => {
-    const { fs, path } = await import("@intellectual-frontiers/commons/ts/runtime");
+    const { fs, path } = await import("@intellectual-frontiers/system");
     const { sandbox, linkEngine, fingerprint } = await import("./sandbox.ts");
     const { observationSource } = await import("../src/archon/connect/connector.ts");
     const sb = await sandbox("stolos-estate-query-");

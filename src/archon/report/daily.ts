@@ -5,7 +5,7 @@
  * @module
  */
 
-import { fs, path as paths, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs, path as paths, toError } from "@intellectual-frontiers/system";
 import { asRoot, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
