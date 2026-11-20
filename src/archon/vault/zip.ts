@@ -23,15 +23,10 @@
 // Spec: 056-zip-backup
 // Spec: 061-vault-restore
 
+import { array, type Decoder, integer, json, object, string } from "@intellectual-frontiers/core";
 import {
-  array,
-  type Decoder,
   formatArchiveError,
-  integer,
-  json,
-  object,
   sha256,
-  string,
   unzip,
   zipDeflated,
   zipEntries,

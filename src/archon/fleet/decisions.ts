@@ -12,7 +12,8 @@
 // Spec: 108-tags FR-004, FR-006
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
-import { lf, tsKey } from "@intellectual-frontiers/commons/ts/kernel";
+import { lf } from "@intellectual-frontiers/core";
+import { tsKey } from "@intellectual-frontiers/commons/ts/kernel";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import type { DataClass, HostDecisions, OptInRecord } from "../model/types.ts";

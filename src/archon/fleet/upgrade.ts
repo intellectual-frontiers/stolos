@@ -41,7 +41,7 @@
 // Spec: 105-calm-output FR-005, FR-012 to FR-014
 // Spec: 114-release-record FR-005, FR-007
 
-import { object, record, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { object, record, string } from "@intellectual-frontiers/core";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { listFleets, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";

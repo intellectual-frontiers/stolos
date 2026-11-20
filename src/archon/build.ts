@@ -8,7 +8,7 @@
 // Spec: 115-compatibility FR-013
 // Spec: 110-network-assets FR-004
 
-import { lf } from "@intellectual-frontiers/commons/ts/kernel";
+import { lf } from "@intellectual-frontiers/core";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";

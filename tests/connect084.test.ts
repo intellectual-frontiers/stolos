@@ -12,7 +12,7 @@ import {
   test,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
-import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import type { Result } from "@intellectual-frontiers/core";
 import { observationSource } from "../src/archon/connect/connector.ts";
 import { cloudflare } from "../src/archon/connect/cloudflare.ts";
 import { hetzner } from "../src/archon/connect/hetzner.ts";

@@ -17,7 +17,7 @@ import {
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv } from "ajv";
-import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import type { Result } from "@intellectual-frontiers/core";
 import { fs, type http, path } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   type Connector,

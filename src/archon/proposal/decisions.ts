@@ -13,15 +13,14 @@
 import {
   array,
   type Decoder,
-  exportedLiteral,
   formatDecodeError,
   literal,
   mapDecoder,
   object,
   record,
   string,
-  tsLiteral,
-} from "@intellectual-frontiers/commons/ts/kernel";
+} from "@intellectual-frontiers/core";
+import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import type { ProposalDecision, ProposalDecisions } from "./types.ts";

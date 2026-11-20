@@ -41,13 +41,12 @@ import {
   array,
   boolean,
   type Decoder,
-  jobs as kernelJobs,
   json,
   mapDecoder,
   object,
-  otel,
   string,
-} from "@intellectual-frontiers/commons/ts/kernel";
+} from "@intellectual-frontiers/core";
+import { jobs as kernelJobs, otel } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, jobs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import type { ExportJobDef, FleetDef } from "../model/types.ts";

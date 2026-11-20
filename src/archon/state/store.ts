@@ -25,7 +25,7 @@
  */
 // Spec: 048-observe-by-query
 
-import { formatDecodeError, object, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { formatDecodeError, object, string } from "@intellectual-frontiers/core";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { DatabaseSync } from "node:sqlite";

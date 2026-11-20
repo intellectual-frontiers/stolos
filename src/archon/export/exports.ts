@@ -26,7 +26,7 @@
  */
 // Spec: 092-exporters
 
-import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import { type OscalDocuments, oscalExports } from "../compliance/oscal.ts";
 import type { ComplianceView } from "../compliance/report.ts";

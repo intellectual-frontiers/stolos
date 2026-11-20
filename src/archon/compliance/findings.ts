@@ -25,7 +25,8 @@
  * @module
  */
 
-import { absurd, grc } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
+import { grc } from "@intellectual-frontiers/commons/ts/kernel";
 import type { ScfCatalog } from "./catalog.ts";
 import { allEvidence } from "./oscal.ts";
 import type { ComplianceView, Evidence } from "./report.ts";

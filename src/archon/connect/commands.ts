@@ -8,7 +8,7 @@
 // Spec: 109-integrations-api FR-006, FR-012, FR-018
 // Spec: 110-network-assets FR-004, FR-005
 
-import { json, record, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { json, record, string } from "@intellectual-frontiers/core";
 import { fs, http, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import type { Result } from "@intellectual-frontiers/core";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { github } from "../src/archon/connect/github.ts";
 import { okta } from "../src/archon/connect/okta.ts";

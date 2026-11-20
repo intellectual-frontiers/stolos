@@ -39,10 +39,10 @@ import {
   number,
   object,
   oneOf,
-  otel,
   string,
   unknownValue,
-} from "@intellectual-frontiers/commons/ts/kernel";
+} from "@intellectual-frontiers/core";
+import { otel } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   type Action,

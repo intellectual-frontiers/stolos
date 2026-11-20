@@ -3,13 +3,7 @@
  *
  * @module
  */
-import {
-  array,
-  type Decoder,
-  json,
-  object,
-  string,
-} from "@intellectual-frontiers/commons/ts/kernel";
+import { array, type Decoder, json, object, string } from "@intellectual-frontiers/core";
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,

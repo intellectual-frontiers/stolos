@@ -42,11 +42,9 @@ import {
   mapDecoder,
   object,
   type Result,
-  sha256,
   string,
-  unzip,
-  zipDeflated,
-} from "@intellectual-frontiers/commons/ts/kernel";
+} from "@intellectual-frontiers/core";
+import { sha256, unzip, zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, sign } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 

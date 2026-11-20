@@ -25,7 +25,8 @@
  * @module
  */
 // Spec: 096-bun-runtime
-import { args as cli, err, ok, type Result } from "@intellectual-frontiers/commons/ts/kernel";
+import { err, ok, type Result } from "@intellectual-frontiers/core";
+import { args as cli } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   REPORT_FORMATS,

@@ -9,7 +9,7 @@
 // Spec: 112-machine-reported-tags FR-005, FR-007
 // Spec: 115-compatibility FR-005
 
-import { json } from "@intellectual-frontiers/commons/ts/kernel";
+import { json } from "@intellectual-frontiers/core";
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import type { SyncStatus } from "../reconcile/reconcile.ts";

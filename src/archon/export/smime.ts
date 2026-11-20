@@ -26,7 +26,8 @@
  */
 // Spec: 092-exporters
 
-import { absurd, cms, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
+import { cms, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
 
 /** Headers of the outer (unencrypted) message: who, the subject, and nothing else. */
 export interface SmimeHeaders {

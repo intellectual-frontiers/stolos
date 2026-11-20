@@ -31,7 +31,8 @@
 // Spec: 073-freshness
 // Spec: 111-network-posture FR-014
 
-import { absurd, assess, grc } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
+import { assess, grc } from "@intellectual-frontiers/commons/ts/kernel";
 import type { PcFacts } from "../console/pc.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import {

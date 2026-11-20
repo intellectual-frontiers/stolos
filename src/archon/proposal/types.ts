@@ -8,7 +8,7 @@
  */
 // Spec: 095-proposals
 
-import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
 
 /** The spec that brings proposals. */
 export const PROPOSAL_SPEC = "095-proposals" as const;

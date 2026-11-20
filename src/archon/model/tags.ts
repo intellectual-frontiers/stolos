@@ -53,7 +53,7 @@
 // Spec: 112-machine-reported-tags FR-002, FR-003, FR-005, FR-011
 // Spec: 110-network-assets FR-010
 
-import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
 import {
   TAG_CARDINALITIES,
   TAG_COLOURS,

@@ -31,14 +31,14 @@
 import {
   array,
   type Decoder,
-  exportedLiteral,
   formatDecodeError,
   literal,
   mapDecoder,
   object,
   record,
   string,
-} from "@intellectual-frontiers/commons/ts/kernel";
+} from "@intellectual-frontiers/core";
+import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { defineLabel, type LabelView } from "../schema/define.ts";
 
 /**

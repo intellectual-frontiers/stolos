@@ -29,7 +29,7 @@
  */
 // Spec: 089-ocsf-schema-language
 
-import { type Result, unknownValue } from "@intellectual-frontiers/commons/ts/kernel";
+import { type Result, unknownValue } from "@intellectual-frontiers/core";
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { PolicyResult } from "../adopt/policy.ts";
 import { OCSF_CLASSES } from "../ocsf/classes.ts";

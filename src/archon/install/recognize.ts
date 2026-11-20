@@ -26,7 +26,7 @@
  */
 // Spec: 051-machine-identity
 
-import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
 import { parseMac } from "../fleet/registration.ts";
 import type { HostRegistration } from "../model/types.ts";
 

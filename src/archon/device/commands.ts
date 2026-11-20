@@ -5,7 +5,7 @@
  */
 // Spec: 117-adopted-in-status FR-006, FR-007
 
-import { json, object, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { json, object, string } from "@intellectual-frontiers/core";
 import { fs, path, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import { MACHINE_NAME } from "../adopt/adopt.ts";

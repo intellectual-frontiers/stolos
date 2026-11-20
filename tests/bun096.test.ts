@@ -111,7 +111,11 @@ proves(
     const pkg: unknown = JSON.parse(await fs.readTextFile(path.join(ROOT, "package.json")));
     const deps = strings(pkg, "dependencies");
     const dev = strings(pkg, "devDependencies");
-    assertEquals(Object.keys(deps).sort(), ["@intellectual-frontiers/commons", "ajv"]);
+    assertEquals(Object.keys(deps).sort(), [
+      "@intellectual-frontiers/commons",
+      "@intellectual-frontiers/core",
+      "ajv",
+    ]);
     assertEquals(Object.keys(dev).sort(), ["@types/node", "typescript"]);
     assert(/^7\.\d+\.\d+$/.test(dev["typescript"] ?? ""), "TypeScript 7, exactly");
     const commons = deps["@intellectual-frontiers/commons"] ?? "";

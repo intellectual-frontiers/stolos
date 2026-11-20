@@ -27,15 +27,17 @@
 import {
   array,
   type Decoder,
-  exportedLiteral,
   formatDecodeError,
   integer,
   literal,
   object,
+  string,
+} from "@intellectual-frontiers/core";
+import {
+  exportedLiteral,
   parseRange,
   parseSemVer,
   satisfies,
-  string,
   tsLiteral,
 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";

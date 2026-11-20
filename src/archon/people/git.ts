@@ -28,12 +28,12 @@ import {
   array,
   boolean,
   type Decoder,
-  exportedLiteral,
   object,
   record,
   string,
   unknownValue,
-} from "@intellectual-frontiers/commons/ts/kernel";
+} from "@intellectual-frontiers/core";
+import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { run } from "../core/exec.ts";
 import type { Item } from "../evidence/bundle.ts";
 import type { SignerDef } from "../model/types.ts";

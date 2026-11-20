@@ -11,7 +11,7 @@
 // Spec: 107-pairing-and-query FR-007, FR-009
 // Spec: 110-network-assets FR-002
 
-import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
 import { WAYS_OF_JOINING, type MachineKind, type WayOfJoining } from "../ontology.auto.ts";
 
 export { WAYS_OF_JOINING, type WayOfJoining };

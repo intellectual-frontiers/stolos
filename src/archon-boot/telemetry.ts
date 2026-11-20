@@ -27,7 +27,8 @@
 // Spec: 049-telemetry
 // Spec: 096-bun-runtime
 
-import { err, ok, otlp, type Result, signals } from "@intellectual-frontiers/commons/ts/kernel";
+import { err, ok, type Result } from "@intellectual-frontiers/core";
+import { otlp, signals } from "@intellectual-frontiers/commons/ts/kernel";
 import type { otel as kotel } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, otel, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { type ArchonEvent, toLogsRequest } from "../archon/telemetry/events.ts";

@@ -56,7 +56,11 @@ proves(
         if (spec === undefined) return;
         // Relative (with .ts), node: builtins, the packages package.json declares, and the PAM
         // binding's bun:ffi (spec 096); never npm:, jsr: or a URL.
-        if (!/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|ajv(\/|$)|bun:ffi$)/.test(spec)) {
+        if (
+          !/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|@intellectual-frontiers\/core$|ajv(\/|$)|bun:ffi$)/.test(
+            spec,
+          )
+        ) {
           bad.push(`${f}:${i + 1} ${spec}`);
         }
         if (/(^|\/)(fleets|examples)\//.test(spec)) bad.push(`${f}:${i + 1} ${spec}`);

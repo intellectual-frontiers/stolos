@@ -25,7 +25,7 @@
 // Spec: 109-integrations-api FR-001, FR-002, FR-004, FR-005
 // Spec: 110-network-assets FR-007, FR-012
 
-import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import type { Result } from "@intellectual-frontiers/core";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { API_CAPABILITIES } from "../ontology.auto.ts";
 import { AccessDenied } from "./connector.ts";

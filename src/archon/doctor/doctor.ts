@@ -9,14 +9,7 @@
  * @module
  */
 
-import {
-  array,
-  integer,
-  json,
-  number,
-  object,
-  string,
-} from "@intellectual-frontiers/commons/ts/kernel";
+import { array, integer, json, number, object, string } from "@intellectual-frontiers/core";
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { asRoot, P } from "../core/paths.ts";

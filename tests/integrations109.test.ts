@@ -8,7 +8,7 @@
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
-import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import type { Result } from "@intellectual-frontiers/core";
 import {
   assert,
   assertEquals,

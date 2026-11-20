@@ -32,7 +32,8 @@
 // Spec: 110-network-assets FR-006
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
-import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { compact } from "@intellectual-frontiers/core";
+import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ownerOnly, writeSecret } from "../core/secrets.ts";

@@ -34,7 +34,7 @@
 // Spec: 076-fedramp-20x
 // Spec: 111-network-posture FR-014
 
-import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { absurd } from "@intellectual-frontiers/core";
 import type { PcFacts } from "../console/pc.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import { combine, type Coverage, type Evidence, fleetEvidence } from "../compliance/report.ts";

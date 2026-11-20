@@ -16,7 +16,8 @@
 // Spec: 108-tags FR-008
 
 import { dns, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
-import { compact, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { compact } from "@intellectual-frontiers/core";
+import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { choosePort, firewallRule, outsideStandardNote, standardPort } from "../core/listeners.ts";
