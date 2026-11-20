@@ -10,7 +10,7 @@
  */
 // Spec: 030-agent-layer
 
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/system";
 import { count } from "../core/telemetry.ts";
 import { COMMANDS } from "../commands/registry.ts";

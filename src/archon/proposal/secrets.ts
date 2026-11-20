@@ -10,7 +10,7 @@
 // Spec: 095-proposals
 
 import { sha256 } from "@intellectual-frontiers/crypto";
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import { patternOf, SECRET_INVENTORY } from "../model/secret-inventory.ts";
 import type { FileEvidence } from "./types.ts";
 

@@ -6,7 +6,7 @@
  */
 import { dsse, sha256 } from "@intellectual-frontiers/crypto";
 import { unzip } from "@intellectual-frontiers/formats";
-import { otlp } from "@intellectual-frontiers/commons/ts/kernel";
+import { otlp } from "@intellectual-frontiers/telemetry";
 import { fs } from "@intellectual-frontiers/system";
 import { grc } from "@intellectual-frontiers/commons/ts/runtime";
 import {

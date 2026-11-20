@@ -46,7 +46,7 @@ import {
   object,
   string,
 } from "@intellectual-frontiers/core";
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import { fs, jobPlan, jobs, path, proc, stdio } from "@intellectual-frontiers/system";
 import { ui } from "../core/ui.ts";
 import type { ExportJobDef, FleetDef } from "../model/types.ts";

@@ -41,8 +41,8 @@
 // Spec: 049-telemetry
 // Spec: 096-bun-runtime
 import { err, ok, type Result } from "@intellectual-frontiers/core";
-import { otel as kotel, signals } from "@intellectual-frontiers/commons/ts/kernel";
-import { otel } from "@intellectual-frontiers/commons/ts/runtime";
+import { otel as kotel, signals } from "@intellectual-frontiers/telemetry";
+import { otel } from "@intellectual-frontiers/telemetry/host";
 import { ATTRIBUTES, type MetricName, METRICS, SPANS } from "../telemetry/signals.ts";
 import { EVENTS } from "../telemetry/events.ts";
 

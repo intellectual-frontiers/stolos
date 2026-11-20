@@ -26,7 +26,7 @@
 // Spec: 027-mail
 
 import { fromBase64, toBase64 } from "@intellectual-frontiers/formats";
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";

@@ -7,7 +7,7 @@
  * @module
  */
 
-import { otel as kotel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel as kotel } from "@intellectual-frontiers/telemetry";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {

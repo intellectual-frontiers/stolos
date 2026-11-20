@@ -5,7 +5,7 @@
  * @module
  */
 
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import { fs } from "@intellectual-frontiers/system";
 import {
   assert,

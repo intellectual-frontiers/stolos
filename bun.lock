@@ -5,12 +5,13 @@
     "": {
       "name": "@intellectual-frontiers/stolos",
       "dependencies": {
-        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#c9b57ccd8609cb6fcffc1f59608a1b96a0f79a03",
+        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#9d441a2fba946c24d0c740bab8dcdffb5e8c582b",
         "@intellectual-frontiers/core": "0.1.1",
         "@intellectual-frontiers/crypto": "0.1.1",
         "@intellectual-frontiers/formats": "0.1.1",
         "@intellectual-frontiers/rdf": "0.1.1",
         "@intellectual-frontiers/system": "0.1.0",
+        "@intellectual-frontiers/telemetry": "0.1.0",
         "@intellectual-frontiers/terminal": "0.1.1",
         "ajv": "8.17.1",
       },
@@ -31,7 +32,7 @@
 
     "@iconify/utils": ["@iconify/utils@3.1.7", "", { "dependencies": { "@antfu/install-pkg": "^2.0.1", "@iconify/types": "^2.0.0", "import-meta-resolve": "^4.2.0" } }, "sha512-JZHlwdID+dy+lTgbYC8NEC4zeugqeYsc6jewvzb4c58kHauJn+X7rNwQjxz5p2qSjqaEeQoLkCIQ9v/H4PK0/w=="],
 
-    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#c9b57cc", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/crypto": "0.1.0", "@intellectual-frontiers/formats": "0.1.0", "@intellectual-frontiers/rdf": "0.1.0", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/terminal": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-c9b57cc", "sha512-Ziw0EmmKZP+UviG5Kmd6MkUXbzQlVQtIAKvR9qo+7uGjPZJ8A63NQu4oeFQQafF8pGGh1ER3PcZ9Oyfr4EAuOQ=="],
+    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#9d441a2", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/crypto": "0.1.0", "@intellectual-frontiers/formats": "0.1.0", "@intellectual-frontiers/rdf": "0.1.0", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/telemetry": "0.1.0", "@intellectual-frontiers/terminal": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-9d441a2", "sha512-2pTwEARZpbpYuXFP19NsA0ruXmo2idpSRySTdwm5iofPlKVwh+cO6yeMDmC2nU4tj4M1I1feV5/n7S90RwXFNg=="],
 
     "@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.1", "", {}, "sha512-2CRWnO8kSVnsNemWJJUfbILnFuUzMKNAVdra8J4ZXS1O7pDubZw/OM4egq2iWo9+VP45cblxNVjIvV43c7fwSQ=="],
 
@@ -42,6 +43,8 @@
     "@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-Xs2B/0YDKwimn4AglHnj5lq3DQ83y4f7qkI9p+qtQvpQ6WOctVhVQLegQ4RcexIGrJR1kt6gY3VuyIyojuCxjQ=="],
 
     "@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/crypto": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-YoD6seQNw07sz4haAOC82iNHlPXO6bGfqG7yEZDv4CHhAd9XZozn1BP46AovQLPHrEju9+2PwagKHx9y/FR/nA=="],
+
+    "@intellectual-frontiers/telemetry": ["@intellectual-frontiers/telemetry@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/terminal": "0.1.1" } }, "sha512-JjDLdYVwxLiDYnm/XuzKGjKVmhKqHgK67t3ypaQzb7/EBySMBkoq7Pw8ufg+FPsXezQyrk71CQIcDw0IcpfxjQ=="],
 
     "@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-AyfjvpsWzVkeAHQGwkDgJlCjpORgrocahJ1Q0iGbnkP6OP5VXpqyPv2fFJtaWCbYS1F956vj39UNV3Omp60HaA=="],
 

@@ -11,7 +11,7 @@
 // Spec: 095-proposals
 
 import { json, record, unknownValue } from "@intellectual-frontiers/core";
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import type { Alert, Observation, SubjectKind } from "./types.ts";
 
 /** A short stable id for an observation: the same evidence collected twice is one record. */

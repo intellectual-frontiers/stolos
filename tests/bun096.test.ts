@@ -117,6 +117,8 @@ proves(
       "@intellectual-frontiers/crypto",
       "@intellectual-frontiers/formats",
       "@intellectual-frontiers/rdf",
+      "@intellectual-frontiers/system",
+      "@intellectual-frontiers/telemetry",
       "@intellectual-frontiers/terminal",
       "ajv",
     ]);

@@ -42,7 +42,7 @@ import {
   string,
   unknownValue,
 } from "@intellectual-frontiers/core";
-import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/telemetry";
 import { fs, path as paths, proc } from "@intellectual-frontiers/system";
 import {
   type Action,

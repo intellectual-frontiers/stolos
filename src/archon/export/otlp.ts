@@ -39,7 +39,7 @@
 // Spec: 092-exporters
 
 import { type JsonObject } from "@intellectual-frontiers/formats";
-import { type otel, otlp } from "@intellectual-frontiers/commons/ts/kernel";
+import { type otel, otlp } from "@intellectual-frontiers/telemetry";
 import { grc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ocsfClassName } from "../ocsf/classes.ts";
 import { VERSION } from "../version.ts";
