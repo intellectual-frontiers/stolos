@@ -32,7 +32,7 @@ import { MemoryPairStore, newPairRecord } from "../src/archon/adopt/pair-store.t
 import { DEVICE_PAIR_PATH } from "../src/archon/ontology.auto.ts";
 import { parseCheckIn } from "../src/archon/adopt/checkin.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS, PROBE_VERSION } from "../src/archon/adopt/probe.ts";
-import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { toBase64 } from "@intellectual-frontiers/formats";
 import { servePair, untilDelivered } from "./integrate/pair-server.ts";
 
 const KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexampleexampleexampleexampleexample00";

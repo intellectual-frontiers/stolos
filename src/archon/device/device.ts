@@ -10,7 +10,7 @@
  */
 // Spec: 069-integrate
 
-import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";

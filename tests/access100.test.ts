@@ -10,7 +10,8 @@
  * @module
  */
 
-import { cbor, cose, toBase64Url } from "@intellectual-frontiers/commons/ts/kernel";
+import { cbor, toBase64Url } from "@intellectual-frontiers/formats";
+import { cose } from "@intellectual-frontiers/crypto";
 import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,

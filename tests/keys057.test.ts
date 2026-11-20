@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { zipEntries } from "@intellectual-frontiers/commons/ts/kernel";
+import { zipEntries } from "@intellectual-frontiers/formats";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,

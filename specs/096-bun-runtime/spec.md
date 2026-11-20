@@ -121,7 +121,7 @@ flowchart LR
   runtime's file; vendored third-party files keep their publishers' text. The one file that names a
   runtime's API is the PAM binding, which imports `bun:ffi`, as the lint plugin's allow list says.
 - **FR-002** `package.json` pins the development dependencies exactly (TypeScript 7, `@types/node`)
-  and the run-time ones (commons by `github:intellectual-frontiers/.github#<full commit>`, `@intellectual-frontiers/core` from npm, `ajv`),
+  and the run-time ones (commons by `github:intellectual-frontiers/.github#<full commit>`, `@intellectual-frontiers/core`, `crypto`, `formats`, `rdf` and `terminal` from npm, `ajv`),
   with `bun.lock` beside it, which pins commons' commit and its integrity;
   `bun install --frozen-lockfile` installs them.
 - **FR-003** `tsc` 7 type-checks every file with IFC TypeScript's strict configuration.

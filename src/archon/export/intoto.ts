@@ -46,7 +46,8 @@
  */
 // Spec: 092-exporters
 
-import { dsse, sha256, unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { dsse, sha256 } from "@intellectual-frontiers/crypto";
+import { unzip } from "@intellectual-frontiers/formats";
 import { type Manifest, manifestText, NAMESPACE, parseManifest } from "../evidence/bundle.ts";
 
 /** Stolos's predicate type for an evidence bundle's summary. */

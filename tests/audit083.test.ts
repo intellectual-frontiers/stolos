@@ -5,13 +5,8 @@
  * @module
  */
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
-import {
-  type Literal,
-  sha256,
-  tsLiteral,
-  unzip,
-  zipDeflated,
-} from "@intellectual-frontiers/commons/ts/kernel";
+import { type Literal, tsLiteral, unzip, zipDeflated } from "@intellectual-frontiers/formats";
+import { sha256 } from "@intellectual-frontiers/crypto";
 import {
   assert,
   assertEquals,

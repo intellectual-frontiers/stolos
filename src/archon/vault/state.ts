@@ -7,7 +7,7 @@
  */
 // Spec: 029-vault
 
-import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { type Ledger, readLedger, VAULT_LOCAL, writeLedger } from "../core/secret-ledger.ts";

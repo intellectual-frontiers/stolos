@@ -33,13 +33,7 @@ import {
   object,
   string,
 } from "@intellectual-frontiers/core";
-import {
-  exportedLiteral,
-  parseRange,
-  parseSemVer,
-  satisfies,
-  tsLiteral,
-} from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral, parseRange, parseSemVer, satisfies, tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { schemaProblems, type ViewDef } from "../schema/define.ts";
 import { OCSF_CLASSES } from "../ocsf/classes.ts";

@@ -18,7 +18,7 @@
  */
 // Spec: 083-auditor-portal
 
-import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/crypto";
 import { run } from "../core/exec.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { verifyBundle, type VerifyResult } from "../evidence/bundle.ts";

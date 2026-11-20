@@ -381,7 +381,7 @@ proves(
   "099: ⚡ is your move: commons' mark, its own section, never a warning, and the run still succeeds",
   async () => {
     const { Ui } = await import("../src/archon/core/ui.ts");
-    const { palette } = await import("@intellectual-frontiers/commons/ts/kernel");
+    const palette = await import("@intellectual-frontiers/terminal/palette");
     const run = (emoji: boolean) => {
       let text = "";
       const ui = new Ui({

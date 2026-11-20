@@ -11,7 +11,8 @@ import {
   assertThrows,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { sha256, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 } from "@intellectual-frontiers/crypto";
+import { toBase64 } from "@intellectual-frontiers/formats";
 import { fs, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { nameFor, parseCheckIn } from "../src/archon/adopt/checkin.ts";
 import { fromCheckIn, integrateLines } from "../src/archon/adopt/integrate.ts";

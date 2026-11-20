@@ -30,7 +30,7 @@
 // Spec: 106-one-passphrase-speed FR-001
 
 import { run } from "../core/exec.ts";
-import { type Literal, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { type Literal, tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, path as paths, proc, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { log } from "../core/log.ts";
 import { isDay } from "./register.ts";

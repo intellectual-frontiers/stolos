@@ -22,7 +22,7 @@
  */
 // Spec: 083-auditor-portal
 
-import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/formats";
 import { POPULATION_IDS, type PopulationId } from "./populations.ts";
 
 /** One person at the audit firm. */

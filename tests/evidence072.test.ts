@@ -4,7 +4,7 @@
  * @module
  */
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
-import { unzip, zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
+import { unzip, zipDeflated } from "@intellectual-frontiers/formats";
 import {
   assert,
   assertEquals,

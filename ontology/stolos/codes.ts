@@ -6,7 +6,7 @@
  * @module
  */
 // Spec: 101-ladder FR-004, FR-006
-import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import * as rdf from "@intellectual-frontiers/rdf";
 import * as palette from "@intellectual-frontiers/terminal/palette";
 import {
   CommandTierSchema,

@@ -33,7 +33,7 @@ import {
   string,
   unknownValue,
 } from "@intellectual-frontiers/core";
-import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral } from "@intellectual-frontiers/formats";
 import { run } from "../core/exec.ts";
 import type { Item } from "../evidence/bundle.ts";
 import type { SignerDef } from "../model/types.ts";

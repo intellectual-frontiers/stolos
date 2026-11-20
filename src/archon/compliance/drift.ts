@@ -30,7 +30,8 @@
 // Spec: 117-adopted-in-status FR-006, FR-007
 // Spec: 111-network-posture FR-014, FR-019
 
-import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral, type Json } from "@intellectual-frontiers/formats";
+import { assess } from "@intellectual-frontiers/commons/ts/kernel";
 import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import type { RepoReader } from "../estate/snapshot.ts";

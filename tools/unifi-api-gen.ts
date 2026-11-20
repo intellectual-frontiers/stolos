@@ -18,7 +18,7 @@
  * @module
  */
 // Spec: 109-integrations-api FR-009, FR-010
-import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");

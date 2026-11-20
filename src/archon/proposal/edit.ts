@@ -20,7 +20,7 @@
  */
 // Spec: 095-proposals
 
-import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/formats";
 import type { AdoptedDef } from "../capabilities/adopted.ts";
 import type { HostPlan, SpecId } from "../model/types.ts";
 import { type Edit, editText, type Proposal, type ProposalItem } from "./types.ts";

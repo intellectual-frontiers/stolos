@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
+import { zipDeflated } from "@intellectual-frontiers/formats";
 import {
   assert,
   assertEquals,

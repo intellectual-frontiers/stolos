@@ -22,7 +22,7 @@ import {
   MZID,
   OntologyTerm,
 } from "@intellectual-frontiers/commons/ontology/mizan";
-import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import * as rdf from "@intellectual-frontiers/rdf";
 import { STOLOS, stolos } from "./vocabulary.ts";
 
 const { en, RDFS, SKOS, term, XSD } = rdf;

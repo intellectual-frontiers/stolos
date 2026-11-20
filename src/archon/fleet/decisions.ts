@@ -13,7 +13,7 @@
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { lf } from "@intellectual-frontiers/core";
-import { tsKey } from "@intellectual-frontiers/commons/ts/kernel";
+import { tsKey } from "@intellectual-frontiers/formats";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import type { DataClass, HostDecisions, OptInRecord } from "../model/types.ts";

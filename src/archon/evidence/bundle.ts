@@ -44,7 +44,8 @@ import {
   type Result,
   string,
 } from "@intellectual-frontiers/core";
-import { sha256, unzip, zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 } from "@intellectual-frontiers/crypto";
+import { unzip, zipDeflated } from "@intellectual-frontiers/formats";
 import { fs, path, sign } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 

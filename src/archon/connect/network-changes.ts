@@ -27,7 +27,7 @@
  */
 // Spec: 111-network-posture FR-018, FR-019, FR-020
 
-import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral } from "@intellectual-frontiers/formats";
 import type { ScfId } from "../compliance/scf.ts";
 import { run } from "../core/exec.ts";
 import { gitReader } from "../estate/snapshot.ts";

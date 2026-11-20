@@ -15,7 +15,7 @@
  */
 // Spec: 101-ladder FR-004
 import { Rung as MizanRung } from "@intellectual-frontiers/commons/ontology/mizan";
-import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import * as rdf from "@intellectual-frontiers/rdf";
 
 const {
   classSchema,

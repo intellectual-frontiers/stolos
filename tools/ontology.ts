@@ -22,7 +22,7 @@
  * @module
  */
 // Spec: 101-ladder FR-001, FR-004, FR-005
-import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import * as rdf from "@intellectual-frontiers/rdf";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { CODE_LISTS, definedTerms, files, rungs, STOLOS } from "../ontology/stolos/mod.ts";
 

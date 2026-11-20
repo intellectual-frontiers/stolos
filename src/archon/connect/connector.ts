@@ -18,7 +18,7 @@
 // Spec: 084-connectors
 // Spec: 109-integrations-api FR-006, FR-012
 
-import { formatJson5Error, parseJson5, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { formatJson5Error, parseJson5, tsLiteral } from "@intellectual-frontiers/formats";
 import { type http, path } from "@intellectual-frontiers/commons/ts/runtime";
 import type { ObservedRecord } from "./sdk.ts";
 import { P } from "../core/paths.ts";

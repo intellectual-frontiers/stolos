@@ -46,7 +46,7 @@
 // Spec: 099-engine-update FR-008
 // Spec: 117-adopted-in-status FR-006, FR-007
 
-import { parseTsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { parseTsLiteral } from "@intellectual-frontiers/formats";
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { log } from "../core/log.ts";
 import { run } from "../core/exec.ts";

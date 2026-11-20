@@ -15,7 +15,7 @@
 // Spec: 106-one-passphrase-speed FR-001
 
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
-import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/formats";
 import { ui } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";

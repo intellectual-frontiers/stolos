@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import { unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { unzip } from "@intellectual-frontiers/formats";
 import { P, resetRoots } from "../src/archon/core/paths.ts";
 import { Sessions } from "../src/archon/console/auth.ts";
 import { Launch } from "../src/archon/console/stolos-server.ts";

@@ -32,7 +32,7 @@
 // Spec: 110-network-assets FR-001, FR-002, FR-003, FR-004, FR-005, FR-006
 // Spec: 111-network-posture FR-009, FR-010, FR-012, FR-021
 
-import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";

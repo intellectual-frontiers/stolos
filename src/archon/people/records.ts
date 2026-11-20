@@ -38,7 +38,7 @@ import {
   record,
   string,
 } from "@intellectual-frontiers/core";
-import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral } from "@intellectual-frontiers/formats";
 import { defineLabel, type LabelView } from "../schema/define.ts";
 
 /**

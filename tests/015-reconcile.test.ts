@@ -4,7 +4,7 @@
  *
  * @module
  */
-import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, lock, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,

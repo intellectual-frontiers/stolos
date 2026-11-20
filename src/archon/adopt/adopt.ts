@@ -33,7 +33,7 @@
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact } from "@intellectual-frontiers/core";
-import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/formats";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ownerOnly, writeSecret } from "../core/secrets.ts";

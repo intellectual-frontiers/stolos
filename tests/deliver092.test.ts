@@ -19,7 +19,8 @@ import {
   test,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fleet } from "./fixtures.ts";
-import { cms, type jobs } from "@intellectual-frontiers/commons/ts/kernel";
+import { cms } from "@intellectual-frontiers/crypto";
+import { type jobs } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   describeCertificateProblem,
   parseCertificate,

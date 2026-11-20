@@ -7,7 +7,7 @@
  */
 // Spec: 025-notify
 
-import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { toBase64 } from "@intellectual-frontiers/formats";
 
 /** A file attached to a message. */
 export interface Attachment {

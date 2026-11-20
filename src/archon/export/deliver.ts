@@ -42,13 +42,9 @@
 import type { Estate } from "../estate/graph.ts";
 import type { ExportJobDef, ExportKind, FleetDef } from "../model/types.ts";
 import type { ExportInput, ExportKind as ExportFormat } from "./exports.ts";
-import {
-  type cms,
-  type JsonObject,
-  otel,
-  otlp,
-  sha256 as kernelSha256,
-} from "@intellectual-frontiers/commons/ts/kernel";
+import { type cms, sha256 as kernelSha256 } from "@intellectual-frontiers/crypto";
+import { type JsonObject } from "@intellectual-frontiers/formats";
+import { otel, otlp } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { type Attachment, escapeHtml, headerValue, mimeEntity } from "../notify/mime.ts";
 import {

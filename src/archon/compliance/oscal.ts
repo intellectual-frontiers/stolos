@@ -32,7 +32,8 @@
 // Spec: 088-wave3-registry
 // Spec: 111-network-posture FR-017
 
-import { oscal, uuid } from "@intellectual-frontiers/commons/ts/kernel";
+import { uuid } from "@intellectual-frontiers/crypto";
+import { oscal } from "@intellectual-frontiers/commons/ts/kernel";
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import type { Risk } from "../risk/register.ts";

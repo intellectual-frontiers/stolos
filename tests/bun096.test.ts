@@ -114,6 +114,9 @@ proves(
     assertEquals(Object.keys(deps).sort(), [
       "@intellectual-frontiers/commons",
       "@intellectual-frontiers/core",
+      "@intellectual-frontiers/crypto",
+      "@intellectual-frontiers/formats",
+      "@intellectual-frontiers/rdf",
       "@intellectual-frontiers/terminal",
       "ajv",
     ]);

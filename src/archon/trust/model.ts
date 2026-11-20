@@ -25,7 +25,8 @@
  * @module
  */
 
-import { sha256 as sha256Hex, unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/crypto";
+import { unzip } from "@intellectual-frontiers/formats";
 import type { Manifest, ManifestItem, VerifyResult } from "../evidence/bundle.ts";
 import { SCF_SOURCE, type ScfCatalog, type ScfEntry } from "../compliance/catalog.ts";
 import {

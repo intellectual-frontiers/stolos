@@ -15,7 +15,7 @@
  */
 // Spec: 100-remote-access FR-004, FR-005, FR-010, FR-012
 
-import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { newCode, normalizeCode } from "../adopt/pair.ts";
 import type { ConsoleDevice } from "../model/types.ts";

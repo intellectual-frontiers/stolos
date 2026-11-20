@@ -14,7 +14,7 @@
  * @module
  */
 // Spec: 101-ladder FR-001, FR-002, FR-003
-import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import * as rdf from "@intellectual-frontiers/rdf";
 import { rungKinds } from "@intellectual-frontiers/commons/ontology/mizan";
 import { RungSchema, STOLOS } from "./vocabulary.ts";
 

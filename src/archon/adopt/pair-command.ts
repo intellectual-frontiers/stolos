@@ -17,7 +17,7 @@
 
 import { dns, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact } from "@intellectual-frontiers/core";
-import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { toBase64 } from "@intellectual-frontiers/formats";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { choosePort, firewallRule, outsideStandardNote, standardPort } from "../core/listeners.ts";

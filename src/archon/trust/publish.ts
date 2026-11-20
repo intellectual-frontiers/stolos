@@ -33,7 +33,7 @@
  */
 // Spec: 081-trust-center
 
-import { unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { unzip } from "@intellectual-frontiers/formats";
 import {
   forNamespace,
   type Item,

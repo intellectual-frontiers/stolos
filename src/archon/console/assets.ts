@@ -11,7 +11,7 @@
 // Spec: 108-tags FR-014
 // Spec: 112-machine-reported-tags FR-015
 
-import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { ASSETS } from "../assets.auto.ts";
 import { TAG_COLOURS, type TagColour } from "../ontology.auto.ts";

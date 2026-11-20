@@ -4,7 +4,9 @@
  *
  * @module
  */
-import { dsse, otlp, sha256, unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { dsse, sha256 } from "@intellectual-frontiers/crypto";
+import { unzip } from "@intellectual-frontiers/formats";
+import { otlp } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, grc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,

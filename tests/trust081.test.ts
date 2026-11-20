@@ -7,7 +7,8 @@
  * @module
  */
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
-import { unzip, zipDeflated, sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { unzip, zipDeflated } from "@intellectual-frontiers/formats";
+import { sha256 } from "@intellectual-frontiers/crypto";
 import {
   assert,
   assertEquals,

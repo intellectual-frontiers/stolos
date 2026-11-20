@@ -11,7 +11,7 @@
  */
 // Spec: 090-estate-graph
 
-import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { exportedLiteral } from "@intellectual-frontiers/formats";
 import { errors, fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run, type RunResult } from "../core/exec.ts";
 import type { Observation } from "../connect/connector.ts";

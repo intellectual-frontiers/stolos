@@ -31,7 +31,7 @@
  */
 // Spec: 083-auditor-portal
 
-import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/crypto";
 import type { Population, PopulationId } from "./populations.ts";
 
 /** The sampling method's name, recorded with every sample. */

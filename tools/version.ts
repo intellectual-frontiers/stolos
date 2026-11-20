@@ -19,13 +19,7 @@
 // Spec: 046-engine-instance
 // Spec: 096-bun-runtime
 // Spec: 114-release-record FR-002, FR-003
-import {
-  bump,
-  compareSemVer,
-  formatSemVer,
-  parseSemVer,
-  type SemVer,
-} from "@intellectual-frontiers/commons/ts/kernel";
+import { bump, compareSemVer, formatSemVer, parseSemVer, type SemVer } from "@intellectual-frontiers/formats";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { tagOf, WORK_SLUG } from "../src/archon/version.ts";
 
