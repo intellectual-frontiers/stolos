@@ -5,7 +5,7 @@
  * @module
  */
 
-import type { ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
+import type { ServeInfo } from "@intellectual-frontiers/net";
 import {
   assert,
   assertEquals,

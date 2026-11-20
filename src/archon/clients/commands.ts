@@ -7,7 +7,7 @@
  */
 
 import { errors, fs, path, proc, stdio } from "@intellectual-frontiers/system";
-import { type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { type Server, serve } from "@intellectual-frontiers/net";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import {

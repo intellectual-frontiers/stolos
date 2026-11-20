@@ -11,7 +11,7 @@
  */
 // Spec: 086-wave1-connectors
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import { check, type Connector, fresh } from "./connector.ts";
 import { defineConnector, sendJson } from "./sdk.ts";
 import { USER_ACCOUNT } from "./labels.ts";

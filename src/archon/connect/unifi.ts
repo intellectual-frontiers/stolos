@@ -26,7 +26,7 @@
 // Spec: 110-network-assets FR-001, FR-007, FR-012
 // Spec: 111-network-posture FR-012
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import type { PolicyResult } from "../adopt/policy.ts";
 import { AccessDenied, check, fresh, type Observation } from "./connector.ts";
 import { integrationConnector } from "./integration-connector.ts";

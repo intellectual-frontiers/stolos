@@ -14,7 +14,7 @@
 import { array, boolean, nullable, object, splitArgs, string } from "@intellectual-frontiers/core";
 import { sha256Of } from "@intellectual-frontiers/crypto";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { http, net } from "@intellectual-frontiers/commons/ts/runtime";
+import { http, net } from "@intellectual-frontiers/net";
 import { asRoot, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";

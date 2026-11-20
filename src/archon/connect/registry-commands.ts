@@ -11,7 +11,7 @@
 
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { VERSION } from "../version.ts";

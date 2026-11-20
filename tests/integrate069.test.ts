@@ -14,7 +14,7 @@ import {
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { toBase64 } from "@intellectual-frontiers/formats";
 import { fs, proc } from "@intellectual-frontiers/system";
-import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { tcp } from "@intellectual-frontiers/net";
 import { nameFor, parseCheckIn } from "../src/archon/adopt/checkin.ts";
 import { fromCheckIn, integrateLines } from "../src/archon/adopt/integrate.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS, PROBE_VERSION } from "../src/archon/adopt/probe.ts";

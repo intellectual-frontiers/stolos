@@ -11,7 +11,7 @@
 // Spec: 035-welcome-guide
 
 import { fs, path as paths, proc } from "@intellectual-frontiers/system";
-import { serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { serve } from "@intellectual-frontiers/net";
 import { getRecord } from "../state/store.ts";
 import { hostData } from "../model/durable.ts";
 

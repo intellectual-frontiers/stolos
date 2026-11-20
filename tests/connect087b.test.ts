@@ -16,7 +16,7 @@ import {
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { recordedHttp } from "../src/archon/connect/sdk.ts";
 import type { Result } from "@intellectual-frontiers/core";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import { MARKET_CATEGORIES, type Observation } from "../src/archon/connect/connector.ts";
 import { CONNECTORS } from "../src/archon/connect/commands.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";

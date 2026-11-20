@@ -17,7 +17,7 @@
 // Spec: 103-three-ports FR-009
 
 import { proc } from "@intellectual-frontiers/system";
-import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { tcp } from "@intellectual-frontiers/net";
 import { run } from "../core/exec.ts";
 
 /** What holds a TCP port, read from `ss -ltnp` output (Linux); undefined where it does not show. */

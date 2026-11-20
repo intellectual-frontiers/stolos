@@ -45,7 +45,7 @@ import { VERSION } from "../src/archon/version.ts";
 import { ui } from "../src/archon/core/ui.ts";
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, path, stdio } from "@intellectual-frontiers/system";
-import { type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { type Server, serve } from "@intellectual-frontiers/net";
 
 const ENGINE = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const CHECK = {

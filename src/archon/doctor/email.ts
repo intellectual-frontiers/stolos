@@ -15,7 +15,7 @@
 // Spec: 027-mail
 
 import { fs, proc } from "@intellectual-frontiers/system";
-import { dns } from "@intellectual-frontiers/commons/ts/runtime";
+import { dns } from "@intellectual-frontiers/net";
 import type { Phase } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { enqueue, flush, loadCredential, queued, readStatus, type Site } from "../notify/notify.ts";

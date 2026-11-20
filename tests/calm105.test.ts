@@ -10,7 +10,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { serve } from "@intellectual-frontiers/net";
 import {
   assert,
   assertEquals,

@@ -16,7 +16,7 @@
 // Spec: 108-tags FR-008
 
 import { proc, stdio } from "@intellectual-frontiers/system";
-import { dns } from "@intellectual-frontiers/commons/ts/runtime";
+import { dns } from "@intellectual-frontiers/net";
 import { compact } from "@intellectual-frontiers/core";
 import { toBase64 } from "@intellectual-frontiers/formats";
 import { P } from "../core/paths.ts";

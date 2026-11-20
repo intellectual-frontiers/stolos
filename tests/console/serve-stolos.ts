@@ -7,7 +7,7 @@
  */
 
 import { fs, proc } from "@intellectual-frontiers/system";
-import { serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { serve } from "@intellectual-frontiers/net";
 import { Sessions } from "../../src/archon/console/auth.ts";
 import type { ActivityEntry } from "../../src/archon/console/pages.ts";
 import type { PcFacts } from "../../src/archon/console/pc.ts";

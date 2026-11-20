@@ -12,7 +12,7 @@
  */
 // Spec: 087-wave2-connectors
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import { type Connector, fresh } from "./connector.ts";
 import { devicePolicies, devicePosture, osName } from "./endpoint.ts";
 import { emailKey } from "./entities.ts";

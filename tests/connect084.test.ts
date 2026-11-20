@@ -11,7 +11,7 @@ import {
   proves,
   test,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import type { Result } from "@intellectual-frontiers/core";
 import { observationSource } from "../src/archon/connect/connector.ts";
 import { cloudflare } from "../src/archon/connect/cloudflare.ts";

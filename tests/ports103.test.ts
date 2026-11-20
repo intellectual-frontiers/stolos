@@ -13,7 +13,7 @@ import {
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { serve, tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { serve, tcp } from "@intellectual-frontiers/net";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import {
   DEVICE_PAIR_PATH,
@@ -221,7 +221,7 @@ function opens(text: string): string | undefined {
     new RegExp(
       `import\\s*(?:type\\s*)?\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*"[^"]*${from.source}"`,
     ).test(t);
-  if (imports("serve", /commons\/ts\/runtime/) && /\bserve\(/.test(t)) return "serve()";
+  if (imports("serve", /@intellectual-frontiers\/net/) && /\bserve\(/.test(t)) return "serve()";
   if (imports("listen", /http\.ts/) && /\blisten\(/.test(t)) return "listen()";
   if (imports("serve", /\.\/server\.ts/) && /\bserve\(/.test(t)) return "boot serve()";
   return undefined;
@@ -289,7 +289,7 @@ proves(
       );
       await put(
         "src/rogue/server.ts",
-        'import { tcp } from "@intellectual-frontiers/commons/ts/runtime";\nawait tcp.listen({ port: 9999, hostname: "0.0.0.0" });\n',
+        'import { tcp } from "@intellectual-frontiers/net";\nawait tcp.listen({ port: 9999, hostname: "0.0.0.0" });\n',
       );
       await put(
         "src/rogue/udp.ts",
@@ -301,7 +301,7 @@ proves(
       );
       await put(
         "src/rogue/web.ts",
-        'import { serve } from "@intellectual-frontiers/commons/ts/runtime";\nawait serve({ port: 8000 }, () => new Response("hi"));\n',
+        'import { serve } from "@intellectual-frontiers/net";\nawait serve({ port: 8000 }, () => new Response("hi"));\n',
       );
       await put(
         "src/rogue/node.ts",

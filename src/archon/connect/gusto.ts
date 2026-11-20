@@ -14,7 +14,7 @@
  */
 // Spec: 091-connectors
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import type { Connector } from "./connector.ts";
 import { defineConnector } from "./sdk.ts";
 import {

@@ -14,7 +14,7 @@
 // Spec: 115-compatibility FR-009, FR-012
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { tcp } from "@intellectual-frontiers/net";
 import { run } from "../archon/core/exec.ts";
 import type { CompatMachine } from "../archon/observe/compat.ts";
 import { P } from "../archon/core/paths.ts";

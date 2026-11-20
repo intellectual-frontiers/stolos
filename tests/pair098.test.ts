@@ -14,7 +14,7 @@ import {
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fs, proc } from "@intellectual-frontiers/system";
-import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { tcp } from "@intellectual-frontiers/net";
 import {
   CODE_ALPHABET,
   clientKey,

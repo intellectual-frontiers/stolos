@@ -116,6 +116,7 @@ proves(
       "@intellectual-frontiers/core",
       "@intellectual-frontiers/crypto",
       "@intellectual-frontiers/formats",
+      "@intellectual-frontiers/net",
       "@intellectual-frontiers/rdf",
       "@intellectual-frontiers/system",
       "@intellectual-frontiers/telemetry",

@@ -10,7 +10,7 @@
 // Spec: 004-install
 // Spec: 103-three-ports FR-001, FR-004, FR-011
 
-import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { tcp } from "@intellectual-frontiers/net";
 import { standardPort } from "../archon/core/listeners.ts";
 
 /** Answers one request; `from` is the client's address. */

@@ -12,7 +12,7 @@
 // Spec: 100-remote-access FR-002, FR-004, FR-007
 
 import { webauthn } from "@intellectual-frontiers/crypto";
-import { acme } from "@intellectual-frontiers/commons/ts/runtime";
+import { acme } from "@intellectual-frontiers/net";
 import type { AcmeIssue } from "./tls.ts";
 
 /** A result as commons gives it. */

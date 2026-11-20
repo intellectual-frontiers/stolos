@@ -6,7 +6,7 @@
  */
 
 import { fs, proc } from "@intellectual-frontiers/system";
-import { serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { serve } from "@intellectual-frontiers/net";
 import { consoleHandler } from "../../src/archon/console/server.ts";
 import { Sessions, Throttle } from "../../src/archon/console/auth.ts";
 import type { ActivityEntry } from "../../src/archon/console/pages.ts";

@@ -10,7 +10,7 @@
 
 import { json, record, string } from "@intellectual-frontiers/core";
 import { fs, path, stdio } from "@intellectual-frontiers/system";
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { aws } from "./aws.ts";

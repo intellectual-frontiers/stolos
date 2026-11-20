@@ -20,7 +20,7 @@
 
 import { formatJson5Error, parseJson5, tsLiteral } from "@intellectual-frontiers/formats";
 import { path } from "@intellectual-frontiers/system";
-import { type http } from "@intellectual-frontiers/commons/ts/runtime";
+import { type http } from "@intellectual-frontiers/net";
 import type { ObservedRecord } from "./sdk.ts";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";

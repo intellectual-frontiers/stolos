@@ -26,7 +26,7 @@
  */
 // Spec: 082-multi-fleet
 
-import type { ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
+import type { ServeInfo } from "@intellectual-frontiers/net";
 import { cookieOf, type Sessions } from "../console/auth.ts";
 import { type Html, html } from "../console/html.ts";
 import { bare, page } from "../console/layout.ts";

@@ -11,7 +11,7 @@
  */
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
+import { tcp } from "@intellectual-frontiers/net";
 import {
   assert,
   assertEquals,

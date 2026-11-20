@@ -22,7 +22,7 @@
 // Spec: 109-integrations-api FR-003, FR-004, FR-005, FR-006
 // Spec: 110-network-assets FR-008
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Asset, Connector, Observation, ServiceModel } from "./connector.ts";
 import type { Device, Entities } from "./entities.ts";

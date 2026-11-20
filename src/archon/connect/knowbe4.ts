@@ -16,7 +16,7 @@
  */
 // Spec: 088-wave3-registry
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import { check, type Connector, fresh } from "./connector.ts";
 import { defineConnector } from "./sdk.ts";
 import { PERSON_RECORD } from "../people/records.ts";

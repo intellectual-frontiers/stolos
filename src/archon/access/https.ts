@@ -14,7 +14,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
 import { standardPort } from "../core/listeners.ts";
-import type { Server, ServeHandler } from "@intellectual-frontiers/commons/ts/runtime";
+import type { Server, ServeHandler } from "@intellectual-frontiers/net";
 
 /** The certificate and key the listener serves (PEM). */
 export interface TlsPair {

@@ -8,7 +8,7 @@
  */
 
 import { fs, path } from "@intellectual-frontiers/system";
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import {
   assert,
   assertEquals,

@@ -35,7 +35,7 @@
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { type Askpass, type Question, sameToken } from "./askpass.ts";
-import type { ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
+import type { ServeInfo } from "@intellectual-frontiers/net";
 import type { Command } from "../core/registry-types.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Estate } from "../estate/graph.ts";

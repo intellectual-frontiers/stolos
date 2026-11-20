@@ -16,7 +16,7 @@
  */
 // Spec: 087-wave2-connectors
 
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { type Ctx, defineConnector, exchange } from "./sdk.ts";
 import { ORGANIZATION, TICKET, USER_ACCOUNT } from "./labels.ts";

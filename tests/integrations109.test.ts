@@ -7,7 +7,7 @@
  */
 
 import { fs, path } from "@intellectual-frontiers/system";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import type { Result } from "@intellectual-frontiers/core";
 import {
   assert,

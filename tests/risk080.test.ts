@@ -15,7 +15,7 @@ import {
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv, type AnySchema } from "ajv";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { okta } from "../src/archon/connect/okta.ts";
 import { microsoft } from "../src/archon/connect/microsoft.ts";

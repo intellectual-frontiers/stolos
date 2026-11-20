@@ -21,7 +21,7 @@
 // Spec: 088-wave3-registry
 
 import { sigv4 } from "@intellectual-frontiers/crypto";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { type Ctx, defineConnector, exchange, type FieldDef, mustRead } from "./sdk.ts";
 import {

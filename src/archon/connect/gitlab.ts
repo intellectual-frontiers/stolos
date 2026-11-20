@@ -15,7 +15,7 @@
  */
 // Spec: 091-connectors
 
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import { AccessDenied, type Connector } from "./connector.ts";
 import { CODE_REPOSITORY, USER_ACCOUNT } from "./labels.ts";
 import { type Ctx, defineConnector } from "./sdk.ts";

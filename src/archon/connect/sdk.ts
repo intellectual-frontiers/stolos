@@ -30,7 +30,7 @@
 // Spec: 089-ocsf-schema-language
 
 import { type Result, unknownValue } from "@intellectual-frontiers/core";
-import { http } from "@intellectual-frontiers/commons/ts/runtime";
+import { http } from "@intellectual-frontiers/net";
 import type { PolicyResult } from "../adopt/policy.ts";
 import { OCSF_CLASSES } from "../ocsf/classes.ts";
 import type { Column, LabelView, RowOf } from "../schema/define.ts";

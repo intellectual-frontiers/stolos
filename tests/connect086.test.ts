@@ -12,7 +12,7 @@ import {
   proves,
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import type { Result } from "@intellectual-frontiers/core";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import { github } from "../src/archon/connect/github.ts";
 import { okta } from "../src/archon/connect/okta.ts";
 import { google, serviceAccountJwt } from "../src/archon/connect/google.ts";

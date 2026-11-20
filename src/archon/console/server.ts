@@ -16,7 +16,7 @@
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { errors } from "@intellectual-frontiers/system";
-import { type ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
+import { type ServeInfo } from "@intellectual-frontiers/net";
 import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
 import {

@@ -66,7 +66,7 @@ proves(
         script,
         CHILD(
           new URL("../src/archon-boot/telemetry.ts", import.meta.url).href,
-          import.meta.resolve("@intellectual-frontiers/commons/ts/runtime"),
+          import.meta.resolve("@intellectual-frontiers/net"),
         ),
       );
       // Nothing set: no OTEL_* variable, no flag.
@@ -119,7 +119,7 @@ proves(
         script,
         CHILD(
           new URL("../src/archon-boot/telemetry.ts", import.meta.url).href,
-          import.meta.resolve("@intellectual-frontiers/commons/ts/runtime"),
+          import.meta.resolve("@intellectual-frontiers/net"),
         ),
       );
       const r = await sb.run(script, [dir], "", { HTTP_PROXY: "", HTTPS_PROXY: "", NO_PROXY: "*" });

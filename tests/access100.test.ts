@@ -13,7 +13,7 @@
 import { cbor, toBase64Url } from "@intellectual-frontiers/formats";
 import { cose } from "@intellectual-frontiers/crypto";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { serve } from "@intellectual-frontiers/commons/ts/runtime";
+import { serve } from "@intellectual-frontiers/net";
 import {
   assert,
   assertEquals,

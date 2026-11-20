@@ -26,7 +26,7 @@
 // Spec: 110-network-assets FR-007, FR-012
 
 import type { Result } from "@intellectual-frontiers/core";
-import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { http } from "@intellectual-frontiers/net";
 import { API_CAPABILITIES } from "../ontology.auto.ts";
 import { AccessDenied } from "./connector.ts";
 import {
