@@ -612,6 +612,11 @@ proves(
         path.join(ENGINE, "node_modules", "@intellectual-frontiers", "commons"),
         path.join(repo, "node_modules", "@intellectual-frontiers", "commons"),
       );
+      // the engine's own dependencies sit beside it in a real install: the example control tests take `proves` from the package `test`
+      await fs.symlink(
+        path.join(ENGINE, "node_modules", "@intellectual-frontiers", "test"),
+        path.join(repo, "node_modules", "@intellectual-frontiers", "test"),
+      );
       const pack = path.join(repo, "fleets", "lab", "controls", "acme");
       await fs.mkdir(pack, { recursive: true });
       await fs.writeTextFile(
