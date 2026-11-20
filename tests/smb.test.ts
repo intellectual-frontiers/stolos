@@ -4,12 +4,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { fs, proc } from "@intellectual-frontiers/system";
 import { engineFile } from "../src/archon/core/assets.ts";
 import { fleet, host } from "./fixtures.ts";

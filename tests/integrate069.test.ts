@@ -10,7 +10,7 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { toBase64 } from "@intellectual-frontiers/formats";
 import { fs, proc } from "@intellectual-frontiers/system";

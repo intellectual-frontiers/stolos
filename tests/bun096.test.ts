@@ -11,12 +11,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import {
   BUN_SHA256,
   BUN_TARGETS,
@@ -116,14 +111,20 @@ proves(
       "@intellectual-frontiers/core",
       "@intellectual-frontiers/crypto",
       "@intellectual-frontiers/formats",
+      "@intellectual-frontiers/grc",
       "@intellectual-frontiers/net",
       "@intellectual-frontiers/rdf",
       "@intellectual-frontiers/system",
       "@intellectual-frontiers/telemetry",
       "@intellectual-frontiers/terminal",
+      "@intellectual-frontiers/test",
       "ajv",
     ]);
-    assertEquals(Object.keys(dev).sort(), ["@types/node", "typescript"]);
+    assertEquals(Object.keys(dev).sort(), [
+      "@intellectual-frontiers/lint",
+      "@types/node",
+      "typescript",
+    ]);
     assert(/^7\.\d+\.\d+$/.test(dev["typescript"] ?? ""), "TypeScript 7, exactly");
     const commons = deps["@intellectual-frontiers/commons"] ?? "";
     assert(

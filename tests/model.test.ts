@@ -4,13 +4,7 @@
  * @module
  */
 import { fs } from "@intellectual-frontiers/system";
-import {
-  assertExists,
-  assert,
-  assertEquals,
-  test,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assertExists, assert, assertEquals, test, proves } from "@intellectual-frontiers/test";
 import { findSecret, validateFleet, validatePlan } from "../src/archon/model/validate.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { foundation } from "../src/archon/capabilities/mod.ts";

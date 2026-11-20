@@ -11,7 +11,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { setLogProgram, Ui } from "../src/archon/core/ui.ts";
 import { EXPLAIN, explainText, translate } from "../src/archon/core/explain.ts";
 

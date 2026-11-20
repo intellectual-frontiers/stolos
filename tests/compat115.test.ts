@@ -9,12 +9,7 @@
  */
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import { terms as auditTerms } from "../ontology/stolos/audit.ts";
 import { stolos as stolosTerms } from "../ontology/stolos/vocabulary.ts";

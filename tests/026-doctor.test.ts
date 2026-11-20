@@ -7,12 +7,7 @@
  */
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { ui } from "../src/archon/core/ui.ts";
 import { emailChecks, missingRecords } from "../src/archon/doctor/email.ts";
 import type { Site } from "../src/archon/notify/notify.ts";

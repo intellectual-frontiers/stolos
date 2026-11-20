@@ -31,7 +31,7 @@
 // Spec: 111-network-posture FR-014, FR-019
 
 import { exportedLiteral, type Json } from "@intellectual-frontiers/formats";
-import { assess } from "@intellectual-frontiers/commons/ts/kernel";
+import { assess } from "@intellectual-frontiers/grc";
 import { stdio } from "@intellectual-frontiers/system";
 import { run } from "../core/exec.ts";
 import type { RepoReader } from "../estate/snapshot.ts";

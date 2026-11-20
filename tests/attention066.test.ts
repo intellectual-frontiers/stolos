@@ -5,12 +5,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { attentionOf, type Check, verifyRecord } from "../src/archon/state/verify.ts";
 import { attentionCard } from "../src/archon/console/pages.ts";
 import { attentionFrom } from "../src/archon/console/pc.ts";

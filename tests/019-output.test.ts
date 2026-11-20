@@ -5,12 +5,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { Ui } from "../src/archon/core/ui.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 

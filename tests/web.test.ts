@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fleet, host } from "./fixtures.ts";
 import { at, list, must, parse, text } from "./console/tree.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

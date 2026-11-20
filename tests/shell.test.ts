@@ -5,13 +5,7 @@
  * @module
  */
 import { fs, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  proves,
-  test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertExists, proves, test } from "@intellectual-frontiers/test";
 
 /** The parts of Oh My Posh's theme these tests read. */
 type Segment = {

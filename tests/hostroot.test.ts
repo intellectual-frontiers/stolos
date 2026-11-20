@@ -9,12 +9,7 @@
  */
 import { fs, path } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { attachmentText, HOST_ROOT_SKIP, hostRoot } from "./host.ts";
 import { host } from "./fixtures.ts";
 import type { GuestDef } from "../src/archon/model/types.ts";

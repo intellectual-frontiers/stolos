@@ -11,7 +11,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fleet, host, at } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import type { HostDef } from "../src/archon/model/types.ts";

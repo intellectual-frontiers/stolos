@@ -12,7 +12,7 @@ import {
   assertThrows,
   proves,
   test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";
 import { engineFile } from "../src/archon/core/assets.ts";

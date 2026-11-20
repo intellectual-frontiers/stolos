@@ -3,12 +3,7 @@
  *
  * @module
  */
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertExists, proves } from "@intellectual-frontiers/test";
 import { SCF } from "../src/archon/compliance/scf.ts";
 import type { ScfCatalog } from "../src/archon/compliance/catalog.ts";
 import {

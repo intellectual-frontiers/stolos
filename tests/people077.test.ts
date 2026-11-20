@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import type { Account, Person } from "../src/archon/connect/entities.ts";
 import { fixtureEstate, testControl } from "../src/archon/controls/testing.ts";

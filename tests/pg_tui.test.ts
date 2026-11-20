@@ -11,7 +11,7 @@ import {
   proves,
   test,
   the,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { pgcenterArgs, rainfrogArgs, SYSTEM_ROOTS } from "../src/archon/pg/tui.ts";
 import type { Target } from "../src/archon/pg/connections.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";

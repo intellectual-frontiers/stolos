@@ -14,12 +14,7 @@ import { cbor, toBase64Url } from "@intellectual-frontiers/formats";
 import { cose } from "@intellectual-frontiers/crypto";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { Sessions } from "../src/archon/console/auth.ts";
 import type { ActivityEntry } from "../src/archon/console/pages.ts";
 import type {

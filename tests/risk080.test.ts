@@ -13,7 +13,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { Ajv, type AnySchema } from "ajv";
 import type { http } from "@intellectual-frontiers/net";
 import type { Observation } from "../src/archon/connect/connector.ts";

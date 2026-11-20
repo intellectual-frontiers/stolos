@@ -8,12 +8,7 @@
  */
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { loadScf } from "../src/archon/compliance/catalog.ts";
 import { type Evidence, fleetEvidence } from "../src/archon/compliance/report.ts";
 import { cadenceFor, refreshCommand, resolveCadences } from "../src/archon/compliance/freshness.ts";

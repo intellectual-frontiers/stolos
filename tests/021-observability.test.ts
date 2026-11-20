@@ -10,12 +10,7 @@
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { workstation } from "../src/archon/capabilities/mod.ts";
 import {
   collectorConfig,

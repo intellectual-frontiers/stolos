@@ -40,7 +40,7 @@
 
 import { type JsonObject } from "@intellectual-frontiers/formats";
 import { type otel, otlp } from "@intellectual-frontiers/telemetry";
-import { grc } from "@intellectual-frontiers/commons/ts/runtime";
+import { grc } from "@intellectual-frontiers/grc/host";
 import { ocsfClassName } from "../ocsf/classes.ts";
 import { VERSION } from "../version.ts";
 import type { OcsfEvent } from "./ocsf.ts";

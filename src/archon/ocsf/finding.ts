@@ -20,7 +20,7 @@
  */
 // Spec: 089-ocsf-schema-language
 
-import { ocsf } from "@intellectual-frontiers/commons/ts/kernel";
+import { ocsf } from "@intellectual-frontiers/grc";
 import { SCF_SOURCE, type ScfCatalog } from "../compliance/catalog.ts";
 import { evidenceFindings, instantOfDate } from "../compliance/findings.ts";
 import type { Evidence } from "../compliance/report.ts";

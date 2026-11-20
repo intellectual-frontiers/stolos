@@ -10,12 +10,7 @@
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { HOST_ROOT_SKIP, hostRoot } from "./host.ts";
 import { fleet, host } from "./fixtures.ts";
 import type { ToolDef } from "../src/archon/model/types.ts";

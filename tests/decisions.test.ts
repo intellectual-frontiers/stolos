@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { decisionsSource } from "../src/archon/fleet/decisions.ts";
 import { ENGINE_ROOT as ENGINE, sandbox, linkEngine } from "./sandbox.ts";
 import { at } from "./fixtures.ts";

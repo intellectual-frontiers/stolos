@@ -13,7 +13,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import {
   commandTargets,
   etckeeperObservations,

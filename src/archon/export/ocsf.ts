@@ -35,7 +35,7 @@
 // Spec: 088-wave3-registry
 // Spec: 092-exporters
 
-import { grc, ocsf } from "@intellectual-frontiers/commons/ts/kernel";
+import { grc, ocsf } from "@intellectual-frontiers/grc";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import { instantOfDate } from "../compliance/findings.ts";
 import { allEvidence } from "../compliance/oscal.ts";

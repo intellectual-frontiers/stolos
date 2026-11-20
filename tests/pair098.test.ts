@@ -12,7 +12,7 @@ import {
   assertMatch,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fs, proc } from "@intellectual-frontiers/system";
 import { tcp } from "@intellectual-frontiers/net";
 import {

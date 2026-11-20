@@ -4,12 +4,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { DatabaseSync } from "node:sqlite";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import type { Observation } from "../src/archon/connect/connector.ts";

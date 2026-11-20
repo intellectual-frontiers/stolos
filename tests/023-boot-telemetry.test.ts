@@ -8,12 +8,7 @@
  */
 
 import { fs, path } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { P } from "../src/archon/core/paths.ts";
 import { JOURNAL, JOURNAL_FILE, TELEMETRY_DIR } from "../src/archon-boot/telemetry.ts";
 import { installTrace } from "./e2e/trace.ts";

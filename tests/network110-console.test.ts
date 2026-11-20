@@ -6,12 +6,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { entityParts } from "../src/archon/connect/integration-entities.ts";
 import type {

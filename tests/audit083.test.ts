@@ -13,7 +13,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import {
   type Item,

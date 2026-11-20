@@ -4,12 +4,7 @@
  * @module
  */
 import { fs } from "@intellectual-frontiers/system";
-import {
-  assertExists,
-  assert,
-  assertEquals,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assertExists, assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { ui } from "../src/archon/core/ui.ts";
 import {
   aptDeps,

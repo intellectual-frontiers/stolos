@@ -8,12 +8,7 @@
 
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import {
   ANSWER_STATES,

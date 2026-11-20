@@ -9,12 +9,7 @@
  */
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { setLogProgram, Ui } from "../src/archon/core/ui.ts";
 import { EXPLAIN, explainText } from "../src/archon/core/explain.ts";
 import {

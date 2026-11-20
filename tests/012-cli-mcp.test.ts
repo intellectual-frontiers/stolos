@@ -4,7 +4,7 @@
  *
  * @module
  */
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import { allowed, handle, listed, mcpToolName } from "../src/archon/mcp/server.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { workstation } from "../src/archon/capabilities/mod.ts";
 import { SECRET_INVENTORY } from "../src/archon/model/secret-inventory.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

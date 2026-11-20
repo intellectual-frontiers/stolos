@@ -5,18 +5,21 @@
     "": {
       "name": "@intellectual-frontiers/stolos",
       "dependencies": {
-        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#0be5e8241b470bff76d3c0e55c4a4844f9d6b1ed",
-        "@intellectual-frontiers/core": "0.1.1",
-        "@intellectual-frontiers/crypto": "0.1.1",
-        "@intellectual-frontiers/formats": "0.1.1",
+        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#d901efc7b5018ceef5b79ad692fe244fb818564f",
+        "@intellectual-frontiers/core": "0.1.0",
+        "@intellectual-frontiers/crypto": "0.1.0",
+        "@intellectual-frontiers/formats": "0.1.0",
+        "@intellectual-frontiers/grc": "0.1.0",
         "@intellectual-frontiers/net": "0.1.0",
-        "@intellectual-frontiers/rdf": "0.1.1",
+        "@intellectual-frontiers/rdf": "0.1.0",
         "@intellectual-frontiers/system": "0.1.0",
         "@intellectual-frontiers/telemetry": "0.1.0",
-        "@intellectual-frontiers/terminal": "0.1.1",
+        "@intellectual-frontiers/terminal": "0.1.0",
+        "@intellectual-frontiers/test": "0.1.0",
         "ajv": "8.17.1",
       },
       "devDependencies": {
+        "@intellectual-frontiers/lint": "0.1.0",
         "@types/node": "26.6.6",
         "typescript": "7.0.2",
       },
@@ -33,23 +36,29 @@
 
     "@iconify/utils": ["@iconify/utils@3.1.7", "", { "dependencies": { "@antfu/install-pkg": "^2.0.1", "@iconify/types": "^2.0.0", "import-meta-resolve": "^4.2.0" } }, "sha512-JZHlwdID+dy+lTgbYC8NEC4zeugqeYsc6jewvzb4c58kHauJn+X7rNwQjxz5p2qSjqaEeQoLkCIQ9v/H4PK0/w=="],
 
-    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#0be5e82", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/crypto": "0.1.0", "@intellectual-frontiers/formats": "0.1.0", "@intellectual-frontiers/net": "0.1.0", "@intellectual-frontiers/rdf": "0.1.0", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/telemetry": "0.1.0", "@intellectual-frontiers/terminal": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-0be5e82", "sha512-3ufkRqj3TNf6MtBil7Ves0dkV81N49eOkFAVsh3YlrfFRe4hIYw9tnncMc79Q1TLJoZ8upRDuM7URmD2mfmJVA=="],
+    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#d901efc", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/crypto": "0.1.0", "@intellectual-frontiers/formats": "0.1.0", "@intellectual-frontiers/grc": "0.1.0", "@intellectual-frontiers/net": "0.1.0", "@intellectual-frontiers/rdf": "0.1.0", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/telemetry": "0.1.0", "@intellectual-frontiers/terminal": "0.1.0", "@intellectual-frontiers/test": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-d901efc", "sha512-UqwsdTNZuRdofHRHlikILgdSzLozu0f00LbK6ZettBK+bRQfyIboGsEPsZzibaOxQZp6qJN/9yI6cNWpsRKgwQ=="],
 
-    "@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.1", "", {}, "sha512-2CRWnO8kSVnsNemWJJUfbILnFuUzMKNAVdra8J4ZXS1O7pDubZw/OM4egq2iWo9+VP45cblxNVjIvV43c7fwSQ=="],
+    "@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.0", "", {}, "sha512-tOdJKL/vsHJYxUuizWLnaI58mOXojBll1zgaKXw6QIoMK7dHhA+jsfBdherG3jK+EijipzRYBNXqNvWhNIoGHA=="],
 
-    "@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" } }, "sha512-dIVy8N0ttrjDNq/P3MLmb50dRTGNKJ+xdlKw4rDBTerYSScqDoQar8DS3GfIBQwNx7uqCkRNNBS/xl2Nn+PVnw=="],
+    "@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/formats": "0.1.0" } }, "sha512-JVT43ISlUP5rfq+SXKy1oCe9TYjsjFE9FhC0pOUhwW/ewoXi0meNjgT2Ginb8oMg1XfWLnYQ/Nzj5FXcJ2xtcg=="],
 
-    "@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-1vucbLz1Lpv69wLN/RAezPpI6YwANY+twPSSjknnJ72+D2ixsUyICTABv3v6+DYZAUiYyXiNPMGdAVu80eizmQ=="],
+    "@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-22YoAXzh8T6zNpYov+9xQLfmVgYxUOkWMv+TqnT4Bm2WzbEjm1nMNA0WINzjVq+hDGiuPQU/SkJ/F6v3THr9uA=="],
+
+    "@intellectual-frontiers/grc": ["@intellectual-frontiers/grc@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/crypto": "0.1.2", "@intellectual-frontiers/formats": "0.1.2", "@intellectual-frontiers/system": "0.1.2", "@intellectual-frontiers/telemetry": "0.1.2" } }, "sha512-dTuDZPdDwUjlSptYzApZPPEkXA2bexmIYTxYC1f9KwhgshajVAXs46MzsLj8eQ/gDgPt5lmAgbFgOn+FbiqVbg=="],
+
+    "@intellectual-frontiers/lint": ["@intellectual-frontiers/lint@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/formats": "0.1.2", "@intellectual-frontiers/system": "0.1.2" } }, "sha512-ICZ5P6zTPAsMkWI/zpLnC1h5ydj9UMuGjcWjRtlLiaVlNcy9vyciIAIgooxxJXSPtdBUeOaQMcVslouM+H0C5A=="],
 
     "@intellectual-frontiers/net": ["@intellectual-frontiers/net@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/crypto": "0.1.1", "@intellectual-frontiers/formats": "0.1.1", "@intellectual-frontiers/system": "0.1.1", "@intellectual-frontiers/telemetry": "0.1.1" } }, "sha512-ZUKbf/XnmnVHSWrP4KExWKWRm3l+u7PAjeDKL4LcWvez+axZRZpVs/JiBljciwwZagGj5002GkEwTgnq1L6+iQ=="],
 
-    "@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-Xs2B/0YDKwimn4AglHnj5lq3DQ83y4f7qkI9p+qtQvpQ6WOctVhVQLegQ4RcexIGrJR1kt6gY3VuyIyojuCxjQ=="],
+    "@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-D/dpkvn5N+vdvEXg7dB6Pqe2MCTxgo5ejtQuRDPzZziXhFSFn/HJxUig1ELRFS/byx67kpbS6K2E39TE5iDKRg=="],
 
     "@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/crypto": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-YoD6seQNw07sz4haAOC82iNHlPXO6bGfqG7yEZDv4CHhAd9XZozn1BP46AovQLPHrEju9+2PwagKHx9y/FR/nA=="],
 
     "@intellectual-frontiers/telemetry": ["@intellectual-frontiers/telemetry@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1", "@intellectual-frontiers/system": "0.1.0", "@intellectual-frontiers/terminal": "0.1.1" } }, "sha512-JjDLdYVwxLiDYnm/XuzKGjKVmhKqHgK67t3ypaQzb7/EBySMBkoq7Pw8ufg+FPsXezQyrk71CQIcDw0IcpfxjQ=="],
 
-    "@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-AyfjvpsWzVkeAHQGwkDgJlCjpORgrocahJ1Q0iGbnkP6OP5VXpqyPv2fFJtaWCbYS1F956vj39UNV3Omp60HaA=="],
+    "@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-YbAhZorkoWCqRFoy3biJorx9hbxryWClqXYOcNAN0rMNxKcTK9A7o6QM5UoKCeLRIkE+kyHvqEltbZEpMMHNDA=="],
+
+    "@intellectual-frontiers/test": ["@intellectual-frontiers/test@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/crypto": "0.1.2", "@intellectual-frontiers/system": "0.1.2", "@intellectual-frontiers/telemetry": "0.1.2" } }, "sha512-r/Zh2yxxnvcxBhzFjcAyckGjMBfUc/n+OXNpbA8ViAN7nTEpnUc0A/kgoiMsUVgr830cBuEXN+F3PTXdEZsjhQ=="],
 
     "@mermaid-js/parser": ["@mermaid-js/parser@1.2.1", "", { "dependencies": { "@chevrotain/types": "~11.1.2" } }, "sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw=="],
 
@@ -311,21 +320,53 @@
 
     "uuid": ["uuid@14.0.3", "", { "bin": { "uuid": "dist-node/bin/uuid" } }, "sha512-Sc5u1VVln93y1Xnz4R+CunOZc7R9LUcTmhj7Rc7Eg3HVcf7rVn2FOoa812fe0W8p3jD7xeoGSYbfqCGGH2B6xw=="],
 
-    "@intellectual-frontiers/commons/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.0", "", {}, "sha512-tOdJKL/vsHJYxUuizWLnaI58mOXojBll1zgaKXw6QIoMK7dHhA+jsfBdherG3jK+EijipzRYBNXqNvWhNIoGHA=="],
-
-    "@intellectual-frontiers/commons/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "@intellectual-frontiers/formats": "0.1.0" } }, "sha512-JVT43ISlUP5rfq+SXKy1oCe9TYjsjFE9FhC0pOUhwW/ewoXi0meNjgT2Ginb8oMg1XfWLnYQ/Nzj5FXcJ2xtcg=="],
-
-    "@intellectual-frontiers/commons/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-22YoAXzh8T6zNpYov+9xQLfmVgYxUOkWMv+TqnT4Bm2WzbEjm1nMNA0WINzjVq+hDGiuPQU/SkJ/F6v3THr9uA=="],
-
-    "@intellectual-frontiers/commons/@intellectual-frontiers/rdf": ["@intellectual-frontiers/rdf@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-D/dpkvn5N+vdvEXg7dB6Pqe2MCTxgo5ejtQuRDPzZziXhFSFn/HJxUig1ELRFS/byx67kpbS6K2E39TE5iDKRg=="],
-
-    "@intellectual-frontiers/commons/@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-YbAhZorkoWCqRFoy3biJorx9hbxryWClqXYOcNAN0rMNxKcTK9A7o6QM5UoKCeLRIkE+kyHvqEltbZEpMMHNDA=="],
-
     "@intellectual-frontiers/commons/typescript": ["typescript@7.1.0-beta", "", { "optionalDependencies": { "@typescript/typescript-aix-ppc64": "7.1.0-beta", "@typescript/typescript-android-arm64": "7.1.0-beta", "@typescript/typescript-darwin-arm64": "7.1.0-beta", "@typescript/typescript-darwin-x64": "7.1.0-beta", "@typescript/typescript-freebsd-arm64": "7.1.0-beta", "@typescript/typescript-freebsd-x64": "7.1.0-beta", "@typescript/typescript-linux-arm": "7.1.0-beta", "@typescript/typescript-linux-arm64": "7.1.0-beta", "@typescript/typescript-linux-loong64": "7.1.0-beta", "@typescript/typescript-linux-mips64el": "7.1.0-beta", "@typescript/typescript-linux-ppc64": "7.1.0-beta", "@typescript/typescript-linux-riscv64": "7.1.0-beta", "@typescript/typescript-linux-s390x": "7.1.0-beta", "@typescript/typescript-linux-x64": "7.1.0-beta", "@typescript/typescript-netbsd-arm64": "7.1.0-beta", "@typescript/typescript-netbsd-x64": "7.1.0-beta", "@typescript/typescript-openbsd-arm64": "7.1.0-beta", "@typescript/typescript-openbsd-x64": "7.1.0-beta", "@typescript/typescript-sunos-x64": "7.1.0-beta", "@typescript/typescript-win32-arm64": "7.1.0-beta", "@typescript/typescript-win32-x64": "7.1.0-beta" }, "bin": { "tsc": "bin/tsc" } }, "sha512-cjWjZAJDsmZzsNC5GwHNlW0YPM65jZa5oR0KyQcYX3KSVIfTvtBq//vewISyatKk4OLi5grZjHhIVE9fdrw1UQ=="],
+
+    "@intellectual-frontiers/grc/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.2", "", {}, "sha512-odZq/SOVlKtyNaXYTF9aKM/DHXWiiUU2QJ496hu/EGGXaeM2hTl0FXqjR2KUWlawpBECwwcqvhUMx/4CJMja1g=="],
+
+    "@intellectual-frontiers/grc/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/formats": "0.1.2" } }, "sha512-Sjcu7cVBLGLSRcH/qlDbJKfA/hiZk1zzmttLy9Jx/k0LHh2GCjA951hiowMLyfQnFoVc07dzm1i6gPv+4muGsQ=="],
+
+    "@intellectual-frontiers/grc/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-vd8uq8U9Bt6Vrnmdlet16cauCTjil9tXMwTXlemFERA5BeJrHL4V79cGzf5LVbr4kwlB06LrZJACgBlQvrFEpw=="],
+
+    "@intellectual-frontiers/grc/@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/crypto": "0.1.2", "@intellectual-frontiers/formats": "0.1.2" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-WBb/eBdm7ISapweWujI+Gss22+cdKmUORCkRC4tyleCZmNPy9lSh4pdW6FM6Sst+BJdrHgGsWbITW378g0aDHQ=="],
+
+    "@intellectual-frontiers/grc/@intellectual-frontiers/telemetry": ["@intellectual-frontiers/telemetry@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/formats": "0.1.2", "@intellectual-frontiers/system": "0.1.2", "@intellectual-frontiers/terminal": "0.1.2" } }, "sha512-pG2FNHxeylvbXQXY8qtdn8lamXtoZ53B0Lj6/lqv3rCCMdac3mVqdhIjjaTALHo77vdGKMtQxcHfMRJbJj+Fjw=="],
+
+    "@intellectual-frontiers/lint/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.2", "", {}, "sha512-odZq/SOVlKtyNaXYTF9aKM/DHXWiiUU2QJ496hu/EGGXaeM2hTl0FXqjR2KUWlawpBECwwcqvhUMx/4CJMja1g=="],
+
+    "@intellectual-frontiers/lint/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-vd8uq8U9Bt6Vrnmdlet16cauCTjil9tXMwTXlemFERA5BeJrHL4V79cGzf5LVbr4kwlB06LrZJACgBlQvrFEpw=="],
+
+    "@intellectual-frontiers/lint/@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/crypto": "0.1.2", "@intellectual-frontiers/formats": "0.1.2" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-WBb/eBdm7ISapweWujI+Gss22+cdKmUORCkRC4tyleCZmNPy9lSh4pdW6FM6Sst+BJdrHgGsWbITW378g0aDHQ=="],
+
+    "@intellectual-frontiers/net/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.1", "", {}, "sha512-2CRWnO8kSVnsNemWJJUfbILnFuUzMKNAVdra8J4ZXS1O7pDubZw/OM4egq2iWo9+VP45cblxNVjIvV43c7fwSQ=="],
+
+    "@intellectual-frontiers/net/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" } }, "sha512-dIVy8N0ttrjDNq/P3MLmb50dRTGNKJ+xdlKw4rDBTerYSScqDoQar8DS3GfIBQwNx7uqCkRNNBS/xl2Nn+PVnw=="],
+
+    "@intellectual-frontiers/net/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-1vucbLz1Lpv69wLN/RAezPpI6YwANY+twPSSjknnJ72+D2ixsUyICTABv3v6+DYZAUiYyXiNPMGdAVu80eizmQ=="],
 
     "@intellectual-frontiers/net/@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/crypto": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-9AxGJpoLMjO85F7qb7/TJs/wy+FKCffXC4pxo+iTlaq4HXV80B+E9HZoEhMHEc0uPFpih6eP7VJjAkYE0+Fdfg=="],
 
     "@intellectual-frontiers/net/@intellectual-frontiers/telemetry": ["@intellectual-frontiers/telemetry@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1", "@intellectual-frontiers/system": "0.1.1", "@intellectual-frontiers/terminal": "0.1.1" } }, "sha512-eoV8lNQFczAlx2OYa/m7zM/gLEywlzKDloDbS+Z4SVR46SbTkVGb1NF9m712uxa4xadqYaJR9/7am2iAjKPzNQ=="],
+
+    "@intellectual-frontiers/system/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.1", "", {}, "sha512-2CRWnO8kSVnsNemWJJUfbILnFuUzMKNAVdra8J4ZXS1O7pDubZw/OM4egq2iWo9+VP45cblxNVjIvV43c7fwSQ=="],
+
+    "@intellectual-frontiers/system/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1", "@intellectual-frontiers/formats": "0.1.1" } }, "sha512-dIVy8N0ttrjDNq/P3MLmb50dRTGNKJ+xdlKw4rDBTerYSScqDoQar8DS3GfIBQwNx7uqCkRNNBS/xl2Nn+PVnw=="],
+
+    "@intellectual-frontiers/system/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-1vucbLz1Lpv69wLN/RAezPpI6YwANY+twPSSjknnJ72+D2ixsUyICTABv3v6+DYZAUiYyXiNPMGdAVu80eizmQ=="],
+
+    "@intellectual-frontiers/telemetry/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.1", "", {}, "sha512-2CRWnO8kSVnsNemWJJUfbILnFuUzMKNAVdra8J4ZXS1O7pDubZw/OM4egq2iWo9+VP45cblxNVjIvV43c7fwSQ=="],
+
+    "@intellectual-frontiers/telemetry/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-1vucbLz1Lpv69wLN/RAezPpI6YwANY+twPSSjknnJ72+D2ixsUyICTABv3v6+DYZAUiYyXiNPMGdAVu80eizmQ=="],
+
+    "@intellectual-frontiers/telemetry/@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-AyfjvpsWzVkeAHQGwkDgJlCjpORgrocahJ1Q0iGbnkP6OP5VXpqyPv2fFJtaWCbYS1F956vj39UNV3Omp60HaA=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.2", "", {}, "sha512-odZq/SOVlKtyNaXYTF9aKM/DHXWiiUU2QJ496hu/EGGXaeM2hTl0FXqjR2KUWlawpBECwwcqvhUMx/4CJMja1g=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/formats": "0.1.2" } }, "sha512-Sjcu7cVBLGLSRcH/qlDbJKfA/hiZk1zzmttLy9Jx/k0LHh2GCjA951hiowMLyfQnFoVc07dzm1i6gPv+4muGsQ=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/system": ["@intellectual-frontiers/system@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/crypto": "0.1.2", "@intellectual-frontiers/formats": "0.1.2" }, "peerDependencies": { "@types/node": ">=26" } }, "sha512-WBb/eBdm7ISapweWujI+Gss22+cdKmUORCkRC4tyleCZmNPy9lSh4pdW6FM6Sst+BJdrHgGsWbITW378g0aDHQ=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/telemetry": ["@intellectual-frontiers/telemetry@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/formats": "0.1.2", "@intellectual-frontiers/system": "0.1.2", "@intellectual-frontiers/terminal": "0.1.2" } }, "sha512-pG2FNHxeylvbXQXY8qtdn8lamXtoZ53B0Lj6/lqv3rCCMdac3mVqdhIjjaTALHo77vdGKMtQxcHfMRJbJj+Fjw=="],
 
     "cytoscape-fcose/cose-base": ["cose-base@2.2.0", "", { "dependencies": { "layout-base": "^2.0.0" } }, "sha512-AzlgcsCbUMymkADOJtQm3wO9S3ltPfYOFD5033keQn9NJzIbtnZj+UdBJe7DYml/8TdbtHJW3j58SOnKhWY/5g=="],
 
@@ -374,6 +415,20 @@
     "@intellectual-frontiers/commons/typescript/@typescript/typescript-win32-arm64": ["@typescript/typescript-win32-arm64@7.1.0-beta", "", { "os": "win32", "cpu": "arm64" }, "sha512-lJbo71IEOfL7ZZIZnArRaOLqjn9BAfoSzyUQn0aSjfSpDZL4ru0afUsdBfo6PQEjD6ssdmi0n/RwaPADX6bsvQ=="],
 
     "@intellectual-frontiers/commons/typescript/@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.1.0-beta", "", { "os": "win32", "cpu": "x64" }, "sha512-UKcHvbybY2tDTvFW2b1vwiAvDlIRooo69lh8CXWVhOQejcvpM5+IgbiFW9EIwR5Wi5X/v+BdN7gdWbigBuJ3rw=="],
+
+    "@intellectual-frontiers/grc/@intellectual-frontiers/telemetry/@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-ZxexX0jj3jOwo7I4lo0mCFrHsrT2OYNBHBvAFN0//HfgCHTf6QR2hhnFEuUbu5qnhR1Ol0Y2/6kCgirIBhUSSg=="],
+
+    "@intellectual-frontiers/lint/@intellectual-frontiers/system/@intellectual-frontiers/crypto": ["@intellectual-frontiers/crypto@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2", "@intellectual-frontiers/formats": "0.1.2" } }, "sha512-Sjcu7cVBLGLSRcH/qlDbJKfA/hiZk1zzmttLy9Jx/k0LHh2GCjA951hiowMLyfQnFoVc07dzm1i6gPv+4muGsQ=="],
+
+    "@intellectual-frontiers/net/@intellectual-frontiers/telemetry/@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.1", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.1" } }, "sha512-AyfjvpsWzVkeAHQGwkDgJlCjpORgrocahJ1Q0iGbnkP6OP5VXpqyPv2fFJtaWCbYS1F956vj39UNV3Omp60HaA=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/crypto/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-vd8uq8U9Bt6Vrnmdlet16cauCTjil9tXMwTXlemFERA5BeJrHL4V79cGzf5LVbr4kwlB06LrZJACgBlQvrFEpw=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/system/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-vd8uq8U9Bt6Vrnmdlet16cauCTjil9tXMwTXlemFERA5BeJrHL4V79cGzf5LVbr4kwlB06LrZJACgBlQvrFEpw=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/telemetry/@intellectual-frontiers/formats": ["@intellectual-frontiers/formats@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-vd8uq8U9Bt6Vrnmdlet16cauCTjil9tXMwTXlemFERA5BeJrHL4V79cGzf5LVbr4kwlB06LrZJACgBlQvrFEpw=="],
+
+    "@intellectual-frontiers/test/@intellectual-frontiers/telemetry/@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.2", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.2" } }, "sha512-ZxexX0jj3jOwo7I4lo0mCFrHsrT2OYNBHBvAFN0//HfgCHTf6QR2hhnFEuUbu5qnhR1Ol0Y2/6kCgirIBhUSSg=="],
 
     "cytoscape-fcose/cose-base/layout-base": ["layout-base@2.0.1", "", {}, "sha512-dp3s92+uNI1hWIpPGH3jK2kxE2lMjdXdr+DH8ynZHpd6PUlH6x6cbuXnoMmiNumznqaNO31xu9e79F0uuZ0JFg=="],
 

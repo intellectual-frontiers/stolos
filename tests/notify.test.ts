@@ -13,7 +13,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { buildMime } from "../src/archon/notify/mime.ts";
 import {
   collapse,

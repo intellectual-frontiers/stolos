@@ -16,7 +16,7 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import {
   type Item,
   manifestFor,

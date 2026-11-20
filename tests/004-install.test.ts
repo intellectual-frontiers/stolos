@@ -6,12 +6,7 @@
  */
 import { createConnection } from "node:net";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { listen } from "../src/archon-boot/http.ts";
 import { handler } from "../src/archon-boot/server.ts";
 import type { ArchonEvent } from "../src/archon/telemetry/events.ts";

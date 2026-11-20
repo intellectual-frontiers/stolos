@@ -5,12 +5,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, test } from "@intellectual-frontiers/test";
 import { sandbox, linkEngine } from "./sandbox.ts";
 
 test("046: fleet use remembers the fleet for this checkout; --fleet wins once", async () => {

@@ -15,7 +15,7 @@ import {
   assertRejects,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { runtimeCommand } from "../src/archon/install/bun.ts";
 import { UNIFI_API, UNIFI_OPERATIONS } from "../src/archon/connect/unifi-api.auto.ts";

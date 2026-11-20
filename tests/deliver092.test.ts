@@ -18,7 +18,7 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fleet } from "./fixtures.ts";
 import { cms } from "@intellectual-frontiers/crypto";
 import { type jobPlan as jobs } from "@intellectual-frontiers/system";

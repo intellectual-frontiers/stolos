@@ -13,7 +13,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { unzip } from "@intellectual-frontiers/formats";
 import { P, resetRoots } from "../src/archon/core/paths.ts";
 import { Sessions } from "../src/archon/console/auth.ts";

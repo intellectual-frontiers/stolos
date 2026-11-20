@@ -5,12 +5,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { describeChanges } from "../src/archon/fleet/apply.ts";
 import { allowedSignersText, checkTip } from "../src/archon/identity/signers.ts";
 import { parseSignersSource } from "../src/archon/identity/keys.ts";

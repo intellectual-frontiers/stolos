@@ -11,7 +11,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { platform, RELIED_ON } from "../src/archon/capabilities/platform.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { userData } from "../src/archon/render/autoinstall.ts";

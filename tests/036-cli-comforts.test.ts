@@ -6,12 +6,7 @@
  */
 
 import { fs, path } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { workstation } from "../src/archon/capabilities/mod.ts";
 import { guideFor } from "../src/archon/guide/guide.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

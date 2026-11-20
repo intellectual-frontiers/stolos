@@ -6,7 +6,7 @@
  * @module
  */
 import { fs, proc } from "@intellectual-frontiers/system";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { VERSION } from "../src/archon/version.ts";
 import { ENGINE_ROOT } from "./sandbox.ts";
 import { runtimeCommand } from "../src/archon/install/bun.ts";
@@ -57,7 +57,7 @@ proves(
         // Relative (with .ts), node: builtins, the packages package.json declares, and the PAM
         // binding's bun:ffi (spec 096); never npm:, jsr: or a URL.
         if (
-          !/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|@intellectual-frontiers\/(core|crypto|formats|net|rdf|system|telemetry|terminal)(\/|$)|ajv(\/|$)|bun:ffi$)/.test(
+          !/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|@intellectual-frontiers\/(core|crypto|formats|grc|net|rdf|system|telemetry|terminal|test)(\/|$)|ajv(\/|$)|bun:ffi$)/.test(
             spec,
           )
         ) {

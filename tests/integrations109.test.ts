@@ -15,7 +15,7 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import { API_CAPABILITIES, API_KINDS } from "../src/archon/ontology.auto.ts";
 import { cloudflare } from "../src/archon/connect/cloudflare.ts";

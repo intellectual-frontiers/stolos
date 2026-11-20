@@ -3,12 +3,7 @@
  *
  * @module
  */
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertExists, proves } from "@intellectual-frontiers/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { userData } from "../src/archon/render/autoinstall.ts";
 import { fleet, host } from "./fixtures.ts";

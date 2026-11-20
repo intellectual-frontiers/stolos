@@ -47,7 +47,7 @@ import {
 import { sha256 } from "@intellectual-frontiers/crypto";
 import { unzip, zipDeflated } from "@intellectual-frontiers/formats";
 import { fs, path } from "@intellectual-frontiers/system";
-import { sign } from "@intellectual-frontiers/commons/ts/runtime";
+import { sign } from "@intellectual-frontiers/grc/host";
 import { run } from "../core/exec.ts";
 
 /** The bundle format. */

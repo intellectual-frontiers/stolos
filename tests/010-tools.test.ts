@@ -12,7 +12,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { aptDeps } from "../src/archon/apply/apt.ts";
 import { addPpa, ppaHasRelease, ppaReleaseUrl } from "../src/archon/apply/ppa.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";

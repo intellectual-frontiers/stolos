@@ -7,7 +7,7 @@
  */
 import { layers } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { CODE_LISTS, definedTerms, ladder, rungs } from "../ontology/stolos/mod.ts";
 import {
   between,

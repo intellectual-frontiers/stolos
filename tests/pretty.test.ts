@@ -6,13 +6,7 @@
  */
 import * as width from "@intellectual-frontiers/terminal/width";
 import { proc } from "@intellectual-frontiers/system";
-import {
-  assertExists,
-  assert,
-  assertEquals,
-  test,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assertExists, assert, assertEquals, test, proves } from "@intellectual-frontiers/test";
 import { render, resetPretty } from "../src/archon-boot/pretty.ts";
 import { describe } from "../src/archon-boot/progress.ts";
 import { emojiTerminal } from "../src/archon/core/ui.ts";

@@ -10,7 +10,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { publishedNames, retireRefusal } from "../src/archon-boot/retire.ts";
 import { deleteRecords } from "../src/archon/web/cloudflare.ts";
 import { at, list } from "./fixtures.ts";

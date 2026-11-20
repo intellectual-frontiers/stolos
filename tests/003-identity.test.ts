@@ -4,11 +4,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { githubIdentity } from "../src/archon/identity/fleet-init.ts";
 import { KEY } from "./fixtures.ts";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";

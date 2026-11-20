@@ -6,12 +6,7 @@
  */
 import { Rung } from "@intellectual-frontiers/commons/ontology/mizan";
 import { path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { rungs } from "../ontology/stolos/architecture.ts";
 import { terms } from "../ontology/stolos/audit.ts";
 import { stolos } from "../ontology/stolos/vocabulary.ts";

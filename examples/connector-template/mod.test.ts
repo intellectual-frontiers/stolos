@@ -4,7 +4,7 @@
  *
  * @module
  */
-import { test } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { test } from "@intellectual-frontiers/test";
 import connector, { engine, fixtures } from "./mod.ts";
 import { runFixtures } from "@intellectual-frontiers/stolos/archon/connect/registry-contract";
 

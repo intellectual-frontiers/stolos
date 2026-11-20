@@ -33,7 +33,7 @@
 // Spec: 111-network-posture FR-017
 
 import { uuid } from "@intellectual-frontiers/crypto";
-import { oscal } from "@intellectual-frontiers/commons/ts/kernel";
+import { oscal } from "@intellectual-frontiers/grc";
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import type { Risk } from "../risk/register.ts";

@@ -10,7 +10,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fs, proc, toError } from "@intellectual-frontiers/system";
 import { Ajv, type AnySchema } from "ajv";
 import {

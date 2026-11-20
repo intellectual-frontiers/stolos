@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { sha512Crypt } from "@intellectual-frontiers/crypto";
 import { liveToken } from "../src/archon/core/secrets.ts";
 import { chooserMenu, hostMenu, mainMenu } from "../src/archon-boot/grub.ts";

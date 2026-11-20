@@ -5,12 +5,7 @@
  * @module
  */
 import { fs, path, proc, stdio } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { resetRoots } from "../src/archon/core/paths.ts";
 import { HOST_ROOT_SKIP, type HostRoot, hostRoot } from "./host.ts";
 import { fleet, host } from "./fixtures.ts";

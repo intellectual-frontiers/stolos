@@ -6,12 +6,7 @@
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import {
   allowedSignersText,
   checkTip,

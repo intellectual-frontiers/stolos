@@ -4,12 +4,7 @@
  *
  * @module
  */
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { hostNames, knownHostsText, registrationSource } from "../src/archon/fleet/registration.ts";
 import { sshArgs } from "../src/archon/observe/remote.ts";
 import { fleet, host } from "./fixtures.ts";

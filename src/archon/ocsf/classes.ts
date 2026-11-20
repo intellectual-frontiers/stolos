@@ -13,7 +13,7 @@
  */
 // Spec: 089-ocsf-schema-language
 
-import { ocsf } from "@intellectual-frontiers/commons/ts/kernel";
+import { ocsf } from "@intellectual-frontiers/grc";
 
 /** The OCSF version Stolos writes. */
 export const OCSF_VERSION: typeof ocsf.OCSF_VERSION = ocsf.OCSF_VERSION;

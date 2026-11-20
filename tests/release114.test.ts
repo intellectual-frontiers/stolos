@@ -6,12 +6,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { runtimeCommand } from "../src/archon/install/bun.ts";
 import { integrateLines } from "../src/archon/adopt/integrate.ts";
 import { pairEngine } from "../src/archon/adopt/pair-service.ts";

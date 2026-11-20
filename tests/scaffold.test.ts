@@ -5,12 +5,7 @@
  */
 import { tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  proves,
-  test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves, test } from "@intellectual-frontiers/test";
 import { scaffoldFiles, scaffoldRepository } from "../src/archon/fleet/scaffold.ts";
 import { ENGINE_PACKAGE, readPin } from "../src/archon/fleet/upgrade.ts";
 import { FLEET_ID, initRepository } from "../src/archon/identity/fleet-init.ts";

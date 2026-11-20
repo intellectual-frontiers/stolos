@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import {
   keyChecks,
   type KeyFacts,

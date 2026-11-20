@@ -3,12 +3,7 @@
  *
  * @module
  */
-import {
-  assertExists,
-  assert,
-  assertEquals,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assertExists, assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import {
   cidr,
   inCidr,

@@ -14,7 +14,7 @@
  * @example
  * ```ts
  * import { evidenceFindings } from "./findings.ts";
- * import { grc } from "@intellectual-frontiers/commons/ts/kernel";
+ * import { grc } from "@intellectual-frontiers/grc";
  * const at = grc.instantOf("2026-11-15T12:00:00Z");
  * if (at !== undefined) {
  *   evidenceFindings({ scf: ["CRY-07"], subject: "alpha", source: "managed", check: "The disk is encrypted",
@@ -26,7 +26,7 @@
  */
 
 import { absurd } from "@intellectual-frontiers/core";
-import { grc } from "@intellectual-frontiers/commons/ts/kernel";
+import { grc } from "@intellectual-frontiers/grc";
 import type { ScfCatalog } from "./catalog.ts";
 import { allEvidence } from "./oscal.ts";
 import type { ComplianceView, Evidence } from "./report.ts";

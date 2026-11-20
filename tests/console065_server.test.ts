@@ -6,12 +6,7 @@
  */
 
 import type { ServeInfo } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, test } from "@intellectual-frontiers/test";
 import {
   clientAddress,
   type ConsoleDeps,

@@ -6,7 +6,7 @@
  */
 
 import { proc } from "@intellectual-frontiers/system";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { CORE_PCP_METRICS } from "../src/archon/capabilities/observability.ts";
 import {
   candidates,

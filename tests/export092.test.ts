@@ -8,14 +8,14 @@ import { dsse, sha256 } from "@intellectual-frontiers/crypto";
 import { unzip } from "@intellectual-frontiers/formats";
 import { otlp } from "@intellectual-frontiers/telemetry";
 import { fs } from "@intellectual-frontiers/system";
-import { grc } from "@intellectual-frontiers/commons/ts/runtime";
+import { grc } from "@intellectual-frontiers/grc/host";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { Ajv, type AnySchema, type ValidateFunction } from "ajv";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { buildGraph, estatePolicies, estateQuery } from "../src/archon/estate/graph.ts";

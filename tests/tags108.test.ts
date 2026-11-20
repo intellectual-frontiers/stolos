@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import { TAG_CARDINALITIES, TAG_COLOURS, TAG_ORIGINS } from "../src/archon/ontology.auto.ts";
 import {

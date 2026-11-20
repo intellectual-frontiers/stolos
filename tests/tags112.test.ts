@@ -16,7 +16,7 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { CODE_LISTS, STOLOS } from "../ontology/stolos/mod.ts";
 import { terms as auditTerms } from "../ontology/stolos/audit.ts";
 import { stolos as stolosTerms } from "../ontology/stolos/vocabulary.ts";

@@ -5,12 +5,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { MAINTAIN_SQL } from "../src/archon/pg/commands.ts";
 import { PG, PRIME } from "../src/archon/pg/config.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fleet, host } from "./fixtures.ts";
 import { at, parse } from "./console/tree.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

@@ -11,7 +11,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { askpassHelper, sandbox } from "./sandbox.ts";
 import { fleet as lab } from "../examples/fleets/lab/fleet.ts";
 import { foundation } from "../src/archon/capabilities/mod.ts";

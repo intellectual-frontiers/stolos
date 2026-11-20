@@ -11,7 +11,7 @@ import {
   assertExists,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import {
   cadence,
   controlFreshness,

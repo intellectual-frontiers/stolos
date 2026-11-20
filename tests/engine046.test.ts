@@ -7,12 +7,7 @@
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { engineFile, engineFiles, engineSpecs } from "../src/archon/core/assets.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import { fleet, host } from "./fixtures.ts";

@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { workstation } from "../src/archon/capabilities/mod.ts";
 import { isWorkstation, usersFor } from "../src/archon/model/load.ts";
 import type { HostDef } from "../src/archon/model/types.ts";

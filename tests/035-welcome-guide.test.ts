@@ -6,7 +6,7 @@
  */
 
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { resetRoots } from "../src/archon/core/paths.ts";
 import { workstation } from "../src/archon/capabilities/mod.ts";
 import { agentSetup, agentSteps, CATEGORIES, guideFor } from "../src/archon/guide/guide.ts";

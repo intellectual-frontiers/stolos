@@ -15,7 +15,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { Ajv } from "ajv";
 import type { Result } from "@intellectual-frontiers/core";
 import { fs, path } from "@intellectual-frontiers/system";

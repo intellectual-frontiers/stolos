@@ -5,12 +5,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import type { Result } from "@intellectual-frontiers/core";
 import type { http } from "@intellectual-frontiers/net";
 import { github } from "../src/archon/connect/github.ts";

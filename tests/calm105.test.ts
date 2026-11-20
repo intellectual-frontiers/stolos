@@ -11,12 +11,7 @@
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import { OUTPUT_CLASSES } from "../src/archon/ontology.auto.ts";
 import { splitFix, Ui } from "../src/archon/core/ui.ts";

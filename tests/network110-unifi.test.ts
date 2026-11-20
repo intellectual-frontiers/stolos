@@ -9,12 +9,7 @@
 
 import { fs, path } from "@intellectual-frontiers/system";
 import { http } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { unifi } from "../src/archon/connect/unifi.ts";
 import { observedDevices, observedSsids } from "../src/archon/connect/network-asset.ts";
 import { fixture, makeCertificate, startController, uuid, type Routes } from "./unifi-fixtures.ts";

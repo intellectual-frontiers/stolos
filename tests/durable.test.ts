@@ -13,7 +13,7 @@ import {
   assertThrows,
   test,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { fleet, host } from "./fixtures.ts";
 import type { DataClass, HostDef, OptInRecord } from "../src/archon/model/types.ts";
 import {

@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { parseMac } from "../src/archon/fleet/registration.ts";
 import { recognition } from "../src/archon/install/recognize.ts";
 import {

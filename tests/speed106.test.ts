@@ -7,12 +7,7 @@
  * @module
  */
 import { fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { portNotCheckable } from "../src/archon-boot/doctor.ts";
 import { firewallWarnings, forgetWindowsState } from "../src/archon-boot/firewall.ts";
 import { runNested, setNestedRunner } from "../src/archon/core/nested.ts";

@@ -8,12 +8,7 @@
  */
 
 import { fs } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { mainCf } from "../src/archon/capabilities/mail.ts";
 import { ui } from "../src/archon/core/ui.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";

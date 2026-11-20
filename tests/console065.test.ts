@@ -6,13 +6,7 @@
  */
 
 import { errors, fs, path, proc } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertRejects,
-  proves,
-  test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertRejects, proves, test } from "@intellectual-frontiers/test";
 import {
   answerFor,
   cstr,

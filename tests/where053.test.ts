@@ -3,12 +3,7 @@
  *
  * @module
  */
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { nextCommand, type WhereFacts, whereSteps } from "../src/archon/guide/where.ts";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { ENGINE_ROOT, fingerprint, linkEngine, sandbox } from "./sandbox.ts";

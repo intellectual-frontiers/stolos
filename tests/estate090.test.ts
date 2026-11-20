@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { DatabaseSync } from "node:sqlite";
 import { parseJson5, tsLiteral } from "@intellectual-frontiers/formats";
 import { fs, proc } from "@intellectual-frontiers/system";

@@ -13,7 +13,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { recordedHttp } from "../src/archon/connect/sdk.ts";
 import type { Result } from "@intellectual-frontiers/core";
 import type { http } from "@intellectual-frontiers/net";

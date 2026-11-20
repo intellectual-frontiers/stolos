@@ -5,12 +5,7 @@
  * @module
  */
 import { fs, path } from "@intellectual-frontiers/system";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { ENGINE_ROOT, linkEngine, sandbox, type Sandbox } from "./sandbox.ts";
 
 /** A fleet repository with the example lab, the engine installed, in a fresh sandbox. */

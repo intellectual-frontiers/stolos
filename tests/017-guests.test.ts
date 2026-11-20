@@ -11,7 +11,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import { guestSync, launchArgs } from "../src/archon/guests/guests.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import type { GuestDef } from "../src/archon/model/types.ts";

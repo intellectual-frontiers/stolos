@@ -6,12 +6,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { fs, path, proc } from "@intellectual-frontiers/system";
 import { serve, tcp } from "@intellectual-frontiers/net";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";

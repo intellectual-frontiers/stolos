@@ -10,7 +10,7 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+} from "@intellectual-frontiers/test";
 import type { http } from "@intellectual-frontiers/net";
 import type { Result } from "@intellectual-frontiers/core";
 import { observationSource } from "../src/archon/connect/connector.ts";

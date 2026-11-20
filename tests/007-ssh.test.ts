@@ -3,11 +3,7 @@
  *
  * @module
  */
-import {
-  assertEquals,
-  assertExists,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assertEquals, assertExists, proves } from "@intellectual-frontiers/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { GITHUB_KNOWN_HOSTS, userData } from "../src/archon/render/autoinstall.ts";
 import { ufwProfile } from "../src/archon/capabilities/firewall.ts";

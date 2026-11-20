@@ -85,7 +85,7 @@
  * `accepted` and `now` as needed.
  *
  * ```ts
- * import { test } from "@intellectual-frontiers/commons/ts/runtime/test";
+ * import { test } from "@intellectual-frontiers/test";
  * import { defineControl, testControl } from "@intellectual-frontiers/stolos/archon/controls/mod";
  *
  * const noTelnet = defineControl({

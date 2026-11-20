@@ -6,12 +6,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { CODE_LISTS } from "../ontology/stolos/mod.ts";
 import { DEVICE_CLASSES, DEVICE_FACETS, WAYS_OF_JOINING } from "../src/archon/ontology.auto.ts";
 import {

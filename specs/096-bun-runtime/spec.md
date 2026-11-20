@@ -50,9 +50,9 @@ flowchart LR
   (commons 0005-typescript-runtime FR-070).
 - **The engine depends on commons the same way**, by Git at a full commit:
   `"@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#<full commit>"`
-  (commons 0005-typescript-runtime FR-029), imported as `@intellectual-frontiers/commons/ts/kernel`, `.../ts/runtime`, `.../ts/runtime/test`
-  and `.../ts/runtime/test-run`; the lint plugin is `commons/ts/lint/plugin.ts` of the installed
-  package. A fleet repository gets commons through the engine, installed beside it.
+  (commons 0005-typescript-runtime FR-029), imported as `@intellectual-frontiers/commons/ts/kernel`, `.../ts/runtime` (what is not yet a
+  package of its own) and `.../ts/runtime/test-run`; tests take `proves` and the assertions from the package `@intellectual-frontiers/test`
+  and the lint plugin is the package `@intellectual-frontiers/lint`. A fleet repository gets commons through the engine, installed beside it.
 - **The lock is still the control.** `bun install --frozen-lockfile` replaces `--frozen`: a commit
   or integrity that differs from the lock stops the run. The engine's text assets (constitution,
   specs, guides, dotfiles) travel inside the package, as before through `assets.auto.ts`.
@@ -120,8 +120,8 @@ flowchart LR
   runtime other than Bun and Node, imports `npm:`, `jsr:` or a URL, or is configured by another
   runtime's file; vendored third-party files keep their publishers' text. The one file that names a
   runtime's API is the PAM binding, which imports `bun:ffi`, as the lint plugin's allow list says.
-- **FR-002** `package.json` pins the development dependencies exactly (TypeScript 7, `@types/node`)
-  and the run-time ones (commons by `github:intellectual-frontiers/.github#<full commit>`, `@intellectual-frontiers/core`, `crypto`, `formats`, `net`, `rdf`, `system`, `telemetry` and `terminal` from npm, `ajv`),
+- **FR-002** `package.json` pins the development dependencies exactly (TypeScript 7, `@types/node`, `@intellectual-frontiers/lint`)
+  and the run-time ones (commons by `github:intellectual-frontiers/.github#<full commit>`, `@intellectual-frontiers/core`, `crypto`, `formats`, `grc`, `net`, `rdf`, `system`, `telemetry`, `terminal` and `test` from npm, each at the version commons' own package depends on, `ajv`),
   with `bun.lock` beside it, which pins commons' commit and its integrity;
   `bun install --frozen-lockfile` installs them.
 - **FR-003** `tsc` 7 type-checks every file with IFC TypeScript's strict configuration.

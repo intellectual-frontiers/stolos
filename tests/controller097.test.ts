@@ -5,7 +5,7 @@
  * @module
  */
 
-import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/test";
 import { type AdoptedDef, type Observed, probe, toObserved } from "../src/archon/adopt/adopt.ts";
 import {
   controllerDef,

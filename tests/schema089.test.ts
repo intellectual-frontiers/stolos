@@ -5,12 +5,7 @@
  */
 import { fs } from "@intellectual-frontiers/system";
 import { http } from "@intellectual-frontiers/net";
-import {
-  assert,
-  assertEquals,
-  assertStringIncludes,
-  proves,
-} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { DatabaseSync } from "node:sqlite";
 import { Ajv } from "ajv";
 import { OCSF_CLASSES, OCSF_OBJECT_NAMES, OCSF_VERSION } from "../src/archon/ocsf/classes.ts";

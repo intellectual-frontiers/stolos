@@ -32,7 +32,7 @@
 // Spec: 111-network-posture FR-014
 
 import { absurd } from "@intellectual-frontiers/core";
-import { assess, grc } from "@intellectual-frontiers/commons/ts/kernel";
+import { assess, grc } from "@intellectual-frontiers/grc";
 import type { PcFacts } from "../console/pc.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import {
