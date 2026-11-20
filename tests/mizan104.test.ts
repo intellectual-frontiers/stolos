@@ -4,7 +4,7 @@
  *
  * @module
  */
-import { Rung } from "@intellectual-frontiers/commons/ontology/mizan";
+import { Rung } from "@intellectual-frontiers/ontology/mizan";
 import { path, proc } from "@intellectual-frontiers/system";
 import { assert, assertEquals, assertStringIncludes, proves } from "@intellectual-frontiers/test";
 import { rungs } from "../ontology/stolos/architecture.ts";

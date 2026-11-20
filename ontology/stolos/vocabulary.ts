@@ -14,7 +14,7 @@
  * @module
  */
 // Spec: 101-ladder FR-004
-import { Rung as MizanRung } from "@intellectual-frontiers/commons/ontology/mizan";
+import { Rung as MizanRung } from "@intellectual-frontiers/ontology/mizan";
 import * as rdf from "@intellectual-frontiers/rdf";
 
 const {

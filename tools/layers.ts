@@ -12,9 +12,9 @@
  * @module
  */
 // Spec: 101-ladder FR-002, FR-003, FR-008
-import { layers, type trace } from "@intellectual-frontiers/commons/ts/kernel";
+import { layers, type trace } from "@intellectual-frontiers/mizan";
 import { path, proc } from "@intellectual-frontiers/system";
-import { trace as files } from "@intellectual-frontiers/commons/ts/runtime";
+import * as files from "@intellectual-frontiers/mizan/host/trace";
 import { ladder } from "../ontology/stolos/mod.ts";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");

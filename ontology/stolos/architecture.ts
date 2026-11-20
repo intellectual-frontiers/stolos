@@ -15,7 +15,7 @@
  */
 // Spec: 101-ladder FR-001, FR-002, FR-003
 import * as rdf from "@intellectual-frontiers/rdf";
-import { rungKinds } from "@intellectual-frontiers/commons/ontology/mizan";
+import { rungKinds } from "@intellectual-frontiers/ontology/mizan";
 import { RungSchema, STOLOS } from "./vocabulary.ts";
 
 const { en, term } = rdf;

@@ -7,7 +7,7 @@
  */
 // Spec: 101-ladder FR-004
 // Spec: 116-kept-unaligned FR-004
-import { MZ } from "@intellectual-frontiers/commons/ontology/mizan";
+import { MZ } from "@intellectual-frontiers/ontology/mizan";
 import * as rdf from "@intellectual-frontiers/rdf";
 import { rungs } from "./architecture.ts";
 import { file as auditFile } from "./audit.ts";

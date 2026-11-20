@@ -50,8 +50,9 @@ flowchart LR
   (commons 0005-typescript-runtime FR-070).
 - **The engine depends on commons the same way**, by Git at a full commit:
   `"@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#<full commit>"`
-  (commons 0005-typescript-runtime FR-029), imported as `@intellectual-frontiers/commons/ts/kernel`, `.../ts/runtime` (what is not yet a
-  package of its own) and `.../ts/runtime/test-run`; tests take `proves` and the assertions from the package `@intellectual-frontiers/test`
+  (commons 0005-typescript-runtime FR-029), imported as `.../ts/mizan` (what is not yet a package of its own: the commands that need the whole
+  repository) and `.../ts/runtime/test-run`; Mizan's harness, trace and layers are the package `@intellectual-frontiers/mizan` and
+  its ontologies the package `@intellectual-frontiers/ontology`; tests take `proves` and the assertions from the package `@intellectual-frontiers/test`
   and the lint plugin is the package `@intellectual-frontiers/lint`. A fleet repository gets commons through the engine, installed beside it.
 - **The lock is still the control.** `bun install --frozen-lockfile` replaces `--frozen`: a commit
   or integrity that differs from the lock stops the run. The engine's text assets (constitution,

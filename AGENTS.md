@@ -58,8 +58,8 @@ no build. This file is the entry point for any agent; the constitution,
   a module), and, from the ontology, `ontology/stolos.auto.ttl`, `src/archon/ontology.auto.ts`, the
   constitution's ladder table and this file's layout (between their marker comments).
 - **Bun and IFC TypeScript** (spec 096): Bun is the default TypeScript 7 runtime, Node 26 the backup. Relative imports with `.ts` inside `src/`;
-  packages by their bare names from `package.json` (`@intellectual-frontiers/commons/ts/kernel`,
-  `.../ts/runtime`, `ajv`); never `npm:`, `jsr:` or a URL. Commons is a Git dependency pinned by a
+  packages by their bare names from `package.json` (`@intellectual-frontiers/system`, `@intellectual-frontiers/mizan`,
+  `@intellectual-frontiers/commons/ts/mizan`, `ajv`); never `npm:`, `jsr:` or a URL. Commons is a Git dependency pinned by a
   full commit; on Node 26 an entry file runs with
   `node --import @intellectual-frontiers/commons/ts/node <file>`. `examples/` import the engine by its package
   name (`@intellectual-frontiers/stolos/archon/...`), as a fleet does.

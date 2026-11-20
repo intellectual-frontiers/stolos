@@ -1,6 +1,6 @@
 {
   "name": "@intellectual-frontiers/stolos",
-  "version": "0.169.0",
+  "version": "0.170.0",
   "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
   "license": "BUSL-1.1",
   "type": "module",
@@ -38,26 +38,45 @@
     "versions:check": "bun node_modules/@intellectual-frontiers/commons/commons/ts/mizan/versions.ts check --base origin/main"
   },
   "dependencies": {
-    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#d901efc7b5018ceef5b79ad692fe244fb818564f",
-    "@intellectual-frontiers/core": "0.1.0",
-    "@intellectual-frontiers/crypto": "0.1.0",
-    "@intellectual-frontiers/formats": "0.1.0",
-    "@intellectual-frontiers/grc": "0.1.0",
-    "@intellectual-frontiers/net": "0.1.0",
-    "@intellectual-frontiers/rdf": "0.1.0",
-    "@intellectual-frontiers/system": "0.1.0",
-    "@intellectual-frontiers/telemetry": "0.1.0",
-    "@intellectual-frontiers/terminal": "0.1.0",
-    "@intellectual-frontiers/test": "0.1.0",
+    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#29af91fe363d6d325e85106a57b49bdbe140166a",
+    "@intellectual-frontiers/core": "0.1.3",
+    "@intellectual-frontiers/crypto": "0.1.3",
+    "@intellectual-frontiers/formats": "0.1.3",
+    "@intellectual-frontiers/grc": "0.1.1",
+    "@intellectual-frontiers/mizan": "0.1.0",
+    "@intellectual-frontiers/net": "0.1.2",
+    "@intellectual-frontiers/ontology": "0.1.2",
+    "@intellectual-frontiers/rdf": "0.1.3",
+    "@intellectual-frontiers/system": "0.1.3",
+    "@intellectual-frontiers/telemetry": "0.1.3",
+    "@intellectual-frontiers/terminal": "0.1.3",
+    "@intellectual-frontiers/test": "0.1.1",
     "ajv": "8.17.1"
   },
   "devDependencies": {
-    "@intellectual-frontiers/lint": "0.1.0",
+    "@intellectual-frontiers/lint": "0.1.1",
     "@types/node": "26.6.6",
     "typescript": "7.0.2"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/intellectual-frontiers/stolos.git"
+  },
+  "overrides": {
+    "@intellectual-frontiers/core": "0.1.3",
+    "@intellectual-frontiers/crypto": "0.1.3",
+    "@intellectual-frontiers/ergonex": "0.3.8",
+    "@intellectual-frontiers/formats": "0.1.3",
+    "@intellectual-frontiers/githost": "0.1.1",
+    "@intellectual-frontiers/grc": "0.1.1",
+    "@intellectual-frontiers/lint": "0.1.1",
+    "@intellectual-frontiers/mizan": "0.1.0",
+    "@intellectual-frontiers/net": "0.1.2",
+    "@intellectual-frontiers/ontology": "0.1.2",
+    "@intellectual-frontiers/rdf": "0.1.3",
+    "@intellectual-frontiers/system": "0.1.3",
+    "@intellectual-frontiers/telemetry": "0.1.3",
+    "@intellectual-frontiers/terminal": "0.1.3",
+    "@intellectual-frontiers/test": "0.1.1"
   }
 }

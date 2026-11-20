@@ -11,7 +11,8 @@
  */
 // Spec: 104-mizan FR-004, FR-005, FR-006
 import process from "node:process";
-import { holdHarness, termRecordsOf } from "@intellectual-frontiers/commons/ts/mizan";
+import { holdHarness } from "@intellectual-frontiers/mizan";
+import { termRecordsOf } from "@intellectual-frontiers/commons/ts/mizan";
 import { terms as audit } from "../ontology/stolos/audit.ts";
 import { stolos } from "../ontology/stolos/vocabulary.ts";
 

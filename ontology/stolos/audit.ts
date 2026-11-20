@@ -15,13 +15,7 @@
 // Spec: 115-compatibility FR-001
 // Spec: 116-kept-unaligned FR-001, FR-002, FR-003, FR-004, FR-005
 // Spec: 110-network-assets FR-001
-import {
-  bases,
-  Decision,
-  MZ,
-  MZID,
-  OntologyTerm,
-} from "@intellectual-frontiers/commons/ontology/mizan";
+import { bases, Decision, MZ, MZID, OntologyTerm } from "@intellectual-frontiers/ontology/mizan";
 import * as rdf from "@intellectual-frontiers/rdf";
 import { STOLOS, stolos } from "./vocabulary.ts";
 

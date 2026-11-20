@@ -57,7 +57,7 @@ proves(
         // Relative (with .ts), node: builtins, the packages package.json declares, and the PAM
         // binding's bun:ffi (spec 096); never npm:, jsr: or a URL.
         if (
-          !/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|@intellectual-frontiers\/(core|crypto|formats|grc|net|rdf|system|telemetry|terminal|test)(\/|$)|ajv(\/|$)|bun:ffi$)/.test(
+          !/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|@intellectual-frontiers\/(core|crypto|formats|grc|mizan|net|ontology|rdf|system|telemetry|terminal|test)(\/|$)|ajv(\/|$)|bun:ffi$)/.test(
             spec,
           )
         ) {
