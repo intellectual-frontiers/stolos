@@ -7,6 +7,7 @@
       "dependencies": {
         "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#63d599cf8f749b6de3ff516899270428100cf0b2",
         "@intellectual-frontiers/core": "0.1.0",
+        "@intellectual-frontiers/terminal": "0.1.0",
         "ajv": "8.17.1",
       },
       "devDependencies": {
@@ -29,6 +30,8 @@
     "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#63d599c", { "dependencies": { "@intellectual-frontiers/core": "0.1.0", "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-63d599c", "sha512-w2BK0yeMIKSJSCdBVaahpTn6NrmsnsW3D9GIr1HBi5oAm0375HcGfyYRxbh625oQd9n2PvKXPtFcgUqMOQR+sQ=="],
 
     "@intellectual-frontiers/core": ["@intellectual-frontiers/core@0.1.0", "", {}, "sha512-tOdJKL/vsHJYxUuizWLnaI58mOXojBll1zgaKXw6QIoMK7dHhA+jsfBdherG3jK+EijipzRYBNXqNvWhNIoGHA=="],
+
+    "@intellectual-frontiers/terminal": ["@intellectual-frontiers/terminal@0.1.0", "", { "dependencies": { "@intellectual-frontiers/core": "0.1.0" } }, "sha512-YbAhZorkoWCqRFoy3biJorx9hbxryWClqXYOcNAN0rMNxKcTK9A7o6QM5UoKCeLRIkE+kyHvqEltbZEpMMHNDA=="],
 
     "@mermaid-js/parser": ["@mermaid-js/parser@1.2.1", "", { "dependencies": { "@chevrotain/types": "~11.1.2" } }, "sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw=="],
 

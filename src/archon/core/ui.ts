@@ -16,7 +16,7 @@
 // Spec: 099-engine-update FR-007
 // Spec: 101-ladder FR-006
 // Spec: 105-calm-output FR-002 to FR-011
-import { palette } from "@intellectual-frontiers/commons/ts/kernel";
+import * as palette from "@intellectual-frontiers/terminal/palette";
 import type { LineKind, OutcomeLevel, Verbosity } from "../ontology.auto.ts";
 import { fs, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { EXPLAIN, translate } from "./explain.ts";

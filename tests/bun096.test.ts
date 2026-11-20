@@ -114,6 +114,7 @@ proves(
     assertEquals(Object.keys(deps).sort(), [
       "@intellectual-frontiers/commons",
       "@intellectual-frontiers/core",
+      "@intellectual-frontiers/terminal",
       "ajv",
     ]);
     assertEquals(Object.keys(dev).sort(), ["@types/node", "typescript"]);
